@@ -117,14 +117,10 @@
 
   function notifyLocked() {
     if (typeof toast === "function") {
-      toast(
-        "Évaluation verrouillée"
-      );
+      toast("Évaluation verrouillée");
     }
 
-    alert(
-      lockedMessage()
-    );
+    alert(lockedMessage());
   }
 
   function renderApp() {
@@ -156,8 +152,7 @@
       return null;
     }
 
-    db.activeSessionId =
-      session.id;
+    db.activeSessionId = session.id;
 
     try {
       filter = "ALL";
@@ -318,11 +313,6 @@
 
     saveSafe();
 
-    /*
-     * Si on verrouille alors que la page
-     * Scanner est ouverte, on arrête
-     * immédiatement la caméra.
-     */
     if (
       status === "locked" &&
       !document
@@ -439,13 +429,9 @@
         );
 
       if (studentCard) {
-        studentCard.before(
-          manager
-        );
+        studentCard.before(manager);
       } else {
-        groupPage.appendChild(
-          manager
-        );
+        groupPage.appendChild(manager);
       }
     }
 
@@ -626,51 +612,32 @@
               ${sessions
                 .map(session => {
                   const status =
-                    getStatus(
-                      session
-                    );
+                    getStatus(session);
 
                   const locked =
-                    status ===
-                    "locked";
+                    status === "locked";
 
                   const isActive =
-                    String(
-                      session.id
-                    ) ===
-                    String(
-                      activeId
-                    );
+                    String(session.id) ===
+                    String(activeId);
 
                   const students =
                     Array.isArray(
                       session.students
                     )
-                      ? session
-                          .students
-                          .length
+                      ? session.students.length
                       : 0;
 
                   return `
                     <div
                       class="
                         session-row
-                        ${
-                          isActive
-                            ? "active"
-                            : ""
-                        }
+                        ${isActive ? "active" : ""}
                       "
-                      data-session-id="${
-                        escHtml(
-                          session.id
-                        )
-                      }"
+                      data-session-id="${escHtml(session.id)}"
                     >
 
-                      <div
-                        class="session-main"
-                      >
+                      <div class="session-main">
 
                         <div
                           class="session-title-line"
@@ -706,8 +673,7 @@
                           <span>
                             ${
                               formatDate(
-                                session
-                                  .createdAt
+                                session.createdAt
                               )
                             }
                           </span>
@@ -728,9 +694,7 @@
                             "
                           >
                             ${
-                              statusLabel(
-                                status
-                              )
+                              statusLabel(status)
                             }
                           </span>
 
@@ -743,24 +707,15 @@
                       >
 
                         <select
-                          class="
-                            session-status-select
-                          "
-                          data-session-id="${
-                            escHtml(
-                              session.id
-                            )
-                          }"
-                          aria-label="
-                            État de l'évaluation
-                          "
+                          class="session-status-select"
+                          data-session-id="${escHtml(session.id)}"
+                          aria-label="État de l'évaluation"
                         >
 
                           <option
                             value="open"
                             ${
-                              status ===
-                              "open"
+                              status === "open"
                                 ? "selected"
                                 : ""
                             }
@@ -771,8 +726,7 @@
                           <option
                             value="closed"
                             ${
-                              status ===
-                              "closed"
+                              status === "closed"
                                 ? "selected"
                                 : ""
                             }
@@ -783,8 +737,7 @@
                           <option
                             value="locked"
                             ${
-                              status ===
-                              "locked"
+                              status === "locked"
                                 ? "selected"
                                 : ""
                             }
@@ -797,11 +750,7 @@
                         <button
                           type="button"
                           class="session-open"
-                          data-session-id="${
-                            escHtml(
-                              session.id
-                            )
-                          }"
+                          data-session-id="${escHtml(session.id)}"
                         >
                           Ouvrir
                         </button>
@@ -809,16 +758,8 @@
                         <button
                           type="button"
                           class="session-scan"
-                          data-session-id="${
-                            escHtml(
-                              session.id
-                            )
-                          }"
-                          ${
-                            locked
-                              ? "disabled"
-                              : ""
-                          }
+                          data-session-id="${escHtml(session.id)}"
+                          ${locked ? "disabled" : ""}
                         >
                           ${
                             locked
@@ -830,11 +771,7 @@
                         <button
                           type="button"
                           class="session-results"
-                          data-session-id="${
-                            escHtml(
-                              session.id
-                            )
-                          }"
+                          data-session-id="${escHtml(session.id)}"
                         >
                           Résultats
                         </button>
@@ -842,16 +779,8 @@
                         <button
                           type="button"
                           class="session-rename"
-                          data-session-id="${
-                            escHtml(
-                              session.id
-                            )
-                          }"
-                          ${
-                            locked
-                              ? "disabled"
-                              : ""
-                          }
+                          data-session-id="${escHtml(session.id)}"
+                          ${locked ? "disabled" : ""}
                         >
                           Renommer
                         </button>
@@ -908,20 +837,17 @@
         button.onclick =
           () => {
             const panel =
-              document
-                .getElementById(
-                  "groupArchivesPanel"
-                );
+              document.getElementById(
+                "groupArchivesPanel"
+              );
 
             if (!panel) {
               return;
             }
 
-            panel
-              .classList
-              .toggle(
-                "hidden"
-              );
+            panel.classList.toggle(
+              "hidden"
+            );
 
             renderArchives();
           };
@@ -935,9 +861,7 @@
         button.onclick =
           () => {
             openSession(
-              button
-                .dataset
-                .sessionId,
+              button.dataset.sessionId,
               "group"
             );
           };
@@ -951,9 +875,7 @@
         button.onclick =
           () => {
             openSession(
-              button
-                .dataset
-                .sessionId,
+              button.dataset.sessionId,
               "scan"
             );
           };
@@ -967,9 +889,7 @@
         button.onclick =
           () => {
             openSession(
-              button
-                .dataset
-                .sessionId,
+              button.dataset.sessionId,
               "results"
             );
           };
@@ -983,9 +903,7 @@
         button.onclick =
           () => {
             renameSession(
-              button
-                .dataset
-                .sessionId
+              button.dataset.sessionId
             );
           };
       });
@@ -998,9 +916,7 @@
         select.onchange =
           () => {
             changeSessionStatus(
-              select
-                .dataset
-                .sessionId,
+              select.dataset.sessionId,
               select.value
             );
           };
@@ -1027,17 +943,15 @@
           (a, b) =>
             String(
               a.name || ""
+            ).localeCompare(
+              String(
+                b.name || ""
+              ),
+              "fr",
+              {
+                sensitivity: "base"
+              }
             )
-              .localeCompare(
-                String(
-                  b.name || ""
-                ),
-                "fr",
-                {
-                  sensitivity:
-                    "base"
-                }
-              )
         );
 
     panel.innerHTML = `
@@ -1050,9 +964,8 @@
           </h2>
 
           <p>
-            Les évaluations et
-            résultats sont conservés
-            dans chaque groupe.
+            Les évaluations et résultats sont
+            conservés dans chaque groupe.
           </p>
 
         </div>
@@ -1077,9 +990,7 @@
                     Array.isArray(
                       group.sessions
                     )
-                      ? group
-                          .sessions
-                          .length
+                      ? group.sessions.length
                       : 0;
 
                   return `
@@ -1113,11 +1024,7 @@
                       <button
                         type="button"
                         class="restore-group"
-                        data-group-id="${
-                          escHtml(
-                            group.id
-                          )
-                        }"
+                        data-group-id="${escHtml(group.id)}"
                       >
                         Restaurer
                       </button>
@@ -1147,11 +1054,9 @@
     if (close) {
       close.onclick =
         () => {
-          panel
-            .classList
-            .add(
-              "hidden"
-            );
+          panel.classList.add(
+            "hidden"
+          );
         };
     }
 
@@ -1163,24 +1068,16 @@
         button.onclick =
           () => {
             restoreGroup(
-              button
-                .dataset
-                .groupId
+              button.dataset.groupId
             );
 
-            panel
-              .classList
-              .add(
-                "hidden"
-              );
+            panel.classList.add(
+              "hidden"
+            );
           };
       });
   }
 
-  /*
-   * Applique visuellement et techniquement
-   * le verrouillage sur la session active.
-   */
   function applyLockState() {
     const session =
       activeSessionSafe();
@@ -1188,9 +1085,6 @@
     const locked =
       isLocked(session);
 
-    /*
-     * Scanner
-     */
     const camera =
       document.getElementById(
         "camera"
@@ -1218,9 +1112,6 @@
       readText.disabled = locked;
     }
 
-    /*
-     * Ajout manuel élève
-     */
     [
       "last",
       "first",
@@ -1231,9 +1122,7 @@
       "addStudent"
     ].forEach(id => {
       const element =
-        document.getElementById(
-          id
-        );
+        document.getElementById(id);
 
       if (element) {
         element.disabled =
@@ -1242,11 +1131,13 @@
     });
 
     /*
-     * Tableau résultats :
-     * champs et boutons de modification.
+     * Éléments réellement modifiables.
      *
-     * Les boutons d'export et les onglets
-     * de consultation restent disponibles.
+     * IMPORTANT :
+     * .ccf-detail reste volontairement actif
+     * afin de pouvoir consulter le détail
+     * d'un élève même lorsque l'évaluation
+     * est verrouillée.
      */
     document
       .querySelectorAll(
@@ -1254,7 +1145,8 @@
           ".afl-allocation",
           ".afl-level",
           ".points",
-          ".ccf-detail"
+          ".ccf-quick-allocation",
+          ".ccf-quick-level"
         ].join(",")
       )
       .forEach(element => {
@@ -1262,9 +1154,6 @@
           locked;
       });
 
-    /*
-     * Information visible sur la page résultats.
-     */
     let notice =
       document.getElementById(
         "lockedEvaluationNotice"
@@ -1287,10 +1176,9 @@
         !notice
       ) {
         notice =
-          document
-            .createElement(
-              "div"
-            );
+          document.createElement(
+            "div"
+          );
 
         notice.id =
           "lockedEvaluationNotice";
@@ -1332,119 +1220,104 @@
     }
   }
 
-  /*
-   * Bloque l'accès direct à l'onglet Scanner
-   * si la session active est verrouillée.
-   */
   function installNavigationGuard() {
-    document
-      .addEventListener(
-        "click",
-        event => {
-          const scanButton =
-            event.target
-              ?.closest?.(
-                'nav button[data-page="scan"]'
-              );
+    document.addEventListener(
+      "click",
+      event => {
+        const scanButton =
+          event.target
+            ?.closest?.(
+              'nav button[data-page="scan"]'
+            );
 
-          if (
-            !scanButton ||
-            !isLocked()
-          ) {
-            return;
-          }
+        if (
+          !scanButton ||
+          !isLocked()
+        ) {
+          return;
+        }
 
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
 
-          notifyLocked();
-        },
-        true
-      );
+        notifyLocked();
+      },
+      true
+    );
   }
 
-  /*
-   * Bloque les tentatives de modification
-   * par événement si un contrôle échappait
-   * à la désactivation visuelle.
-   */
   function installEditGuard() {
     const editableSelector = [
       ".afl-allocation",
       ".afl-level",
       ".points",
-      ".ccf-detail",
+      ".ccf-quick-allocation",
+      ".ccf-quick-level",
       "#saveCCFDetail",
       "#addStudent",
       "#readText",
       "#camera"
     ].join(",");
 
-    document
-      .addEventListener(
-        "click",
-        event => {
-          const target =
-            event.target
-              ?.closest?.(
-                editableSelector
-              );
+    document.addEventListener(
+      "click",
+      event => {
+        const target =
+          event.target
+            ?.closest?.(
+              editableSelector
+            );
 
-          if (
-            !target ||
-            !isLocked()
-          ) {
-            return;
-          }
+        if (
+          !target ||
+          !isLocked()
+        ) {
+          return;
+        }
 
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
 
-          notifyLocked();
-        },
-        true
-      );
+        notifyLocked();
+      },
+      true
+    );
 
-    document
-      .addEventListener(
-        "change",
-        event => {
-          const target =
-            event.target;
+    document.addEventListener(
+      "change",
+      event => {
+        const target =
+          event.target;
 
-          if (
-            !target ||
-            !target.matches?.(
-              [
-                ".afl-allocation",
-                ".afl-level",
-                ".points"
-              ].join(",")
-            ) ||
-            !isLocked()
-          ) {
-            return;
-          }
+        if (
+          !target ||
+          !target.matches?.(
+            [
+              ".afl-allocation",
+              ".afl-level",
+              ".points",
+              ".ccf-quick-allocation",
+              ".ccf-quick-level"
+            ].join(",")
+          ) ||
+          !isLocked()
+        ) {
+          return;
+        }
 
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
 
-          renderApp();
-          notifyLocked();
-        },
-        true
-      );
+        renderApp();
+        notifyLocked();
+      },
+      true
+    );
   }
 
-  /*
-   * Protection ultime :
-   * même si un QR arrive directement dans
-   * handleQR(), il n'est pas enregistré
-   * lorsque l'évaluation est verrouillée.
-   */
   function installQRGuard() {
     if (
       typeof window.handleQR !==
@@ -1497,11 +1370,6 @@
   function install() {
     ensureInterface();
 
-    /*
-     * On enveloppe render() après le chargement
-     * des autres modules afin de conserver
-     * toutes leurs fonctions.
-     */
     if (
       typeof window.render ===
         "function" &&
