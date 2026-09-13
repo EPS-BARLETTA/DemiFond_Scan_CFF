@@ -265,10 +265,24 @@
 
 <script src="/evaluation-ccf.js?v=1"></script>
 
-<!-- NOUVEAU MODULE : tableaux CCF -->
 <script src="/ccf-results-ui.js?v=1"></script>
 
 <script src="/scanner-ios.js?v=1"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/offline-worker.js')
+        .catch(error => {
+          console.error(
+            'Service worker non enregistré :',
+            error
+          );
+        });
+    });
+  }
+</script>
 
 </body>
 </html>
