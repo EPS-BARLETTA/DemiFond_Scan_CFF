@@ -2,11 +2,24 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#172554">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+  <meta
+    name="theme-color"
+    content="#172554"
+  >
 
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/app.css">
+  <link
+    rel="manifest"
+    href="/manifest.webmanifest"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/app.css"
+  >
 
   <title>DemiFond Scan CCF</title>
 </head>
@@ -15,18 +28,32 @@
 
 <header>
   <div>
-    <small>EPS · VAUBAN</small>
-    <h1>DemiFond Scan CCF</h1>
-    <p>Espaces · évaluations · collecte QR · notation CCF</p>
+    <small>
+      EPS · VAUBAN
+    </small>
+
+    <h1>
+      DemiFond Scan CCF
+    </h1>
+
+    <p>
+      Espaces · évaluations · collecte QR · notation CCF
+    </p>
   </div>
 
   <div>
-    <button id="backup">
+
+    <button
+      id="backup"
+    >
       Sauvegarde de sécurité
     </button>
 
-    <label class="button">
+    <label
+      class="button"
+    >
       Importer une sauvegarde
+
       <input
         id="restore"
         type="file"
@@ -34,54 +61,88 @@
         hidden
       >
     </label>
+
   </div>
 </header>
 
+
 <nav>
-  <button data-page="group" class="active">
+
+  <button
+    data-page="group"
+    class="active"
+  >
     Mes espaces
   </button>
 
-  <button data-page="scan">
+  <button
+    data-page="scan"
+  >
     Scanner
   </button>
 
-  <button data-page="results">
+  <button
+    data-page="results"
+  >
     Résultats
   </button>
+
 </nav>
+
 
 <main>
 
-  <section id="group" class="page">
+  <!-- =========================
+       ESPACES / ÉVALUATIONS
+  ========================== -->
 
-    <div class="toolbar">
+  <section
+    id="group"
+    class="page"
+  >
+
+    <div
+      class="toolbar"
+    >
 
       <select
         id="groups"
         aria-label="Choisir un espace"
       ></select>
 
-      <button id="addGroup">
+      <button
+        id="addGroup"
+      >
         + Nouvel espace
       </button>
 
-      <button id="archive">
+      <button
+        id="archive"
+      >
         Archiver l’espace
       </button>
 
     </div>
+
 
     <div
       id="filters"
       class="filters"
     ></div>
 
-    <div class="card">
 
-      <h2>Élèves de l’évaluation active</h2>
+    <div
+      class="card"
+    >
 
-      <div class="form">
+      <h2>
+        Élèves de l’évaluation active
+      </h2>
+
+
+      <div
+        class="form"
+      >
 
         <input
           id="last"
@@ -98,9 +159,16 @@
           placeholder="Classe (TA, TB…)"
         >
 
-        <select id="sex">
-          <option value="F">Fille</option>
-          <option value="M">Garçon</option>
+        <select
+          id="sex"
+        >
+          <option value="F">
+            Fille
+          </option>
+
+          <option value="M">
+            Garçon
+          </option>
         </select>
 
         <input
@@ -113,17 +181,23 @@
           placeholder="Projet 2 (3:18)"
         >
 
-        <button id="addStudent">
+        <button
+          id="addStudent"
+        >
           Ajouter
         </button>
 
       </div>
 
-      <div class="table">
+
+      <div
+        class="table"
+      >
 
         <table>
 
           <thead>
+
             <tr>
               <th>Élève</th>
               <th>Classe</th>
@@ -133,9 +207,12 @@
               <th>Course 2</th>
               <th>AFL1</th>
             </tr>
+
           </thead>
 
-          <tbody id="students"></tbody>
+          <tbody
+            id="students"
+          ></tbody>
 
         </table>
 
@@ -146,23 +223,36 @@
   </section>
 
 
+  <!-- =========================
+       SCANNER
+  ========================== -->
+
   <section
     id="scan"
     class="page hidden"
   >
 
-    <div class="scanGrid">
+    <div
+      class="scanGrid"
+    >
 
-      <div class="card">
+      <div
+        class="card"
+      >
 
-        <h2>Scanner un résultat</h2>
+        <h2>
+          Scanner un résultat
+        </h2>
 
         <p>
           Le résultat sera enregistré dans
           l’espace et l’évaluation actuellement sélectionnés.
         </p>
 
-        <div class="camera">
+
+        <div
+          class="camera"
+        >
 
           <video
             id="video"
@@ -170,17 +260,25 @@
             muted
           ></video>
 
-          <div class="target"></div>
+          <div
+            class="target"
+          ></div>
 
         </div>
 
-        <button id="camera">
+
+        <button
+          id="camera"
+        >
           Activer la caméra
         </button>
 
-        <button id="cameraStop">
+        <button
+          id="cameraStop"
+        >
           Arrêter
         </button>
+
 
         <details>
 
@@ -193,7 +291,9 @@
             placeholder="Contenu du QR"
           ></textarea>
 
-          <button id="readText">
+          <button
+            id="readText"
+          >
             Valider
           </button>
 
@@ -202,9 +302,13 @@
       </div>
 
 
-      <div class="card">
+      <div
+        class="card"
+      >
 
-        <h2>Dernier scan</h2>
+        <h2>
+          Dernier scan
+        </h2>
 
         <div
           id="scanMessage"
@@ -213,7 +317,9 @@
           Aucun résultat reçu.
         </div>
 
-        <div id="history"></div>
+        <div
+          id="history"
+        ></div>
 
       </div>
 
@@ -222,21 +328,32 @@
   </section>
 
 
+  <!-- =========================
+       RÉSULTATS
+  ========================== -->
+
   <section
     id="results"
     class="page hidden"
   >
 
-    <div class="card">
+    <div
+      class="card"
+    >
 
-      <h2>Résultats de l’évaluation active</h2>
+      <h2>
+        Résultats de l’évaluation active
+      </h2>
 
       <div
         id="resultFilters"
         class="filters"
       ></div>
 
-      <div class="table">
+
+      <div
+        class="table"
+      >
 
         <table>
 
@@ -258,7 +375,9 @@
 
           </thead>
 
-          <tbody id="resultRows"></tbody>
+          <tbody
+            id="resultRows"
+          ></tbody>
 
         </table>
 
@@ -277,46 +396,81 @@
 ></div>
 
 
+<!-- =========================
+     SCRIPTS
+========================== -->
+
+
 <!-- Lecture QR locale / hors connexion -->
 <script src="/jsQR.js"></script>
 
-<!-- Gestion des espaces -->
+
+<!-- Gestion interne des groupes / espaces -->
 <script src="/groups.js"></script>
 
 <script src="/group-presets.js"></script>
 
 <script src="/qr-ui.js"></script>
 
+
 <!-- Moteur principal -->
 <script src="/app.js"></script>
+
 
 <!-- Évaluation CCF -->
 <script src="/evaluation-ccf.js?v=1"></script>
 
-<!-- Deux vues résultats -->
+
+<!-- Vues résultats -->
 <script src="/ccf-results-ui.js?v=1"></script>
+
 
 <!-- Gestion espace permanent -> évaluations -> archives -->
 <script src="/group-sessions-ui.js?v=1"></script>
+
+
+<!-- Nouvelle vue Espaces -->
+<script src="/spaces-ui.js?v=1"></script>
+
 
 <!-- Scanner iPad -->
 <script src="/scanner-ios.js?v=1"></script>
 
 
+<!-- Service Worker -->
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/offline-worker.js')
-        .catch(error => {
-          console.error(
-            'Service worker non enregistré :',
-            error
+
+  if (
+    'serviceWorker' in navigator
+  ) {
+
+    window.addEventListener(
+      'load',
+      () => {
+
+        navigator
+          .serviceWorker
+          .register(
+            '/offline-worker.js'
+          )
+          .catch(
+            error => {
+
+              console.error(
+                'Service worker non enregistré :',
+                error
+              );
+
+            }
           );
-        });
-    });
+
+      }
+    );
+
   }
+
 </script>
+
 
 </body>
 </html>
