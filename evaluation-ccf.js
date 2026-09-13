@@ -1,148 +1,407 @@
-(()=>{
-  const ALLOCATION_POINTS={2:{1:0.5,2:1,3:1.5,4:2},4:{1:1,2:2,3:3,4:4},6:{1:1.5,2:3,3:4.5,4:6}};
-  const PERF_F=[306,299,292,285,278,272,266,260,254,248,242,236,230,225,220,215,210,205,200,195,190,185,180,175];
-  const PERF_M=[242,237,232,227,222,217,212,207,202,197,192,188,184,180,176,172,168,165,162,159,156,153,150,147];
+(() => {
+  "use strict";
 
-  function laps200(splits){
-    if(!Array.isArray(splits)||splits.length<4)return[];
-    const a=splits.slice(0,4).map(Number);
-    if(a.some(v=>!Number.isFinite(v)))return[];
-    return a.map((v,i)=>i===0?v:v-a[i-1]);
+  const ALLOCATION_POINTS = {
+    2: {
+      1: 0.5,
+      2: 1,
+      3: 1.5,
+      4: 2
+    },
+    4: {
+      1: 1,
+      2: 2,
+      3: 3,
+      4: 4
+    },
+    6: {
+      1: 1.5,
+      2: 3,
+      3: 4.5,
+      4: 6
+    }
+  };
+
+  const PERF_F = [
+    306, 299, 292, 285, 278, 272,
+    266, 260, 254, 248, 242, 236,
+    230, 225, 220, 215, 210, 205,
+    200, 195, 190, 185, 180, 175
+  ];
+
+  const PERF_M = [
+    242, 237, 232, 227, 222, 217,
+    212, 207, 202, 197, 192, 188,
+    184, 180, 176, 172, 168, 165,
+    162, 159, 156, 153, 150, 147
+  ];
+
+  function laps200(splits) {
+    if (
+      !Array.isArray(splits) ||
+      splits.length < 4
+    ) {
+      return [];
+    }
+
+    const values =
+      splits
+        .slice(0, 4)
+        .map(Number);
+
+    if (
+      values.some(
+        value =>
+          !Number.isFinite(value)
+      )
+    ) {
+      return [];
+    }
+
+    return values.map(
+      (value, index) =>
+        index === 0
+          ? value
+          : value -
+            values[index - 1]
+    );
   }
 
-  function perf(sec,sex){
-    const scale=String(sex||'').toUpperCase()==='M'?PERF_M:PERF_F;
-    let p=0;
-    scale.forEach((t,i)=>{if(sec<=t)p=(i+1)*0.25;});
-    return Math.min(6,p);
+  function perf(sec, sex) {
+    const scale =
+      String(
+        sex || ""
+      ).toUpperCase() === "M"
+        ? PERF_M
+        : PERF_F;
+
+    let points = 0;
+
+    scale.forEach(
+      (threshold, index) => {
+        if (sec <= threshold) {
+          points =
+            (index + 1) *
+            0.25;
+        }
+      }
+    );
+
+    return Math.min(
+      6,
+      points
+    );
   }
 
-  function efficiency(ms){
-    if(!Number.isFinite(Number(ms)))return 0;
+  function efficiency(ms) {
+    if (
+      !Number.isFinite(
+        Number(ms)
+      )
+    ) {
+      return 0;
+    }
 
-    const s=Number(ms)/1000;
+    const seconds =
+      Number(ms) /
+      1000;
 
-    if(s>=21)return 0;
-    if(s>=20)return.5;
-    if(s>=18)return 1;
-    if(s>=16)return 1.5;
-    if(s>=14)return 2;
-    if(s>=12)return 2.5;
-    if(s>=10)return 3;
-    if(s>=9)return 3.5;
-    if(s>=8)return 4;
-    if(s>=7)return 4.5;
-    if(s>=6)return 5;
-    if(s>=5)return 5.5;
-    if(s<4)return 6;
+    if (seconds >= 21) return 0;
+    if (seconds >= 20) return 0.5;
+    if (seconds >= 18) return 1;
+    if (seconds >= 16) return 1.5;
+    if (seconds >= 14) return 2;
+    if (seconds >= 12) return 2.5;
+    if (seconds >= 10) return 3;
+    if (seconds >= 9) return 3.5;
+    if (seconds >= 8) return 4;
+    if (seconds >= 7) return 4.5;
+    if (seconds >= 6) return 5;
+    if (seconds >= 5) return 5.5;
+    if (seconds < 4) return 6;
 
     return 5.5;
   }
 
-  function scoreCCF(student){
-    const r1=student?.races?.[1],r2=student?.races?.[2];
+  function scoreCCF(student) {
+    const r1 =
+      student?.races?.[1];
 
-    if(!r1||!r2)return null;
+    const r2 =
+      student?.races?.[2];
 
-    const l1=laps200(r1.splits),l2=laps200(r2.splits);
+    if (
+      !r1 ||
+      !r2
+    ) {
+      return null;
+    }
 
-    if(l1.length!==4||l2.length!==4)return null;
+    const laps1 =
+      laps200(r1.splits);
 
-    const t1=Number(r1.totalMs),t2=Number(r2.totalMs);
+    const laps2 =
+      laps200(r2.splits);
 
-    if(!Number.isFinite(t1)||!Number.isFinite(t2))return null;
+    if (
+      laps1.length !== 4 ||
+      laps2.length !== 4
+    ) {
+      return null;
+    }
 
-    const all=[...l1,...l2],
-      best=Math.min(t1,t2),
-      fast=Math.min(...all),
-      slow=Math.max(...all),
-      spread=slow-fast;
+    const t1 =
+      Number(r1.totalMs);
 
-    const pp=perf(best/1000,student.sex),
-      rp=efficiency(spread);
+    const t2 =
+      Number(r2.totalMs);
 
-    return{
+    if (
+      !Number.isFinite(t1) ||
+      !Number.isFinite(t2)
+    ) {
+      return null;
+    }
+
+    const all =
+      [
+        ...laps1,
+        ...laps2
+      ];
+
+    const best =
+      Math.min(
+        t1,
+        t2
+      );
+
+    const fastest200 =
+      Math.min(...all);
+
+    const slowest200 =
+      Math.max(...all);
+
+    const spread =
+      slowest200 -
+      fastest200;
+
+    const pp =
+      perf(
+        best / 1000,
+        student.sex
+      );
+
+    const rp =
+      efficiency(
+        spread
+      );
+
+    return {
       best,
-      fastest200:fast,
-      slowest200:slow,
+      fastest200,
+      slowest200,
       spread,
       pp,
       rp,
-      total:pp+rp,
-      laps1:l1,
-      laps2:l2
+      total:
+        pp + rp,
+      laps1,
+      laps2
     };
   }
 
-  function allocation(student){
-    const key=['2-6','4-4','6-2'].includes(student.aflAllocation)
-      ?student.aflAllocation
-      :'4-4';
+  function allocation(student) {
+    const allowed = [
+      "2-6",
+      "4-4",
+      "6-2"
+    ];
 
-    const[a2,a3]=key.split('-').map(Number);
+    const key =
+      allowed.includes(
+        student.aflAllocation
+      )
+        ? student.aflAllocation
+        : "4-4";
 
-    return{key,a2,a3};
+    const [
+      a2,
+      a3
+    ] =
+      key
+        .split("-")
+        .map(Number);
+
+    return {
+      key,
+      a2,
+      a3
+    };
   }
 
-  function levelPoints(max,level){
-    return ALLOCATION_POINTS[max]?.[Number(level)]??null;
+  function levelPoints(
+    max,
+    level
+  ) {
+    return (
+      ALLOCATION_POINTS[max]
+        ?.[Number(level)] ??
+      null
+    );
   }
 
-  function parseProject(v){
-    if(v==null||v==='')return null;
+  function parseProject(value) {
+    if (
+      value == null ||
+      value === ""
+    ) {
+      return null;
+    }
 
-    if(typeof v==='number'&&Number.isFinite(v))return v;
+    if (
+      typeof value ===
+        "number" &&
+      Number.isFinite(value)
+    ) {
+      return value;
+    }
 
-    const s=String(v).trim().replace(',', '.');
+    const str =
+      String(value)
+        .trim()
+        .replace(
+          ",",
+          "."
+        );
 
-    if(/^\d+(\.\d+)?$/.test(s))
-      return Number(s)*1000;
+    if (
+      /^\d+(\.\d+)?$/
+        .test(str)
+    ) {
+      return (
+        Number(str) *
+        1000
+      );
+    }
 
-    const m=s.match(/^(\d+):([0-5]?\d)(?:\.(\d{1,2}))?$/);
+    const match =
+      str.match(
+        /^(\d+):([0-5]?\d)(?:\.(\d{1,2}))?$/
+      );
 
-    if(!m)return null;
+    if (!match) {
+      return null;
+    }
 
-    const cs=m[3]
-      ?Number(m[3].padEnd(2,'0'))
-      :0;
+    const cs =
+      match[3]
+        ? Number(
+            match[3]
+              .padEnd(
+                2,
+                "0"
+              )
+          )
+        : 0;
 
-    return Number(m[1])*60000+
-      Number(m[2])*1000+
-      cs*10;
+    return (
+      Number(match[1]) *
+        60000 +
+      Number(match[2]) *
+        1000 +
+      cs *
+        10
+    );
   }
 
-  function projectOf(student,race){
-    return student[`project${race}`]||
-      student?.races?.[race]?.project||
-      '';
+  function projectOf(
+    student,
+    race
+  ) {
+    return (
+      student[
+        `project${race}`
+      ] ||
+      student
+        ?.races?.[race]
+        ?.project ||
+      ""
+    );
   }
 
-  function projectMetrics(student){
-    const p1=parseProject(projectOf(student,1)),
-      p2=parseProject(projectOf(student,2));
+  function projectMetrics(
+    student
+  ) {
+    const p1 =
+      parseProject(
+        projectOf(
+          student,
+          1
+        )
+      );
 
-    const t1=Number(student?.races?.[1]?.totalMs),
-      t2=Number(student?.races?.[2]?.totalMs);
+    const p2 =
+      parseProject(
+        projectOf(
+          student,
+          2
+        )
+      );
 
-    if(
-      p1==null||
-      p2==null||
-      !Number.isFinite(t1)||
+    const t1 =
+      Number(
+        student
+          ?.races?.[1]
+          ?.totalMs
+      );
+
+    const t2 =
+      Number(
+        student
+          ?.races?.[2]
+          ?.totalMs
+      );
+
+    if (
+      p1 == null ||
+      p2 == null ||
+      !Number.isFinite(t1) ||
       !Number.isFinite(t2)
-    )return null;
+    ) {
+      return null;
+    }
 
-    const e1=Math.abs(t1-p1),
-      e2=Math.abs(t2-p2),
-      sum=e1+e2,
-      s=sum/1000;
+    const e1 =
+      Math.abs(
+        t1 - p1
+      );
 
-    let level=1;
+    const e2 =
+      Math.abs(
+        t2 - p2
+      );
 
-    if(s<8)level=4;
-    else if(s<=15)level=3;
-    else if(s<=24)level=2;
+    const sum =
+      e1 + e2;
 
-    return{
+    const seconds =
+      sum / 1000;
+
+    let level = 1;
+
+    if (seconds < 8) {
+      level = 4;
+    } else if (
+      seconds <= 15
+    ) {
+      level = 3;
+    } else if (
+      seconds <= 24
+    ) {
+      level = 2;
+    }
+
+    return {
       p1,
       p2,
       e1,
@@ -152,435 +411,887 @@
     };
   }
 
-  function fmtPts(v){
-    return v==null||!Number.isFinite(Number(v))
-      ?'—'
-      :Number(v).toLocaleString(
-        'fr-FR',
-        {maximumFractionDigits:2}
+  function fmtPts(value) {
+    if (
+      value == null ||
+      !Number.isFinite(
+        Number(value)
+      )
+    ) {
+      return "—";
+    }
+
+    return Number(value)
+      .toLocaleString(
+        "fr-FR",
+        {
+          maximumFractionDigits:
+            2
+        }
       );
   }
 
-  function fmtSec(ms){
-    return ms==null||!Number.isFinite(Number(ms))
-      ?'—'
-      :(Number(ms)/1000).toLocaleString(
-        'fr-FR',
+  function fmtSec(ms) {
+    if (
+      ms == null ||
+      !Number.isFinite(
+        Number(ms)
+      )
+    ) {
+      return "—";
+    }
+
+    return (
+      (
+        Number(ms) /
+        1000
+      ).toLocaleString(
+        "fr-FR",
         {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
+          minimumFractionDigits:
+            2,
+          maximumFractionDigits:
+            2
         }
-      )+' s';
-  }
-
-  function fmtTime(ms){
-    return ms==null||!Number.isFinite(Number(ms))
-      ?'—'
-      :time(Number(ms));
-  }
-
-  function escAttr(v){
-    return String(v??'')
-      .replace(/&/g,'&amp;')
-      .replace(/"/g,'&quot;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
-  }
-
-  function q(v){
-    return '"'+String(v??'')
-      .replace(/"/g,'""')+'"';
-  }
-
-  function currentStudent(id){
-    return activeSession()?.students?.find(
-      s=>String(s.id)===String(id)
+      ) +
+      " s"
     );
   }
 
-  score=scoreCCF;
-
-  function ensureTools(){
-    const card=$('resultRows')?.closest('.card');
-
-    if(!card)return;
-
-    if(!document.getElementById('ccfTools')){
-      const d=document.createElement('div');
-
-      d.id='ccfTools';
-      d.className='toolbar';
-
-      d.innerHTML=
-        '<button id="exportCsvCCF">Exporter CSV</button>'+
-        '<button id="exportPdfCCF">PDF / Imprimer</button>';
-
-      const filters=$('resultFilters');
-
-      filters?.before(d);
-
-      d.querySelector('#exportCsvCCF').onclick=exportCSV;
-      d.querySelector('#exportPdfCCF').onclick=printPDF;
+  function fmtTime(ms) {
+    if (
+      ms == null ||
+      !Number.isFinite(
+        Number(ms)
+      )
+    ) {
+      return "—";
     }
 
-    if(!document.getElementById('ccfDetailDialog')){
-      const dlg=document.createElement('dialog');
+    return time(
+      Number(ms)
+    );
+  }
 
-      dlg.id='ccfDetailDialog';
+  function escAttr(value) {
+    return String(
+      value ?? ""
+    )
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      );
+  }
 
-      dlg.innerHTML=
-        '<div id="ccfDetailBox" '+
-        'style="min-width:min(980px,92vw);'+
-        'max-height:85vh;overflow:auto;'+
-        'background:#fff;padding:18px;'+
+  function q(value) {
+    return (
+      '"' +
+      String(
+        value ?? ""
+      )
+        .replace(
+          /"/g,
+          '""'
+        ) +
+      '"'
+    );
+  }
+
+  function currentStudent(id) {
+    return activeSession()
+      ?.students
+      ?.find(
+        student =>
+          String(
+            student.id
+          ) ===
+          String(id)
+      );
+  }
+
+  function sessionLocked() {
+    return (
+      activeSession()
+        ?.status ===
+      "locked"
+    );
+  }
+
+  score = scoreCCF;
+
+  function ensureTools() {
+    const card =
+      $("resultRows")
+        ?.closest(
+          ".card"
+        );
+
+    if (!card) {
+      return;
+    }
+
+    if (
+      !document
+        .getElementById(
+          "ccfTools"
+        )
+    ) {
+      const toolbar =
+        document.createElement(
+          "div"
+        );
+
+      toolbar.id =
+        "ccfTools";
+
+      toolbar.className =
+        "toolbar";
+
+      toolbar.innerHTML =
+        '<button id="exportCsvCCF">Exporter CSV</button>' +
+        '<button id="exportPdfCCF">PDF / Imprimer</button>';
+
+      const filters =
+        $("resultFilters");
+
+      filters
+        ?.before(
+          toolbar
+        );
+
+      toolbar
+        .querySelector(
+          "#exportCsvCCF"
+        )
+        .onclick =
+        exportCSV;
+
+      toolbar
+        .querySelector(
+          "#exportPdfCCF"
+        )
+        .onclick =
+        printPDF;
+    }
+
+    if (
+      !document
+        .getElementById(
+          "ccfDetailDialog"
+        )
+    ) {
+      const dialog =
+        document.createElement(
+          "dialog"
+        );
+
+      dialog.id =
+        "ccfDetailDialog";
+
+      dialog.innerHTML =
+        '<div id="ccfDetailBox" ' +
+        'style="min-width:min(980px,92vw);' +
+        'max-height:85vh;overflow:auto;' +
+        'background:#fff;padding:18px;' +
         'border-radius:16px"></div>';
 
-      document.body.appendChild(dlg);
+      document.body
+        .appendChild(
+          dialog
+        );
     }
   }
 
-  renderResults=function(){
-    ensureTools();
+  renderResults =
+    function() {
+      ensureTools();
 
-    const body=$('resultRows');
+      const body =
+        $("resultRows");
 
-    if(!body)return;
+      if (!body) {
+        return;
+      }
 
-    const h=body
-      .closest('table')
-      ?.querySelector('thead tr');
+      const locked =
+        sessionLocked();
 
-    if(h)h.innerHTML=
-      '<th>Élève</th>'+
-      '<th>Classe</th>'+
-      '<th>Est. C1</th>'+
-      '<th>C1</th>'+
-      '<th>Écart</th>'+
-      '<th>Est. C2</th>'+
-      '<th>C2</th>'+
-      '<th>Écart</th>'+
-      '<th>Écart cum.</th>'+
-      '<th>Niv. estim.</th>'+
-      '<th>Meilleur</th>'+
-      '<th>Perf /6</th>'+
-      '<th>Écart 200</th>'+
-      '<th>Eff. /6</th>'+
-      '<th>AFL1 /12</th>'+
-      '<th>Répart.</th>'+
-      '<th>AFL2</th>'+
-      '<th>AFL3</th>'+
-      '<th>/20</th>'+
-      '<th>Détails</th>';
+      const header =
+        body
+          .closest("table")
+          ?.querySelector(
+            "thead tr"
+          );
 
-    body.innerHTML=
-      visibleStudents()
-        .map(student=>{
+      if (header) {
+        header.innerHTML =
+          "<th>Élève</th>" +
+          "<th>Classe</th>" +
+          "<th>Est. C1</th>" +
+          "<th>C1</th>" +
+          "<th>Écart</th>" +
+          "<th>Est. C2</th>" +
+          "<th>C2</th>" +
+          "<th>Écart</th>" +
+          "<th>Écart cum.</th>" +
+          "<th>Niv. estim.</th>" +
+          "<th>Meilleur</th>" +
+          "<th>Perf /6</th>" +
+          "<th>Écart 200</th>" +
+          "<th>Eff. /6</th>" +
+          "<th>AFL1 /12</th>" +
+          "<th>Répart.</th>" +
+          "<th>AFL2</th>" +
+          "<th>AFL3</th>" +
+          "<th>/20</th>" +
+          "<th>Détails</th>";
+      }
 
-          const sc=scoreCCF(student),
-            pm=projectMetrics(student),
-            a=allocation(student),
-            l2=student.afl2Level||'',
-            l3=student.afl3Level||'',
-            p2=levelPoints(a.a2,l2),
-            p3=levelPoints(a.a3,l3),
-            final=sc&&p2!=null&&p3!=null
-              ?Math.min(20,sc.total+p2+p3)
-              :null;
+      body.innerHTML =
+        visibleStudents()
+          .map(
+            student => {
+              const sc =
+                scoreCCF(
+                  student
+                );
 
-          return `
-            <tr data-id="${escAttr(student.id)}">
+              const pm =
+                projectMetrics(
+                  student
+                );
 
-              <td>
-                <b>
-                  ${esc(String(student.last||'').toUpperCase())}
-                  ${esc(student.first||'')}
-                </b>
-              </td>
+              const alloc =
+                allocation(
+                  student
+                );
 
-              <td>${esc(student.classroom||'')}</td>
+              const l2 =
+                student
+                  .afl2Level ||
+                "";
 
-              <td>${esc(projectOf(student,1))}</td>
+              const l3 =
+                student
+                  .afl3Level ||
+                "";
 
-              <td>
-                ${fmtTime(student.races?.[1]?.totalMs)}
-              </td>
+              const p2 =
+                levelPoints(
+                  alloc.a2,
+                  l2
+                );
 
-              <td>
-                ${pm?fmtSec(pm.e1):'—'}
-              </td>
+              const p3 =
+                levelPoints(
+                  alloc.a3,
+                  l3
+                );
 
-              <td>${esc(projectOf(student,2))}</td>
+              const final =
+                sc &&
+                p2 != null &&
+                p3 != null
+                  ? Math.min(
+                      20,
+                      sc.total +
+                        p2 +
+                        p3
+                    )
+                  : null;
 
-              <td>
-                ${fmtTime(student.races?.[2]?.totalMs)}
-              </td>
-
-              <td>
-                ${pm?fmtSec(pm.e2):'—'}
-              </td>
-
-              <td>
-                ${pm?fmtSec(pm.sum):'—'}
-              </td>
-
-              <td>
-                ${pm?'Niv. '+pm.level:'—'}
-              </td>
-
-              <td>
-                ${sc?fmtTime(sc.best):'—'}
-              </td>
-
-              <td>
-                ${sc?fmtPts(sc.pp):'—'}
-              </td>
-
-              <td>
-                ${sc?fmtSec(sc.spread):'—'}
-              </td>
-
-              <td>
-                ${sc?fmtPts(sc.rp):'—'}
-              </td>
-
-              <td>
-                <b>
-                  ${sc?fmtPts(sc.total):'—'}
-                </b>
-              </td>
-
-              <td>
-
-                <select
-                  class="afl-allocation"
-                  data-id="${escAttr(student.id)}"
+              return `
+                <tr
+                  data-id="${escAttr(
+                    student.id
+                  )}"
                 >
 
-                  <option
-                    value="2-6"
-                    ${a.key==='2-6'?'selected':''}
-                  >
-                    2-6
-                  </option>
+                  <td>
+                    <b>
+                      ${esc(
+                        String(
+                          student.last ||
+                            ""
+                        ).toUpperCase()
+                      )}
+                      ${esc(
+                        student.first ||
+                          ""
+                      )}
+                    </b>
+                  </td>
 
-                  <option
-                    value="4-4"
-                    ${a.key==='4-4'?'selected':''}
-                  >
-                    4-4
-                  </option>
+                  <td>
+                    ${esc(
+                      student.classroom ||
+                        ""
+                    )}
+                  </td>
 
-                  <option
-                    value="6-2"
-                    ${a.key==='6-2'?'selected':''}
-                  >
-                    6-2
-                  </option>
+                  <td>
+                    ${esc(
+                      projectOf(
+                        student,
+                        1
+                      )
+                    )}
+                  </td>
 
-                </select>
+                  <td>
+                    ${fmtTime(
+                      student
+                        .races?.[1]
+                        ?.totalMs
+                    )}
+                  </td>
 
-              </td>
+                  <td>
+                    ${
+                      pm
+                        ? fmtSec(
+                            pm.e1
+                          )
+                        : "—"
+                    }
+                  </td>
 
-              <td>
+                  <td>
+                    ${esc(
+                      projectOf(
+                        student,
+                        2
+                      )
+                    )}
+                  </td>
 
-                <select
-                  class="afl-level"
-                  data-id="${escAttr(student.id)}"
-                  data-key="afl2Level"
-                >
+                  <td>
+                    ${fmtTime(
+                      student
+                        .races?.[2]
+                        ?.totalMs
+                    )}
+                  </td>
 
-                  <option value="">—</option>
+                  <td>
+                    ${
+                      pm
+                        ? fmtSec(
+                            pm.e2
+                          )
+                        : "—"
+                    }
+                  </td>
 
-                  ${[1,2,3,4]
-                    .map(n=>`
+                  <td>
+                    ${
+                      pm
+                        ? fmtSec(
+                            pm.sum
+                          )
+                        : "—"
+                    }
+                  </td>
+
+                  <td>
+                    ${
+                      pm
+                        ? "Niv. " +
+                          pm.level
+                        : "—"
+                    }
+                  </td>
+
+                  <td>
+                    ${
+                      sc
+                        ? fmtTime(
+                            sc.best
+                          )
+                        : "—"
+                    }
+                  </td>
+
+                  <td>
+                    ${
+                      sc
+                        ? fmtPts(
+                            sc.pp
+                          )
+                        : "—"
+                    }
+                  </td>
+
+                  <td>
+                    ${
+                      sc
+                        ? fmtSec(
+                            sc.spread
+                          )
+                        : "—"
+                    }
+                  </td>
+
+                  <td>
+                    ${
+                      sc
+                        ? fmtPts(
+                            sc.rp
+                          )
+                        : "—"
+                    }
+                  </td>
+
+                  <td>
+                    <b>
+                      ${
+                        sc
+                          ? fmtPts(
+                              sc.total
+                            )
+                          : "—"
+                      }
+                    </b>
+                  </td>
+
+                  <td>
+
+                    <select
+                      class="afl-allocation"
+                      data-id="${escAttr(
+                        student.id
+                      )}"
+                      ${
+                        locked
+                          ? "disabled"
+                          : ""
+                      }
+                    >
+
                       <option
-                        value="${n}"
+                        value="2-6"
                         ${
-                          String(l2)===String(n)
-                            ?'selected'
-                            :''
+                          alloc.key ===
+                          "2-6"
+                            ? "selected"
+                            : ""
                         }
                       >
-                        N${n}
+                        2-6
                       </option>
-                    `)
-                    .join('')
-                  }
 
-                </select>
-
-                <div>
-                  ${
-                    p2==null
-                      ?'—'
-                      :fmtPts(p2)+'/'+a.a2
-                  }
-                </div>
-
-              </td>
-
-              <td>
-
-                <select
-                  class="afl-level"
-                  data-id="${escAttr(student.id)}"
-                  data-key="afl3Level"
-                >
-
-                  <option value="">—</option>
-
-                  ${[1,2,3,4]
-                    .map(n=>`
                       <option
-                        value="${n}"
+                        value="4-4"
                         ${
-                          String(l3)===String(n)
-                            ?'selected'
-                            :''
+                          alloc.key ===
+                          "4-4"
+                            ? "selected"
+                            : ""
                         }
                       >
-                        N${n}
+                        4-4
                       </option>
-                    `)
-                    .join('')
-                  }
 
-                </select>
+                      <option
+                        value="6-2"
+                        ${
+                          alloc.key ===
+                          "6-2"
+                            ? "selected"
+                            : ""
+                        }
+                      >
+                        6-2
+                      </option>
 
-                <div>
-                  ${
-                    p3==null
-                      ?'—'
-                      :fmtPts(p3)+'/'+a.a3
-                  }
-                </div>
+                    </select>
 
-              </td>
+                  </td>
 
-              <td>
-                <b>
-                  ${
-                    final==null
-                      ?'—'
-                      :fmtPts(final)
-                  }
-                </b>
-              </td>
+                  <td>
 
-              <td>
+                    <select
+                      class="afl-level"
+                      data-id="${escAttr(
+                        student.id
+                      )}"
+                      data-key="afl2Level"
+                      ${
+                        locked
+                          ? "disabled"
+                          : ""
+                      }
+                    >
 
-                <button
-                  class="ccf-detail"
-                  data-id="${escAttr(student.id)}"
-                >
-                  Voir / modifier
-                </button>
+                      <option value="">
+                        —
+                      </option>
 
-              </td>
+                      ${[
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                        .map(
+                          level => `
+                            <option
+                              value="${level}"
+                              ${
+                                String(
+                                  l2
+                                ) ===
+                                String(
+                                  level
+                                )
+                                  ? "selected"
+                                  : ""
+                              }
+                            >
+                              N${level}
+                            </option>
+                          `
+                        )
+                        .join("")}
 
-            </tr>
-          `;
-        })
-        .join('');
+                    </select>
 
-    body
-      .querySelectorAll('.afl-allocation')
-      .forEach(x=>{
-        x.onchange=()=>{
-          const s=currentStudent(x.dataset.id);
+                    <div>
+                      ${
+                        p2 == null
+                          ? "—"
+                          : fmtPts(
+                              p2
+                            ) +
+                            "/" +
+                            alloc.a2
+                      }
+                    </div>
 
-          if(!s)return;
+                  </td>
 
-          s.aflAllocation=x.value;
+                  <td>
 
-          save();
-          renderResults();
-        };
-      });
+                    <select
+                      class="afl-level"
+                      data-id="${escAttr(
+                        student.id
+                      )}"
+                      data-key="afl3Level"
+                      ${
+                        locked
+                          ? "disabled"
+                          : ""
+                      }
+                    >
 
-    body
-      .querySelectorAll('.afl-level')
-      .forEach(x=>{
-        x.onchange=()=>{
-          const s=currentStudent(x.dataset.id);
+                      <option value="">
+                        —
+                      </option>
 
-          if(!s)return;
+                      ${[
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                        .map(
+                          level => `
+                            <option
+                              value="${level}"
+                              ${
+                                String(
+                                  l3
+                                ) ===
+                                String(
+                                  level
+                                )
+                                  ? "selected"
+                                  : ""
+                              }
+                            >
+                              N${level}
+                            </option>
+                          `
+                        )
+                        .join("")}
 
-          s[x.dataset.key]=
-            x.value===''
-              ?''
-              :Number(x.value);
+                    </select>
 
-          save();
-          renderResults();
-        };
-      });
+                    <div>
+                      ${
+                        p3 == null
+                          ? "—"
+                          : fmtPts(
+                              p3
+                            ) +
+                            "/" +
+                            alloc.a3
+                      }
+                    </div>
 
-    body
-      .querySelectorAll('.ccf-detail')
-      .forEach(
-        b=>b.onclick=
-          ()=>openDetail(b.dataset.id)
-      );
-  };
+                  </td>
 
-  renderStudents=function(){
-    const body=$('students');
+                  <td>
+                    <b>
+                      ${
+                        final == null
+                          ? "—"
+                          : fmtPts(
+                              final
+                            )
+                      }
+                    </b>
+                  </td>
 
-    if(!body)return;
+                  <td>
 
-    body.innerHTML=
-      visibleStudents()
-        .map(s=>{
+                    <button
+                      class="ccf-detail"
+                      data-id="${escAttr(
+                        student.id
+                      )}"
+                    >
+                      ${
+                        locked
+                          ? "Voir"
+                          : "Voir / modifier"
+                      }
+                    </button>
 
-          const sc=scoreCCF(s),
-            pm=projectMetrics(s);
+                  </td>
 
-          return `
-            <tr>
+                </tr>
+              `;
+            }
+          )
+          .join("");
 
-              <td>
-                <b>
-                  ${esc(String(s.last||'').toUpperCase())}
-                  ${esc(s.first||'')}
-                </b>
-              </td>
+      body
+        .querySelectorAll(
+          ".afl-allocation"
+        )
+        .forEach(
+          element => {
+            element.onchange =
+              () => {
+                if (
+                  sessionLocked()
+                ) {
+                  renderResults();
+                  return;
+                }
 
-              <td>
-                ${esc(s.classroom||'')}
-              </td>
+                const student =
+                  currentStudent(
+                    element.dataset.id
+                  );
 
-              <td>
-                ${esc(projectOf(s,1))}
-                ${pm?' · '+fmtSec(pm.e1):''}
-              </td>
+                if (!student) {
+                  return;
+                }
 
-              <td>
-                ${esc(projectOf(s,2))}
-                ${pm?' · '+fmtSec(pm.e2):''}
-              </td>
+                student.aflAllocation =
+                  element.value;
 
-              <td>
-                ${fmtTime(s.races?.[1]?.totalMs)}
-              </td>
+                save();
+                renderResults();
+              };
+          }
+        );
 
-              <td>
-                ${fmtTime(s.races?.[2]?.totalMs)}
-              </td>
+      body
+        .querySelectorAll(
+          ".afl-level"
+        )
+        .forEach(
+          element => {
+            element.onchange =
+              () => {
+                if (
+                  sessionLocked()
+                ) {
+                  renderResults();
+                  return;
+                }
 
-              <td>
-                <b>
-                  ${sc?fmtPts(sc.total)+'/12':'—'}
-                </b>
-              </td>
+                const student =
+                  currentStudent(
+                    element.dataset.id
+                  );
 
-            </tr>
-          `;
-        })
-        .join('');
-  };
+                if (!student) {
+                  return;
+                }
 
-  function field(label,id,value,type='text'){
+                student[
+                  element.dataset.key
+                ] =
+                  element.value ===
+                  ""
+                    ? ""
+                    : Number(
+                        element.value
+                      );
+
+                save();
+                renderResults();
+              };
+          }
+        );
+
+      body
+        .querySelectorAll(
+          ".ccf-detail"
+        )
+        .forEach(
+          button => {
+            button.onclick =
+              () =>
+                openDetail(
+                  button.dataset.id
+                );
+          }
+        );
+    };
+
+  renderStudents =
+    function() {
+      const body =
+        $("students");
+
+      if (!body) {
+        return;
+      }
+
+      body.innerHTML =
+        visibleStudents()
+          .map(
+            student => {
+              const sc =
+                scoreCCF(
+                  student
+                );
+
+              const pm =
+                projectMetrics(
+                  student
+                );
+
+              return `
+                <tr>
+
+                  <td>
+                    <b>
+                      ${esc(
+                        String(
+                          student.last ||
+                            ""
+                        ).toUpperCase()
+                      )}
+                      ${esc(
+                        student.first ||
+                          ""
+                      )}
+                    </b>
+                  </td>
+
+                  <td>
+                    ${esc(
+                      student.classroom ||
+                        ""
+                    )}
+                  </td>
+
+                  <td>
+                    ${esc(
+                      projectOf(
+                        student,
+                        1
+                      )
+                    )}
+                    ${
+                      pm
+                        ? " · " +
+                          fmtSec(
+                            pm.e1
+                          )
+                        : ""
+                    }
+                  </td>
+
+                  <td>
+                    ${esc(
+                      projectOf(
+                        student,
+                        2
+                      )
+                    )}
+                    ${
+                      pm
+                        ? " · " +
+                          fmtSec(
+                            pm.e2
+                          )
+                        : ""
+                    }
+                  </td>
+
+                  <td>
+                    ${fmtTime(
+                      student
+                        .races?.[1]
+                        ?.totalMs
+                    )}
+                  </td>
+
+                  <td>
+                    ${fmtTime(
+                      student
+                        .races?.[2]
+                        ?.totalMs
+                    )}
+                  </td>
+
+                  <td>
+                    <b>
+                      ${
+                        sc
+                          ? fmtPts(
+                              sc.total
+                            ) +
+                            "/12"
+                          : "—"
+                      }
+                    </b>
+                  </td>
+
+                </tr>
+              `;
+            }
+          )
+          .join("");
+    };
+
+  function field(
+    label,
+    id,
+    value,
+    type = "text",
+    readonly = false
+  ) {
     return `
       <label
         style="
@@ -590,32 +1301,69 @@
         "
       >
 
-        <span>${label}</span>
+        <span>
+          ${label}
+        </span>
 
         <input
           id="${id}"
           type="${type}"
-          value="${escAttr(value??'')}"
+          value="${escAttr(
+            value ?? ""
+          )}"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
         >
 
       </label>
     `;
   }
 
-  function openDetail(id){
-    const s=currentStudent(id);
+  function openDetail(id) {
+    const student =
+      currentStudent(id);
 
-    if(!s)return;
+    if (!student) {
+      return;
+    }
 
-    const dlg=$('ccfDetailDialog'),
-      box=$('ccfDetailBox');
+    const locked =
+      sessionLocked();
 
-    const r1=s.races?.[1]||{splits:[]},
-      r2=s.races?.[2]||{splits:[]},
-      sc=scoreCCF(s),
-      pm=projectMetrics(s);
+    const dialog =
+      $("ccfDetailDialog");
 
-    box.innerHTML=`
+    const box =
+      $("ccfDetailBox");
+
+    const r1 =
+      student
+        .races?.[1] ||
+      {
+        splits: []
+      };
+
+    const r2 =
+      student
+        .races?.[2] ||
+      {
+        splits: []
+      };
+
+    const sc =
+      scoreCCF(
+        student
+      );
+
+    const pm =
+      projectMetrics(
+        student
+      );
+
+    box.innerHTML = `
 
       <div
         style="
@@ -627,8 +1375,16 @@
       >
 
         <h2>
-          ${esc(String(s.last||'').toUpperCase())}
-          ${esc(s.first||'')}
+          ${esc(
+            String(
+              student.last ||
+                ""
+            ).toUpperCase()
+          )}
+          ${esc(
+            student.first ||
+              ""
+          )}
         </h2>
 
         <button id="closeCCFDetail">
@@ -638,10 +1394,37 @@
       </div>
 
       <p>
-        ${esc(s.classroom||'')}
+        ${esc(
+          student.classroom ||
+            ""
+        )}
         ·
-        ${esc(s.sex||'')}
+        ${esc(
+          student.sex ||
+            ""
+        )}
       </p>
+
+      ${
+        locked
+          ? `
+            <div
+              style="
+                margin:10px 0 18px;
+                padding:12px 14px;
+                border-radius:12px;
+                background:#f1f5f9;
+                border:1px solid #cbd5e1;
+                color:#334155;
+                font-weight:700
+              "
+            >
+              🔒 Évaluation verrouillée :
+              consultation uniquement.
+            </div>
+          `
+          : ""
+      }
 
       <div
         style="
@@ -654,63 +1437,103 @@
 
         <section>
 
-          <h3>Course 1</h3>
+          <h3>
+            Course 1
+          </h3>
 
           ${field(
-            'Estimation',
-            'e_p1',
-            projectOf(s,1)
+            "Estimation",
+            "e_p1",
+            projectOf(
+              student,
+              1
+            ),
+            "text",
+            locked
           )}
 
           ${field(
-            'Temps total (ms)',
-            'e_t1',
+            "Temps total (ms)",
+            "e_t1",
             r1.totalMs,
-            'number'
+            "number",
+            locked
           )}
 
-          ${[0,1,2,3]
-            .map(i=>
-              field(
-                `${(i+1)*200} m cumulé (ms)`,
-                `e_s1_${i}`,
-                r1.splits?.[i]??'',
-                'number'
-              )
+          ${[
+            0,
+            1,
+            2,
+            3
+          ]
+            .map(
+              index =>
+                field(
+                  `${
+                    (index + 1) *
+                    200
+                  } m cumulé (ms)`,
+                  `e_s1_${index}`,
+                  r1
+                    .splits
+                    ?.[index] ??
+                    "",
+                  "number",
+                  locked
+                )
             )
-            .join('')
-          }
+            .join("")}
 
         </section>
 
         <section>
 
-          <h3>Course 2</h3>
+          <h3>
+            Course 2
+          </h3>
 
           ${field(
-            'Estimation',
-            'e_p2',
-            projectOf(s,2)
+            "Estimation",
+            "e_p2",
+            projectOf(
+              student,
+              2
+            ),
+            "text",
+            locked
           )}
 
           ${field(
-            'Temps total (ms)',
-            'e_t2',
+            "Temps total (ms)",
+            "e_t2",
             r2.totalMs,
-            'number'
+            "number",
+            locked
           )}
 
-          ${[0,1,2,3]
-            .map(i=>
-              field(
-                `${(i+1)*200} m cumulé (ms)`,
-                `e_s2_${i}`,
-                r2.splits?.[i]??'',
-                'number'
-              )
+          ${[
+            0,
+            1,
+            2,
+            3
+          ]
+            .map(
+              index =>
+                field(
+                  `${
+                    (index + 1) *
+                    200
+                  } m cumulé (ms)`,
+                  `e_s2_${index}`,
+                  r2
+                    .splits
+                    ?.[index] ??
+                    "",
+                  "number",
+                  locked
+                )
             )
-            .join('')
-          }
+            .join("")}
 
         </section>
 
@@ -728,61 +1551,136 @@
       >
 
         <div>
-          <b>AFL1</b><br>
-          ${sc?fmtPts(sc.total)+'/12':'—'}
+          <b>AFL1</b>
+          <br>
+          ${
+            sc
+              ? fmtPts(
+                  sc.total
+                ) +
+                "/12"
+              : "—"
+          }
         </div>
 
         <div>
-          <b>Perf.</b><br>
-          ${sc?fmtPts(sc.pp)+'/6':'—'}
+          <b>Performance</b>
+          <br>
+          ${
+            sc
+              ? fmtPts(
+                  sc.pp
+                ) +
+                "/6"
+              : "—"
+          }
         </div>
 
         <div>
-          <b>Efficacité</b><br>
-          ${sc?fmtPts(sc.rp)+'/6':'—'}
+          <b>Efficacité</b>
+          <br>
+          ${
+            sc
+              ? fmtPts(
+                  sc.rp
+                ) +
+                "/6"
+              : "—"
+          }
         </div>
 
         <div>
-          <b>Écart 200</b><br>
-          ${sc?fmtSec(sc.spread):'—'}
+          <b>Écart 200</b>
+          <br>
+          ${
+            sc
+              ? fmtSec(
+                  sc.spread
+                )
+              : "—"
+          }
         </div>
 
       </div>
 
       ${
         sc
-          ?`
+          ? `
             <p>
-              <b>Fractions C1 :</b>
-              ${sc.laps1.map(fmtTime).join(' · ')}
+              <b>
+                Fractions C1 :
+              </b>
+
+              ${
+                sc.laps1
+                  .map(
+                    fmtTime
+                  )
+                  .join(
+                    " · "
+                  )
+              }
             </p>
 
             <p>
-              <b>Fractions C2 :</b>
-              ${sc.laps2.map(fmtTime).join(' · ')}
+              <b>
+                Fractions C2 :
+              </b>
+
+              ${
+                sc.laps2
+                  .map(
+                    fmtTime
+                  )
+                  .join(
+                    " · "
+                  )
+              }
             </p>
 
             <p>
-              <b>200 le plus rapide :</b>
-              ${fmtTime(sc.fastest200)}
+              <b>
+                200 le plus rapide :
+              </b>
+
+              ${fmtTime(
+                sc.fastest200
+              )}
+
               ·
-              <b>200 le plus lent :</b>
-              ${fmtTime(sc.slowest200)}
+
+              <b>
+                200 le plus lent :
+              </b>
+
+              ${fmtTime(
+                sc.slowest200
+              )}
             </p>
           `
-          :''
+          : ""
       }
 
       ${
         pm
-          ?`
+          ? `
             <p>
-              <b>Estimation/régulation :</b>
-              écart cumulé ${fmtSec(pm.sum)}
-              → niveau indicatif ${pm.level}
+              <b>
+                Estimation / régulation :
+              </b>
+
+              écart cumulé
+
+              ${fmtSec(
+                pm.sum
+              )}
+
+              → niveau indicatif
+
+              ${pm.level}
             </p>
           `
-          :''
+          : ""
       }
 
       <div
@@ -793,131 +1691,216 @@
         "
       >
 
-        <button id="saveCCFDetail">
-          Enregistrer et recalculer
-        </button>
+        ${
+          locked
+            ? `
+              <button
+                type="button"
+                disabled
+              >
+                Évaluation verrouillée
+              </button>
+            `
+            : `
+              <button
+                id="saveCCFDetail"
+              >
+                Enregistrer et recalculer
+              </button>
+            `
+        }
 
       </div>
     `;
 
-    $('closeCCFDetail').onclick=
-      ()=>dlg.close();
+    $("closeCCFDetail")
+      .onclick =
+      () =>
+        dialog.close();
 
-    $('saveCCFDetail').onclick=()=>{
-
-      s.project1=
-        $('e_p1').value.trim();
-
-      s.project2=
-        $('e_p2').value.trim();
-
-      s.races=s.races||{};
-
-      [1,2].forEach(r=>{
-
-        s.races[r]=
-          s.races[r]||{};
-
-        s.races[r].project=
-          s[`project${r}`];
-
-        s.races[r].totalMs=
-          Number(
-            $(`e_t${r}`).value
-          )||0;
-
-        s.races[r].splits=
-          [0,1,2,3]
-            .map(
-              i=>
-                Number(
-                  $(`e_s${r}_${i}`).value
-                )||0
+    if (!locked) {
+      $("saveCCFDetail")
+        .onclick =
+        () => {
+          if (
+            sessionLocked()
+          ) {
+            alert(
+              "Cette évaluation vient d'être verrouillée. Modification annulée."
             );
-      });
 
-      save();
+            dialog.close();
 
-      dlg.close();
+            render();
 
-      render();
-    };
+            return;
+          }
 
-    dlg.showModal();
-  }
+          student.project1 =
+            $("e_p1")
+              .value
+              .trim();
 
-  function exportRows(){
-    return visibleStudents()
-      .map(s=>{
+          student.project2 =
+            $("e_p2")
+              .value
+              .trim();
 
-        const sc=scoreCCF(s),
-          pm=projectMetrics(s),
-          a=allocation(s),
-          p2=levelPoints(
-            a.a2,
-            s.afl2Level
-          ),
-          p3=levelPoints(
-            a.a3,
-            s.afl3Level
-          ),
-          final=
-            sc&&p2!=null&&p3!=null
-              ?Math.min(
-                20,
-                sc.total+p2+p3
-              )
-              :null;
+          student.races =
+            student.races ||
+            {};
 
-        return{
-          s,
-          sc,
-          pm,
-          a,
-          p2,
-          p3,
-          final
+          [
+            1,
+            2
+          ].forEach(
+            race => {
+              student
+                .races[race] =
+                student
+                  .races[race] ||
+                {};
+
+              student
+                .races[race]
+                .project =
+                student[
+                  `project${race}`
+                ];
+
+              student
+                .races[race]
+                .totalMs =
+                Number(
+                  $(
+                    `e_t${race}`
+                  ).value
+                ) ||
+                0;
+
+              student
+                .races[race]
+                .splits =
+                [
+                  0,
+                  1,
+                  2,
+                  3
+                ].map(
+                  index =>
+                    Number(
+                      $(
+                        `e_s${race}_${index}`
+                      ).value
+                    ) ||
+                    0
+                );
+            }
+          );
+
+          save();
+
+          dialog.close();
+
+          render();
         };
-      });
+    }
+
+    dialog.showModal();
   }
 
-  function exportCSV(){
+  function exportRows() {
+    return visibleStudents()
+      .map(
+        student => {
+          const sc =
+            scoreCCF(
+              student
+            );
 
-    const headers=[
-      'Nom',
-      'Prénom',
-      'Classe',
-      'Sexe',
-      'Estimation C1',
-      'Temps C1',
-      'Écart C1',
-      'C1 200',
-      'C1 400',
-      'C1 600',
-      'C1 800',
-      'Estimation C2',
-      'Temps C2',
-      'Écart C2',
-      'C2 200',
-      'C2 400',
-      'C2 600',
-      'C2 800',
-      'Écart estimation cumulé',
-      'Niveau estimation',
-      'Meilleur 800',
-      'Performance /6',
-      '200 plus rapide',
-      '200 plus lent',
-      'Écart 200',
-      'Efficacité /6',
-      'AFL1 /12',
-      'Répartition',
-      'AFL2',
-      'AFL3',
-      'Note /20'
+          const pm =
+            projectMetrics(
+              student
+            );
+
+          const alloc =
+            allocation(
+              student
+            );
+
+          const p2 =
+            levelPoints(
+              alloc.a2,
+              student.afl2Level
+            );
+
+          const p3 =
+            levelPoints(
+              alloc.a3,
+              student.afl3Level
+            );
+
+          const final =
+            sc &&
+            p2 != null &&
+            p3 != null
+              ? Math.min(
+                  20,
+                  sc.total +
+                    p2 +
+                    p3
+                )
+              : null;
+
+          return {
+            s: student,
+            sc,
+            pm,
+            a: alloc,
+            p2,
+            p3,
+            final
+          };
+        }
+      );
+  }
+
+  function exportCSV() {
+    const headers = [
+      "Nom",
+      "Prénom",
+      "Classe",
+      "Sexe",
+      "Estimation C1",
+      "Temps C1",
+      "Écart C1",
+      "C1 200",
+      "C1 400",
+      "C1 600",
+      "C1 800",
+      "Estimation C2",
+      "Temps C2",
+      "Écart C2",
+      "C2 200",
+      "C2 400",
+      "C2 600",
+      "C2 800",
+      "Écart estimation cumulé",
+      "Niveau estimation",
+      "Meilleur 800",
+      "Performance /6",
+      "200 plus rapide",
+      "200 plus lent",
+      "Écart 200",
+      "Efficacité /6",
+      "AFL1 /12",
+      "Répartition",
+      "AFL2",
+      "AFL3",
+      "Note /20"
     ];
 
-    const rows=
+    const rows =
       exportRows()
         .map(
           ({
@@ -928,312 +1911,538 @@
             p2,
             p3,
             final
-          })=>[
+          }) => {
+            const splits1 =
+              [
+                ...(
+                  s
+                    .races?.[1]
+                    ?.splits ||
+                  []
+                )
+              ];
 
-            s.last,
-            s.first,
-            s.classroom,
-            s.sex,
+            const splits2 =
+              [
+                ...(
+                  s
+                    .races?.[2]
+                    ?.splits ||
+                  []
+                )
+              ];
 
-            projectOf(s,1),
+            while (
+              splits1.length <
+              4
+            ) {
+              splits1.push(
+                null
+              );
+            }
 
-            fmtTime(
-              s.races?.[1]?.totalMs
-            ),
+            while (
+              splits2.length <
+              4
+            ) {
+              splits2.push(
+                null
+              );
+            }
 
-            pm
-              ?fmtSec(pm.e1)
-              :'',
+            return [
+              s.last,
+              s.first,
+              s.classroom,
+              s.sex,
 
-            ...(s.races?.[1]?.splits||[])
-              .slice(0,4)
-              .map(fmtTime),
+              projectOf(
+                s,
+                1
+              ),
 
-            projectOf(s,2),
+              fmtTime(
+                s
+                  .races?.[1]
+                  ?.totalMs
+              ),
 
-            fmtTime(
-              s.races?.[2]?.totalMs
-            ),
+              pm
+                ? fmtSec(
+                    pm.e1
+                  )
+                : "",
 
-            pm
-              ?fmtSec(pm.e2)
-              :'',
+              ...splits1
+                .slice(
+                  0,
+                  4
+                )
+                .map(
+                  value =>
+                    value == null
+                      ? ""
+                      : fmtTime(
+                          value
+                        )
+                ),
 
-            ...(s.races?.[2]?.splits||[])
-              .slice(0,4)
-              .map(fmtTime),
+              projectOf(
+                s,
+                2
+              ),
 
-            pm
-              ?fmtSec(pm.sum)
-              :'',
+              fmtTime(
+                s
+                  .races?.[2]
+                  ?.totalMs
+              ),
 
-            pm
-              ?pm.level
-              :'',
+              pm
+                ? fmtSec(
+                    pm.e2
+                  )
+                : "",
 
-            sc
-              ?fmtTime(sc.best)
-              :'',
+              ...splits2
+                .slice(
+                  0,
+                  4
+                )
+                .map(
+                  value =>
+                    value == null
+                      ? ""
+                      : fmtTime(
+                          value
+                        )
+                ),
 
-            sc
-              ?fmtPts(sc.pp)
-              :'',
+              pm
+                ? fmtSec(
+                    pm.sum
+                  )
+                : "",
 
-            sc
-              ?fmtTime(sc.fastest200)
-              :'',
+              pm
+                ? pm.level
+                : "",
 
-            sc
-              ?fmtTime(sc.slowest200)
-              :'',
+              sc
+                ? fmtTime(
+                    sc.best
+                  )
+                : "",
 
-            sc
-              ?fmtSec(sc.spread)
-              :'',
+              sc
+                ? fmtPts(
+                    sc.pp
+                  )
+                : "",
 
-            sc
-              ?fmtPts(sc.rp)
-              :'',
+              sc
+                ? fmtTime(
+                    sc.fastest200
+                  )
+                : "",
 
-            sc
-              ?fmtPts(sc.total)
-              :'',
+              sc
+                ? fmtTime(
+                    sc.slowest200
+                  )
+                : "",
 
-            a.key,
+              sc
+                ? fmtSec(
+                    sc.spread
+                  )
+                : "",
 
-            p2==null
-              ?''
-              :`${fmtPts(p2)}/${a.a2}`,
+              sc
+                ? fmtPts(
+                    sc.rp
+                  )
+                : "",
 
-            p3==null
-              ?''
-              :`${fmtPts(p3)}/${a.a3}`,
+              sc
+                ? fmtPts(
+                    sc.total
+                  )
+                : "",
 
-            final==null
-              ?''
-              :fmtPts(final)
+              a.key,
 
-          ]
+              p2 == null
+                ? ""
+                : `${fmtPts(
+                    p2
+                  )}/${a.a2}`,
+
+              p3 == null
+                ? ""
+                : `${fmtPts(
+                    p3
+                  )}/${a.a3}`,
+
+              final == null
+                ? ""
+                : fmtPts(
+                    final
+                  )
+            ];
+          }
         );
 
-    const csv=
-      '\ufeff'+
-      [headers,...rows]
+    const csv =
+      "\ufeff" +
+      [
+        headers,
+        ...rows
+      ]
         .map(
-          r=>
-            r.map(q)
-              .join(';')
+          row =>
+            row
+              .map(q)
+              .join(";")
         )
-        .join('\n');
+        .join("\n");
 
-    const blob=
+    const blob =
       new Blob(
-        [csv],
+        [
+          csv
+        ],
         {
           type:
-            'text/csv;charset=utf-8'
+            "text/csv;charset=utf-8"
         }
       );
 
-    const a=
-      document.createElement('a');
+    const link =
+      document.createElement(
+        "a"
+      );
 
-    a.href=
-      URL.createObjectURL(blob);
+    link.href =
+      URL.createObjectURL(
+        blob
+      );
 
-    a.download=
+    link.download =
       `${
-        activeGroup()?.name||
-        'groupe'
+        activeGroup()
+          ?.name ||
+        "groupe"
       }_${
-        activeSession()?.label||
-        'releve'
+        activeSession()
+          ?.label ||
+        "releve"
       }_CCF.csv`
         .replace(
           /[^a-z0-9_.-]+/gi,
-          '_'
+          "_"
         );
 
-    a.click();
+    link.click();
 
     setTimeout(
-      ()=>URL.revokeObjectURL(a.href),
+      () =>
+        URL.revokeObjectURL(
+          link.href
+        ),
       1000
     );
   }
 
-  function printPDF(){
+  function printPDF() {
+    const group =
+      activeGroup();
 
-    const g=activeGroup(),
-      sess=activeSession(),
-      rows=exportRows();
+    const session =
+      activeSession();
 
-    const detail=
-      rows.map(
-        ({
-          s,
-          sc,
-          pm,
-          a,
-          p2,
-          p3,
-          final
-        })=>`
+    const rows =
+      exportRows();
 
-          <tr>
+    const detail =
+      rows
+        .map(
+          ({
+            s,
+            sc,
+            a,
+            p2,
+            p3,
+            final
+          }) => `
+            <tr>
 
-            <td>
-              ${esc(String(s.last||'').toUpperCase())}
-              ${esc(s.first||'')}
-            </td>
+              <td>
+                ${esc(
+                  String(
+                    s.last ||
+                      ""
+                  ).toUpperCase()
+                )}
+                ${esc(
+                  s.first ||
+                    ""
+                )}
+              </td>
 
-            <td>
-              ${esc(s.classroom||'')}
-            </td>
+              <td>
+                ${esc(
+                  s.classroom ||
+                    ""
+                )}
+              </td>
 
-            <td>
-              ${sc?fmtPts(sc.total)+'/12':'—'}
-            </td>
+              <td>
+                ${
+                  sc
+                    ? fmtPts(
+                        sc.total
+                      ) +
+                      "/12"
+                    : "—"
+                }
+              </td>
 
-            <td>
-              ${esc(a.key)}
-            </td>
+              <td>
+                ${esc(
+                  a.key
+                )}
+              </td>
 
-            <td>
-              ${
-                p2==null
-                  ?'—'
-                  :fmtPts(p2)+'/'+a.a2
-              }
-            </td>
+              <td>
+                ${
+                  p2 == null
+                    ? "—"
+                    : fmtPts(
+                        p2
+                      ) +
+                      "/" +
+                      a.a2
+                }
+              </td>
 
-            <td>
-              ${
-                p3==null
-                  ?'—'
-                  :fmtPts(p3)+'/'+a.a3
-              }
-            </td>
+              <td>
+                ${
+                  p3 == null
+                    ? "—"
+                    : fmtPts(
+                        p3
+                      ) +
+                      "/" +
+                      a.a3
+                }
+              </td>
 
-            <td>
-              ${
-                final==null
-                  ?'—'
-                  :fmtPts(final)+'/20'
-              }
-            </td>
+              <td>
+                ${
+                  final == null
+                    ? "—"
+                    : fmtPts(
+                        final
+                      ) +
+                      "/20"
+                }
+              </td>
 
-          </tr>
-        `
-      )
-      .join('');
+            </tr>
+          `
+        )
+        .join("");
 
-    const full=
-      rows.map(
-        ({
-          s,
-          sc,
-          pm
-        })=>`
+    const full =
+      rows
+        .map(
+          ({
+            s,
+            sc,
+            pm
+          }) => `
+            <section>
 
-          <section>
+              <h3>
+                ${esc(
+                  String(
+                    s.last ||
+                      ""
+                  ).toUpperCase()
+                )}
+                ${esc(
+                  s.first ||
+                    ""
+                )}
+                ·
+                ${esc(
+                  s.classroom ||
+                    ""
+                )}
+              </h3>
 
-            <h3>
-              ${esc(String(s.last||'').toUpperCase())}
-              ${esc(s.first||'')}
-              ·
-              ${esc(s.classroom||'')}
-            </h3>
+              <p>
+                C1 :
+                estimation
+                ${
+                  esc(
+                    projectOf(
+                      s,
+                      1
+                    )
+                  ) ||
+                  "—"
+                }
+                · réalisé
+                ${fmtTime(
+                  s
+                    .races?.[1]
+                    ?.totalMs
+                )}
+                · écart
+                ${
+                  pm
+                    ? fmtSec(
+                        pm.e1
+                      )
+                    : "—"
+                }
+              </p>
 
-            <p>
-              C1 :
-              estimation
-              ${esc(projectOf(s,1))||'—'}
-              · réalisé
-              ${fmtTime(s.races?.[1]?.totalMs)}
-              · écart
-              ${pm?fmtSec(pm.e1):'—'}
-            </p>
+              <p>
+                Passages C1 :
+                ${
+                  (
+                    s
+                      .races?.[1]
+                      ?.splits ||
+                    []
+                  )
+                    .slice(
+                      0,
+                      4
+                    )
+                    .map(
+                      fmtTime
+                    )
+                    .join(
+                      " · "
+                    ) ||
+                  "—"
+                }
+              </p>
 
-            <p>
-              Passages C1 :
-              ${
-                (s.races?.[1]?.splits||[])
-                  .slice(0,4)
-                  .map(fmtTime)
-                  .join(' · ')
-                ||
-                '—'
-              }
-            </p>
+              <p>
+                C2 :
+                estimation
+                ${
+                  esc(
+                    projectOf(
+                      s,
+                      2
+                    )
+                  ) ||
+                  "—"
+                }
+                · réalisé
+                ${fmtTime(
+                  s
+                    .races?.[2]
+                    ?.totalMs
+                )}
+                · écart
+                ${
+                  pm
+                    ? fmtSec(
+                        pm.e2
+                      )
+                    : "—"
+                }
+              </p>
 
-            <p>
-              C2 :
-              estimation
-              ${esc(projectOf(s,2))||'—'}
-              · réalisé
-              ${fmtTime(s.races?.[2]?.totalMs)}
-              · écart
-              ${pm?fmtSec(pm.e2):'—'}
-            </p>
+              <p>
+                Passages C2 :
+                ${
+                  (
+                    s
+                      .races?.[2]
+                      ?.splits ||
+                    []
+                  )
+                    .slice(
+                      0,
+                      4
+                    )
+                    .map(
+                      fmtTime
+                    )
+                    .join(
+                      " · "
+                    ) ||
+                  "—"
+                }
+              </p>
 
-            <p>
-              Passages C2 :
-              ${
-                (s.races?.[2]?.splits||[])
-                  .slice(0,4)
-                  .map(fmtTime)
-                  .join(' · ')
-                ||
-                '—'
-              }
-            </p>
+              <p>
+                Écart estimation cumulé :
+                ${
+                  pm
+                    ? fmtSec(
+                        pm.sum
+                      ) +
+                      " · niveau indicatif " +
+                      pm.level
+                    : "—"
+                }
+              </p>
 
-            <p>
-              Écart estimation cumulé :
-              ${
-                pm
-                  ?fmtSec(pm.sum)+
-                    ' · niveau indicatif '+
-                    pm.level
-                  :'—'
-              }
-            </p>
+              <p>
+                AFL1 :
+                ${
+                  sc
+                    ? fmtPts(
+                        sc.total
+                      ) +
+                      "/12 · performance " +
+                      fmtPts(
+                        sc.pp
+                      ) +
+                      "/6 · efficacité " +
+                      fmtPts(
+                        sc.rp
+                      ) +
+                      "/6 · écart 200 " +
+                      fmtSec(
+                        sc.spread
+                      )
+                    : "—"
+                }
+              </p>
 
-            <p>
-              AFL1 :
-              ${
-                sc
-                  ?fmtPts(sc.total)+
-                    '/12 · performance '+
-                    fmtPts(sc.pp)+
-                    '/6 · efficacité '+
-                    fmtPts(sc.rp)+
-                    '/6 · écart 200 '+
-                    fmtSec(sc.spread)
-                  :'—'
-              }
-            </p>
+            </section>
+          `
+        )
+        .join("");
 
-          </section>
-        `
-      )
-      .join('');
-
-    const w=
+    const windowPrint =
       window.open(
-        '',
-        '_blank'
+        "",
+        "_blank"
       );
 
-    if(!w)
-      return alert(
-        'Autorise les fenêtres surgissantes pour générer le PDF.'
+    if (!windowPrint) {
+      alert(
+        "Autorise les fenêtres surgissantes pour générer le PDF."
       );
 
-    w.document.write(
+      return;
+    }
+
+    windowPrint.document.write(
       `<!doctype html>
-      <html>
+
+      <html lang="fr">
 
       <head>
 
@@ -1283,9 +2492,11 @@
           }
 
           @media print{
+
             button{
               display:none
             }
+
           }
 
         </style>
@@ -1300,10 +2511,35 @@
 
         <p>
           <b>
-            ${esc(g?.name||'')}
+            ${esc(
+              group
+                ?.name ||
+              ""
+            )}
           </b>
+
           ·
-          ${esc(sess?.label||'')}
+
+          ${esc(
+            session
+              ?.label ||
+            ""
+          )}
+
+          ${
+            session?.status
+              ? " · " +
+                esc(
+                  session.status ===
+                    "locked"
+                    ? "Verrouillée"
+                    : session.status ===
+                      "closed"
+                      ? "Terminée"
+                      : "En cours"
+                )
+              : ""
+          }
         </p>
 
         <h2>
@@ -1339,7 +2575,9 @@
         ${full}
 
         <script>
-          window.onload=()=>window.print()
+          window.onload =
+            () =>
+              window.print();
         <\/script>
 
       </body>
@@ -1347,15 +2585,15 @@
       </html>`
     );
 
-    w.document.close();
+    windowPrint.document.close();
   }
 
-  try{
+  try {
     render();
-  }catch(e){
+  } catch (error) {
     console.error(
-      'evaluation-ccf init',
-      e
+      "evaluation-ccf init",
+      error
     );
   }
 
