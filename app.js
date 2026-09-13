@@ -89,6 +89,10 @@ function normalizeDB(data) {
       s.students = Array.isArray(s.students)
         ? s.students
         : [];
+
+      if (!['open', 'closed', 'locked'].includes(s.status)) {
+        s.status = 'open';
+      }
     });
   });
 
@@ -217,7 +221,7 @@ function reg(ms) {
 
   const s = ms / 1000;
 
-  if (s > 21) return 0;
+  if (s >= 21) return 0;
   if (s >= 20) return .5;
   if (s >= 18) return 1;
   if (s >= 16) return 1.5;
@@ -451,6 +455,7 @@ function createSession(group) {
     id: uid(),
     createdAt: Date.now(),
     label: custom.trim(),
+    status: 'open',
     students: []
   };
 
@@ -710,6 +715,15 @@ function handleQR(raw) {
 
     session =
       activeSession();
+  }
+
+  if (
+    session.status ===
+    'locked'
+  ) {
+    return scanError(
+      'Évaluation verrouillée : scan refusé.'
+    );
   }
 
   const race =
@@ -1127,6 +1141,10 @@ function renderResults() {
 
   if (!body) return;
 
+  const locked =
+    activeSession()?.status ===
+    'locked';
+
   body.innerHTML =
     visibleStudents()
       .map(
@@ -1230,6 +1248,7 @@ function renderResults() {
                   type="number"
                   step="0.25"
                   value="${a2}"
+                  ${locked ? 'disabled' : ''}
                 >
               </td>
 
@@ -1241,6 +1260,7 @@ function renderResults() {
                   type="number"
                   step="0.25"
                   value="${a3}"
+                  ${locked ? 'disabled' : ''}
                 >
               </td>
 
@@ -1267,6 +1287,17 @@ function renderResults() {
             activeSession();
 
           if (!session) return;
+
+          if (
+            session.status ===
+            'locked'
+          ) {
+            renderResults();
+
+            return scanError(
+              'Évaluation verrouillée.'
+            );
+          }
 
           const student =
             session.students.find(
@@ -1371,6 +1402,7 @@ function beep() {
       ctx.createGain();
 
     osc.connect(gain);
+
     gain.connect(
       ctx.destination
     );
@@ -1531,12 +1563,35 @@ function init() {
               const s =
                 activeSession();
 
+              if (
+                s &&
+                s.status ===
+                'locked'
+              ) {
+                return scanError(
+                  'Évaluation verrouillée : scanner indisponible.'
+                );
+              }
+
               if (!g || !s) {
                 const ok =
                   prepareScanner();
 
                 if (!ok) {
                   return;
+                }
+
+                const selected =
+                  activeSession();
+
+                if (
+                  selected &&
+                  selected.status ===
+                  'locked'
+                ) {
+                  return scanError(
+                    'Évaluation verrouillée : scanner indisponible.'
+                  );
                 }
               }
             }
@@ -1626,6 +1681,15 @@ function init() {
             createSession(g);
 
           if (!session) return;
+        }
+
+        if (
+          session.status ===
+          'locked'
+        ) {
+          return scanError(
+            'Évaluation verrouillée : modification impossible.'
+          );
         }
 
         const last =
