@@ -1,0 +1,1 @@
+window.CCFGroupPresets={examples:['Lundi 12h-13h · TA TB TC TD TE','Mercredi 12h-13h · TA TB TC TD TE'],parseClasses(text){return String(text||'').toUpperCase().match(/T[A-Z]/g)||[]}};
