@@ -17,14 +17,16 @@
   <div>
     <small>EPS · VAUBAN</small>
     <h1>DemiFond Scan CCF</h1>
-    <p>Groupes multi-classes · collecte QR · notation CCF</p>
+    <p>Espaces · évaluations · collecte QR · notation CCF</p>
   </div>
 
   <div>
-    <button id="backup">Sauvegarder</button>
+    <button id="backup">
+      Sauvegarde de sécurité
+    </button>
 
     <label class="button">
-      Restaurer
+      Importer une sauvegarde
       <input
         id="restore"
         type="file"
@@ -37,7 +39,7 @@
 
 <nav>
   <button data-page="group" class="active">
-    Groupe
+    Mes espaces
   </button>
 
   <button data-page="scan">
@@ -55,14 +57,17 @@
 
     <div class="toolbar">
 
-      <select id="groups"></select>
+      <select
+        id="groups"
+        aria-label="Choisir un espace"
+      ></select>
 
       <button id="addGroup">
-        + Groupe
+        + Nouvel espace
       </button>
 
       <button id="archive">
-        Archiver le groupe
+        Archiver l’espace
       </button>
 
     </div>
@@ -74,7 +79,7 @@
 
     <div class="card">
 
-      <h2>Élèves du groupe</h2>
+      <h2>Élèves de l’évaluation active</h2>
 
       <div class="form">
 
@@ -153,8 +158,8 @@
         <h2>Scanner un résultat</h2>
 
         <p>
-          Le QR complète la fiche correspondant
-          à l’identifiant unique de l’élève.
+          Le résultat sera enregistré dans
+          l’espace et l’évaluation actuellement sélectionnés.
         </p>
 
         <div class="camera">
@@ -224,7 +229,7 @@
 
     <div class="card">
 
-      <h2>Résultats</h2>
+      <h2>Résultats de l’évaluation active</h2>
 
       <div
         id="resultFilters"
@@ -275,7 +280,7 @@
 <!-- Lecture QR locale / hors connexion -->
 <script src="/jsQR.js"></script>
 
-<!-- Gestion groupes -->
+<!-- Gestion des espaces -->
 <script src="/groups.js"></script>
 
 <script src="/group-presets.js"></script>
@@ -291,7 +296,7 @@
 <!-- Deux vues résultats -->
 <script src="/ccf-results-ui.js?v=1"></script>
 
-<!-- Gestion groupe permanent -> évaluations -> archives -->
+<!-- Gestion espace permanent -> évaluations -> archives -->
 <script src="/group-sessions-ui.js?v=1"></script>
 
 <!-- Scanner iPad -->
