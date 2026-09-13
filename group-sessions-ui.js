@@ -3,14 +3,20 @@
 
   /*
    * DemiFond Scan CCF
-   * Gestion visuelle :
-   * Groupe permanent -> plusieurs évaluations
-   * + archives des groupes
    *
-   * Ce module ne remplace pas app.js.
+   * Gestion :
+   * Groupe permanent
+   * -> plusieurs évaluations
+   * -> archives
+   * -> statut En cours / Terminée / Verrouillée
+   *
+   * Une évaluation verrouillée reste consultable
+   * mais ne peut plus être modifiée ou alimentée
+   * par de nouveaux scans.
    */
 
   let originalRender = null;
+  let originalHandleQR = null;
 
   function escHtml(value) {
     return String(value ?? "")
@@ -27,17 +33,26 @@
     }
 
     try {
-      return new Date(timestamp).toLocaleDateString("fr-FR");
+      return new Date(timestamp)
+        .toLocaleDateString("fr-FR");
     } catch (error) {
       return "—";
     }
   }
 
   function getStatus(session) {
-    const allowed = ["open", "closed", "locked"];
+    const allowed = [
+      "open",
+      "closed",
+      "locked"
+    ];
 
-    if (!allowed.includes(session.status)) {
-      session.status = "open";
+    if (!allowed.includes(session?.status)) {
+      if (session) {
+        session.status = "open";
+      }
+
+      return "open";
     }
 
     return session.status;
@@ -66,6 +81,22 @@
     }
   }
 
+  function activeSessionSafe() {
+    try {
+      return typeof activeSession === "function"
+        ? activeSession()
+        : null;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  function isLocked(session = activeSessionSafe()) {
+    return !!session &&
+      getStatus(session) === "locked";
+  }
+
   function saveSafe() {
     try {
       if (typeof save === "function") {
@@ -76,6 +107,26 @@
     }
   }
 
+  function lockedMessage() {
+    return (
+      "Cette évaluation est verrouillée.\n\n" +
+      "Repasse-la en « En cours » pour " +
+      "ajouter ou modifier des résultats."
+    );
+  }
+
+  function notifyLocked() {
+    if (typeof toast === "function") {
+      toast(
+        "Évaluation verrouillée"
+      );
+    }
+
+    alert(
+      lockedMessage()
+    );
+  }
+
   function renderApp() {
     if (typeof originalRender === "function") {
       originalRender();
@@ -84,37 +135,60 @@
     ensureInterface();
     renderSessionManager();
     renderArchives();
+    applyLockState();
   }
 
   function setActiveSession(sessionId) {
     const group = activeGroupSafe();
 
     if (!group) {
-      return;
+      return null;
     }
 
-    const session = group.sessions?.find(
-      item => String(item.id) === String(sessionId)
-    );
+    const session =
+      group.sessions?.find(
+        item =>
+          String(item.id) ===
+          String(sessionId)
+      );
 
     if (!session) {
-      return;
+      return null;
     }
 
-    db.activeSessionId = session.id;
+    db.activeSessionId =
+      session.id;
 
     try {
       filter = "ALL";
     } catch (error) {}
 
     saveSafe();
-    renderApp();
+
+    return session;
   }
 
   function openSession(sessionId, page) {
-    setActiveSession(sessionId);
+    const session =
+      setActiveSession(sessionId);
 
-    if (page && typeof showPage === "function") {
+    if (!session) {
+      return;
+    }
+
+    if (
+      page === "scan" &&
+      isLocked(session)
+    ) {
+      renderApp();
+      notifyLocked();
+      return;
+    }
+
+    if (
+      page &&
+      typeof showPage === "function"
+    ) {
       showPage(page);
     }
 
@@ -122,19 +196,28 @@
   }
 
   function createNewSession() {
-    const group = activeGroupSafe();
+    const group =
+      activeGroupSafe();
 
     if (!group) {
-      alert("Sélectionne ou crée d'abord un groupe.");
+      alert(
+        "Sélectionne ou crée d'abord un groupe."
+      );
       return;
     }
 
-    if (typeof createSession !== "function") {
-      alert("Impossible de créer une évaluation.");
+    if (
+      typeof createSession !==
+      "function"
+    ) {
+      alert(
+        "Impossible de créer une évaluation."
+      );
       return;
     }
 
-    const session = createSession(group);
+    const session =
+      createSession(group);
 
     if (!session) {
       return;
@@ -147,17 +230,26 @@
   }
 
   function renameSession(sessionId) {
-    const group = activeGroupSafe();
+    const group =
+      activeGroupSafe();
 
     if (!group) {
       return;
     }
 
-    const session = group.sessions?.find(
-      item => String(item.id) === String(sessionId)
-    );
+    const session =
+      group.sessions?.find(
+        item =>
+          String(item.id) ===
+          String(sessionId)
+      );
 
     if (!session) {
+      return;
+    }
+
+    if (isLocked(session)) {
+      notifyLocked();
       return;
     }
 
@@ -166,50 +258,102 @@
       session.label || ""
     );
 
-    if (!value || !value.trim()) {
+    if (
+      !value ||
+      !value.trim()
+    ) {
       return;
     }
 
-    session.label = value.trim();
+    session.label =
+      value.trim();
 
     saveSafe();
     renderApp();
   }
 
-  function changeSessionStatus(sessionId, status) {
-    const group = activeGroupSafe();
+  function changeSessionStatus(
+    sessionId,
+    status
+  ) {
+    const group =
+      activeGroupSafe();
 
     if (!group) {
       return;
     }
 
-    const session = group.sessions?.find(
-      item => String(item.id) === String(sessionId)
-    );
+    const session =
+      group.sessions?.find(
+        item =>
+          String(item.id) ===
+          String(sessionId)
+      );
 
     if (!session) {
       return;
     }
 
+    const previous =
+      getStatus(session);
+
     if (
       status === "locked" &&
-      !confirm(
-        "Verrouiller cette évaluation ?\n\n" +
-        "Elle sera signalée comme finalisée."
-      )
+      previous !== "locked"
     ) {
-      renderApp();
-      return;
+      const ok = confirm(
+        "Verrouiller cette évaluation ?\n\n" +
+        "Les scans et les modifications " +
+        "seront bloqués.\n\n" +
+        "Les résultats resteront consultables."
+      );
+
+      if (!ok) {
+        renderApp();
+        return;
+      }
     }
 
     session.status = status;
 
     saveSafe();
+
+    /*
+     * Si on verrouille alors que la page
+     * Scanner est ouverte, on arrête
+     * immédiatement la caméra.
+     */
+    if (
+      status === "locked" &&
+      !document
+        .getElementById("scan")
+        ?.classList.contains("hidden")
+    ) {
+      const stop =
+        document.getElementById(
+          "cameraStop"
+        );
+
+      if (stop) {
+        try {
+          stop.click();
+        } catch (error) {}
+      }
+
+      if (
+        typeof showPage ===
+        "function"
+      ) {
+        showPage("results");
+      }
+    }
+
     renderApp();
   }
 
   function archiveActiveGroup() {
-    const group = activeGroupSafe();
+    const group =
+      activeGroupSafe();
 
     if (!group) {
       return;
@@ -218,7 +362,8 @@
     if (
       !confirm(
         `Archiver le groupe "${group.name}" ?\n\n` +
-        "Toutes ses évaluations et tous ses résultats seront conservés."
+        "Toutes ses évaluations et tous ses " +
+        "résultats seront conservés."
       )
     ) {
       return;
@@ -234,9 +379,12 @@
   }
 
   function restoreGroup(groupId) {
-    const group = db.groups?.find(
-      item => String(item.id) === String(groupId)
-    );
+    const group =
+      db.groups?.find(
+        item =>
+          String(item.id) ===
+          String(groupId)
+      );
 
     if (!group) {
       return;
@@ -244,8 +392,11 @@
 
     group.archived = false;
 
-    db.activeGroupId = group.id;
-    db.activeSessionId = null;
+    db.activeGroupId =
+      group.id;
+
+    db.activeSessionId =
+      null;
 
     try {
       filter = "ALL";
@@ -256,88 +407,125 @@
   }
 
   function ensureInterface() {
-    const groupPage = document.getElementById("group");
+    const groupPage =
+      document.getElementById(
+        "group"
+      );
 
     if (!groupPage) {
       return;
     }
 
-    let manager = document.getElementById(
-      "groupSessionManager"
-    );
+    let manager =
+      document.getElementById(
+        "groupSessionManager"
+      );
 
     if (!manager) {
-      manager = document.createElement("div");
+      manager =
+        document.createElement(
+          "div"
+        );
 
-      manager.id = "groupSessionManager";
-      manager.className = "card session-manager";
+      manager.id =
+        "groupSessionManager";
 
-      const studentCard = groupPage.querySelector(".card");
+      manager.className =
+        "card session-manager";
+
+      const studentCard =
+        groupPage.querySelector(
+          ".card"
+        );
 
       if (studentCard) {
-        studentCard.before(manager);
+        studentCard.before(
+          manager
+        );
       } else {
-        groupPage.appendChild(manager);
+        groupPage.appendChild(
+          manager
+        );
       }
     }
 
-    let archivePanel = document.getElementById(
-      "groupArchivesPanel"
-    );
+    let archivePanel =
+      document.getElementById(
+        "groupArchivesPanel"
+      );
 
     if (!archivePanel) {
-      archivePanel = document.createElement("div");
+      archivePanel =
+        document.createElement(
+          "div"
+        );
 
-      archivePanel.id = "groupArchivesPanel";
+      archivePanel.id =
+        "groupArchivesPanel";
+
       archivePanel.className =
         "card group-archives-panel hidden";
 
-      manager.after(archivePanel);
+      manager.after(
+        archivePanel
+      );
     }
 
-    /*
-     * Le bouton Archiver existant devient
-     * l'action d'archivage de la classe/groupe.
-     */
     const archiveButton =
-      document.getElementById("archive");
+      document.getElementById(
+        "archive"
+      );
 
     if (
       archiveButton &&
-      archiveButton.dataset.sessionUiBound !== "1"
+      archiveButton
+        .dataset
+        .sessionUiBound !== "1"
     ) {
-      archiveButton.dataset.sessionUiBound = "1";
-      archiveButton.textContent = "Archiver le groupe";
+      archiveButton
+        .dataset
+        .sessionUiBound = "1";
 
-      archiveButton.onclick = event => {
-        event.preventDefault();
-        archiveActiveGroup();
-      };
+      archiveButton.textContent =
+        "Archiver le groupe";
+
+      archiveButton.onclick =
+        event => {
+          event.preventDefault();
+          archiveActiveGroup();
+        };
     }
   }
 
   function renderSessionManager() {
-    const manager = document.getElementById(
-      "groupSessionManager"
-    );
+    const manager =
+      document.getElementById(
+        "groupSessionManager"
+      );
 
     if (!manager) {
       return;
     }
 
-    const group = activeGroupSafe();
+    const group =
+      activeGroupSafe();
 
     if (!group) {
       manager.innerHTML = `
         <div class="session-manager-empty">
 
           <div>
-            <h2>Évaluations demi-fond</h2>
+
+            <h2>
+              Évaluations demi-fond
+            </h2>
 
             <p>
-              Crée ou sélectionne un groupe pour
-              retrouver toutes ses évaluations.
+              Crée ou sélectionne un groupe
+              pour retrouver toutes ses
+              évaluations.
             </p>
+
           </div>
 
           <button
@@ -354,23 +542,36 @@
       return;
     }
 
-    group.sessions = Array.isArray(group.sessions)
-      ? group.sessions
-      : [];
+    group.sessions =
+      Array.isArray(
+        group.sessions
+      )
+        ? group.sessions
+        : [];
 
-    const sessions = [...group.sessions].sort(
-      (a, b) =>
-        Number(b.createdAt || 0) -
-        Number(a.createdAt || 0)
-    );
+    const sessions =
+      [...group.sessions]
+        .sort(
+          (a, b) =>
+            Number(
+              b.createdAt || 0
+            ) -
+            Number(
+              a.createdAt || 0
+            )
+        );
 
-    const activeId = db.activeSessionId;
+    const activeId =
+      db.activeSessionId;
 
     manager.innerHTML = `
       <div class="session-manager-header">
 
         <div>
-          <div class="session-manager-eyebrow">
+
+          <div
+            class="session-manager-eyebrow"
+          >
             GROUPE PERMANENT
           </div>
 
@@ -380,12 +581,23 @@
 
           <p>
             ${sessions.length}
-            évaluation${sessions.length > 1 ? "s" : ""}
-            enregistrée${sessions.length > 1 ? "s" : ""}
+            évaluation${
+              sessions.length > 1
+                ? "s"
+                : ""
+            }
+            enregistrée${
+              sessions.length > 1
+                ? "s"
+                : ""
+            }
           </p>
+
         </div>
 
-        <div class="session-manager-actions">
+        <div
+          class="session-manager-actions"
+        >
 
           <button
             type="button"
@@ -413,41 +625,72 @@
 
               ${sessions
                 .map(session => {
-                  const status = getStatus(session);
+                  const status =
+                    getStatus(
+                      session
+                    );
+
+                  const locked =
+                    status ===
+                    "locked";
 
                   const isActive =
-                    String(session.id) ===
-                    String(activeId);
+                    String(
+                      session.id
+                    ) ===
+                    String(
+                      activeId
+                    );
 
                   const students =
-                    Array.isArray(session.students)
-                      ? session.students.length
+                    Array.isArray(
+                      session.students
+                    )
+                      ? session
+                          .students
+                          .length
                       : 0;
 
                   return `
                     <div
                       class="
                         session-row
-                        ${isActive ? "active" : ""}
+                        ${
+                          isActive
+                            ? "active"
+                            : ""
+                        }
                       "
-                      data-session-id="${escHtml(session.id)}"
+                      data-session-id="${
+                        escHtml(
+                          session.id
+                        )
+                      }"
                     >
 
-                      <div class="session-main">
+                      <div
+                        class="session-main"
+                      >
 
-                        <div class="session-title-line">
+                        <div
+                          class="session-title-line"
+                        >
 
                           <strong>
-                            ${escHtml(
-                              session.label ||
-                              "Évaluation"
-                            )}
+                            ${
+                              escHtml(
+                                session.label ||
+                                "Évaluation"
+                              )
+                            }
                           </strong>
 
                           ${
                             isActive
                               ? `
-                                <span class="session-active-badge">
+                                <span
+                                  class="session-active-badge"
+                                >
                                   Active
                                 </span>
                               `
@@ -456,15 +699,26 @@
 
                         </div>
 
-                        <div class="session-meta">
+                        <div
+                          class="session-meta"
+                        >
 
                           <span>
-                            ${formatDate(session.createdAt)}
+                            ${
+                              formatDate(
+                                session
+                                  .createdAt
+                              )
+                            }
                           </span>
 
                           <span>
                             ${students}
-                            élève${students > 1 ? "s" : ""}
+                            élève${
+                              students > 1
+                                ? "s"
+                                : ""
+                            }
                           </span>
 
                           <span
@@ -473,38 +727,67 @@
                               status-${status}
                             "
                           >
-                            ${statusLabel(status)}
+                            ${
+                              statusLabel(
+                                status
+                              )
+                            }
                           </span>
 
                         </div>
 
                       </div>
 
-                      <div class="session-controls">
+                      <div
+                        class="session-controls"
+                      >
 
                         <select
-                          class="session-status-select"
-                          data-session-id="${escHtml(session.id)}"
-                          aria-label="État de l'évaluation"
+                          class="
+                            session-status-select
+                          "
+                          data-session-id="${
+                            escHtml(
+                              session.id
+                            )
+                          }"
+                          aria-label="
+                            État de l'évaluation
+                          "
                         >
 
                           <option
                             value="open"
-                            ${status === "open" ? "selected" : ""}
+                            ${
+                              status ===
+                              "open"
+                                ? "selected"
+                                : ""
+                            }
                           >
                             En cours
                           </option>
 
                           <option
                             value="closed"
-                            ${status === "closed" ? "selected" : ""}
+                            ${
+                              status ===
+                              "closed"
+                                ? "selected"
+                                : ""
+                            }
                           >
                             Terminée
                           </option>
 
                           <option
                             value="locked"
-                            ${status === "locked" ? "selected" : ""}
+                            ${
+                              status ===
+                              "locked"
+                                ? "selected"
+                                : ""
+                            }
                           >
                             Verrouillée
                           </option>
@@ -514,7 +797,11 @@
                         <button
                           type="button"
                           class="session-open"
-                          data-session-id="${escHtml(session.id)}"
+                          data-session-id="${
+                            escHtml(
+                              session.id
+                            )
+                          }"
                         >
                           Ouvrir
                         </button>
@@ -522,15 +809,32 @@
                         <button
                           type="button"
                           class="session-scan"
-                          data-session-id="${escHtml(session.id)}"
+                          data-session-id="${
+                            escHtml(
+                              session.id
+                            )
+                          }"
+                          ${
+                            locked
+                              ? "disabled"
+                              : ""
+                          }
                         >
-                          Scanner
+                          ${
+                            locked
+                              ? "Scan verrouillé"
+                              : "Scanner"
+                          }
                         </button>
 
                         <button
                           type="button"
                           class="session-results"
-                          data-session-id="${escHtml(session.id)}"
+                          data-session-id="${
+                            escHtml(
+                              session.id
+                            )
+                          }"
                         >
                           Résultats
                         </button>
@@ -538,7 +842,16 @@
                         <button
                           type="button"
                           class="session-rename"
-                          data-session-id="${escHtml(session.id)}"
+                          data-session-id="${
+                            escHtml(
+                              session.id
+                            )
+                          }"
+                          ${
+                            locked
+                              ? "disabled"
+                              : ""
+                          }
                         >
                           Renommer
                         </button>
@@ -553,10 +866,13 @@
             </div>
           `
           : `
-            <div class="session-empty">
+            <div
+              class="session-empty"
+            >
 
               <strong>
-                Aucune évaluation pour ce groupe.
+                Aucune évaluation
+                pour ce groupe.
               </strong>
 
               <p>
@@ -576,114 +892,169 @@
 
   function bindManagerButtons() {
     document
-      .querySelectorAll("#newEvaluation")
+      .querySelectorAll(
+        "#newEvaluation"
+      )
       .forEach(button => {
-        button.onclick = createNewSession;
+        button.onclick =
+          createNewSession;
       });
 
     document
-      .querySelectorAll("#showArchives")
+      .querySelectorAll(
+        "#showArchives"
+      )
       .forEach(button => {
-        button.onclick = () => {
-          const panel =
-            document.getElementById(
-              "groupArchivesPanel"
+        button.onclick =
+          () => {
+            const panel =
+              document
+                .getElementById(
+                  "groupArchivesPanel"
+                );
+
+            if (!panel) {
+              return;
+            }
+
+            panel
+              .classList
+              .toggle(
+                "hidden"
+              );
+
+            renderArchives();
+          };
+      });
+
+    document
+      .querySelectorAll(
+        ".session-open"
+      )
+      .forEach(button => {
+        button.onclick =
+          () => {
+            openSession(
+              button
+                .dataset
+                .sessionId,
+              "group"
             );
-
-          if (!panel) {
-            return;
-          }
-
-          panel.classList.toggle("hidden");
-
-          renderArchives();
-        };
+          };
       });
 
     document
-      .querySelectorAll(".session-open")
+      .querySelectorAll(
+        ".session-scan"
+      )
       .forEach(button => {
-        button.onclick = () => {
-          openSession(
-            button.dataset.sessionId,
-            "group"
-          );
-        };
+        button.onclick =
+          () => {
+            openSession(
+              button
+                .dataset
+                .sessionId,
+              "scan"
+            );
+          };
       });
 
     document
-      .querySelectorAll(".session-scan")
+      .querySelectorAll(
+        ".session-results"
+      )
       .forEach(button => {
-        button.onclick = () => {
-          openSession(
-            button.dataset.sessionId,
-            "scan"
-          );
-        };
+        button.onclick =
+          () => {
+            openSession(
+              button
+                .dataset
+                .sessionId,
+              "results"
+            );
+          };
       });
 
     document
-      .querySelectorAll(".session-results")
+      .querySelectorAll(
+        ".session-rename"
+      )
       .forEach(button => {
-        button.onclick = () => {
-          openSession(
-            button.dataset.sessionId,
-            "results"
-          );
-        };
+        button.onclick =
+          () => {
+            renameSession(
+              button
+                .dataset
+                .sessionId
+            );
+          };
       });
 
     document
-      .querySelectorAll(".session-rename")
-      .forEach(button => {
-        button.onclick = () => {
-          renameSession(
-            button.dataset.sessionId
-          );
-        };
-      });
-
-    document
-      .querySelectorAll(".session-status-select")
+      .querySelectorAll(
+        ".session-status-select"
+      )
       .forEach(select => {
-        select.onchange = () => {
-          changeSessionStatus(
-            select.dataset.sessionId,
-            select.value
-          );
-        };
+        select.onchange =
+          () => {
+            changeSessionStatus(
+              select
+                .dataset
+                .sessionId,
+              select.value
+            );
+          };
       });
   }
 
   function renderArchives() {
-    const panel = document.getElementById(
-      "groupArchivesPanel"
-    );
+    const panel =
+      document.getElementById(
+        "groupArchivesPanel"
+      );
 
     if (!panel) {
       return;
     }
 
-    const archived = (db.groups || [])
-      .filter(group => group.archived)
-      .sort((a, b) =>
-        String(a.name || "").localeCompare(
-          String(b.name || ""),
-          "fr",
-          { sensitivity: "base" }
+    const archived =
+      (db.groups || [])
+        .filter(
+          group =>
+            group.archived
         )
-      );
+        .sort(
+          (a, b) =>
+            String(
+              a.name || ""
+            )
+              .localeCompare(
+                String(
+                  b.name || ""
+                ),
+                "fr",
+                {
+                  sensitivity:
+                    "base"
+                }
+              )
+        );
 
     panel.innerHTML = `
       <div class="archives-header">
 
         <div>
-          <h2>Groupes archivés</h2>
+
+          <h2>
+            Groupes archivés
+          </h2>
 
           <p>
-            Les évaluations et résultats sont
-            conservés dans chaque groupe.
+            Les évaluations et
+            résultats sont conservés
+            dans chaque groupe.
           </p>
+
         </div>
 
         <button
@@ -703,28 +1074,50 @@
               ${archived
                 .map(group => {
                   const sessions =
-                    Array.isArray(group.sessions)
-                      ? group.sessions.length
+                    Array.isArray(
+                      group.sessions
+                    )
+                      ? group
+                          .sessions
+                          .length
                       : 0;
 
                   return `
-                    <div class="archive-row">
+                    <div
+                      class="archive-row"
+                    >
 
                       <div>
+
                         <strong>
-                          ${escHtml(group.name)}
+                          ${
+                            escHtml(
+                              group.name
+                            )
+                          }
                         </strong>
 
-                        <div class="archive-meta">
+                        <div
+                          class="archive-meta"
+                        >
                           ${sessions}
-                          évaluation${sessions > 1 ? "s" : ""}
+                          évaluation${
+                            sessions > 1
+                              ? "s"
+                              : ""
+                          }
                         </div>
+
                       </div>
 
                       <button
                         type="button"
                         class="restore-group"
-                        data-group-id="${escHtml(group.id)}"
+                        data-group-id="${
+                          escHtml(
+                            group.id
+                          )
+                        }"
                       >
                         Restaurer
                       </button>
@@ -737,7 +1130,9 @@
             </div>
           `
           : `
-            <div class="session-empty">
+            <div
+              class="session-empty"
+            >
               Aucun groupe archivé.
             </div>
           `
@@ -745,42 +1140,392 @@
     `;
 
     const close =
-      document.getElementById("closeArchives");
+      document.getElementById(
+        "closeArchives"
+      );
 
     if (close) {
-      close.onclick = () => {
-        panel.classList.add("hidden");
-      };
+      close.onclick =
+        () => {
+          panel
+            .classList
+            .add(
+              "hidden"
+            );
+        };
     }
 
     panel
-      .querySelectorAll(".restore-group")
+      .querySelectorAll(
+        ".restore-group"
+      )
       .forEach(button => {
-        button.onclick = () => {
-          restoreGroup(
-            button.dataset.groupId
+        button.onclick =
+          () => {
+            restoreGroup(
+              button
+                .dataset
+                .groupId
+            );
+
+            panel
+              .classList
+              .add(
+                "hidden"
+              );
+          };
+      });
+  }
+
+  /*
+   * Applique visuellement et techniquement
+   * le verrouillage sur la session active.
+   */
+  function applyLockState() {
+    const session =
+      activeSessionSafe();
+
+    const locked =
+      isLocked(session);
+
+    /*
+     * Scanner
+     */
+    const camera =
+      document.getElementById(
+        "camera"
+      );
+
+    const qrText =
+      document.getElementById(
+        "qrText"
+      );
+
+    const readText =
+      document.getElementById(
+        "readText"
+      );
+
+    if (camera) {
+      camera.disabled = locked;
+    }
+
+    if (qrText) {
+      qrText.disabled = locked;
+    }
+
+    if (readText) {
+      readText.disabled = locked;
+    }
+
+    /*
+     * Ajout manuel élève
+     */
+    [
+      "last",
+      "first",
+      "classroom",
+      "sex",
+      "p1",
+      "p2",
+      "addStudent"
+    ].forEach(id => {
+      const element =
+        document.getElementById(
+          id
+        );
+
+      if (element) {
+        element.disabled =
+          locked;
+      }
+    });
+
+    /*
+     * Tableau résultats :
+     * champs et boutons de modification.
+     *
+     * Les boutons d'export et les onglets
+     * de consultation restent disponibles.
+     */
+    document
+      .querySelectorAll(
+        [
+          ".afl-allocation",
+          ".afl-level",
+          ".points",
+          ".ccf-detail"
+        ].join(",")
+      )
+      .forEach(element => {
+        element.disabled =
+          locked;
+      });
+
+    /*
+     * Information visible sur la page résultats.
+     */
+    let notice =
+      document.getElementById(
+        "lockedEvaluationNotice"
+      );
+
+    if (locked) {
+      const results =
+        document.getElementById(
+          "results"
+        );
+
+      const card =
+        results
+          ?.querySelector(
+            ".card"
           );
 
-          panel.classList.add("hidden");
-        };
-      });
+      if (
+        card &&
+        !notice
+      ) {
+        notice =
+          document
+            .createElement(
+              "div"
+            );
+
+        notice.id =
+          "lockedEvaluationNotice";
+
+        notice.style.cssText =
+          [
+            "margin:0 0 14px",
+            "padding:12px 14px",
+            "border-radius:12px",
+            "background:#f1f5f9",
+            "border:1px solid #cbd5e1",
+            "color:#334155",
+            "font-weight:700"
+          ].join(";");
+
+        const h2 =
+          card.querySelector(
+            "h2"
+          );
+
+        if (h2) {
+          h2.after(
+            notice
+          );
+        } else {
+          card.prepend(
+            notice
+          );
+        }
+      }
+
+      if (notice) {
+        notice.textContent =
+          "🔒 Évaluation verrouillée — " +
+          "consultation et exports uniquement.";
+      }
+    } else if (notice) {
+      notice.remove();
+    }
+  }
+
+  /*
+   * Bloque l'accès direct à l'onglet Scanner
+   * si la session active est verrouillée.
+   */
+  function installNavigationGuard() {
+    document
+      .addEventListener(
+        "click",
+        event => {
+          const scanButton =
+            event.target
+              ?.closest?.(
+                'nav button[data-page="scan"]'
+              );
+
+          if (
+            !scanButton ||
+            !isLocked()
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          notifyLocked();
+        },
+        true
+      );
+  }
+
+  /*
+   * Bloque les tentatives de modification
+   * par événement si un contrôle échappait
+   * à la désactivation visuelle.
+   */
+  function installEditGuard() {
+    const editableSelector = [
+      ".afl-allocation",
+      ".afl-level",
+      ".points",
+      ".ccf-detail",
+      "#saveCCFDetail",
+      "#addStudent",
+      "#readText",
+      "#camera"
+    ].join(",");
+
+    document
+      .addEventListener(
+        "click",
+        event => {
+          const target =
+            event.target
+              ?.closest?.(
+                editableSelector
+              );
+
+          if (
+            !target ||
+            !isLocked()
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          notifyLocked();
+        },
+        true
+      );
+
+    document
+      .addEventListener(
+        "change",
+        event => {
+          const target =
+            event.target;
+
+          if (
+            !target ||
+            !target.matches?.(
+              [
+                ".afl-allocation",
+                ".afl-level",
+                ".points"
+              ].join(",")
+            ) ||
+            !isLocked()
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          renderApp();
+          notifyLocked();
+        },
+        true
+      );
+  }
+
+  /*
+   * Protection ultime :
+   * même si un QR arrive directement dans
+   * handleQR(), il n'est pas enregistré
+   * lorsque l'évaluation est verrouillée.
+   */
+  function installQRGuard() {
+    if (
+      typeof window.handleQR !==
+      "function"
+    ) {
+      return;
+    }
+
+    if (
+      window.handleQR
+        .__lockedGuardInstalled
+    ) {
+      return;
+    }
+
+    originalHandleQR =
+      window.handleQR;
+
+    const guardedHandleQR =
+      function(raw) {
+        if (isLocked()) {
+          if (
+            typeof scanError ===
+            "function"
+          ) {
+            scanError(
+              "Évaluation verrouillée : " +
+              "scan refusé."
+            );
+          } else {
+            notifyLocked();
+          }
+
+          return;
+        }
+
+        return originalHandleQR(
+          raw
+        );
+      };
+
+    guardedHandleQR
+      .__lockedGuardInstalled =
+      true;
+
+    window.handleQR =
+      guardedHandleQR;
   }
 
   function install() {
     ensureInterface();
 
+    /*
+     * On enveloppe render() après le chargement
+     * des autres modules afin de conserver
+     * toutes leurs fonctions.
+     */
     if (
-      typeof window.render === "function" &&
-      window.render !== renderApp
+      typeof window.render ===
+        "function" &&
+      window.render !==
+        renderApp
     ) {
-      originalRender = window.render;
-      window.render = renderApp;
+      originalRender =
+        window.render;
+
+      window.render =
+        renderApp;
     }
+
+    installQRGuard();
+    installNavigationGuard();
+    installEditGuard();
 
     renderApp();
   }
 
-  if (document.readyState === "loading") {
+  if (
+    document.readyState ===
+    "loading"
+  ) {
     document.addEventListener(
       "DOMContentLoaded",
       install
@@ -788,4 +1533,5 @@
   } else {
     install();
   }
+
 })();
