@@ -52,11 +52,17 @@ button,
   font-weight:700
 }
 
+button:disabled{
+  opacity:.45;
+  cursor:not-allowed
+}
+
 header button,
 #addGroup,
 #addStudent,
 #camera,
-#readText{
+#readText,
+.primary-action{
   background:#3157d5;
   color:white;
   border-color:#3157d5
@@ -174,7 +180,8 @@ th{
   color:#fff;
   border-radius:14px;
   font-weight:800;
-  box-shadow:0 10px 40px #0003
+  box-shadow:0 10px 40px #0003;
+  z-index:1000
 }
 
 .scan-ok{
@@ -198,6 +205,209 @@ textarea{
   width:100%;
   margin:10px 0;
   min-height:90px
+}
+
+
+/* =========================================================
+   GROUPES / EVALUATIONS / ARCHIVES
+   ========================================================= */
+
+.session-manager{
+  margin-bottom:18px;
+  border-color:#dbe4f0
+}
+
+.session-manager-header,
+.session-manager-empty,
+.archives-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px
+}
+
+.session-manager-header h2,
+.session-manager-empty h2,
+.archives-header h2{
+  margin:2px 0 4px
+}
+
+.session-manager-header p,
+.session-manager-empty p,
+.archives-header p{
+  margin:0
+}
+
+.session-manager-eyebrow{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.08em;
+  color:#3157d5;
+  margin-bottom:5px
+}
+
+.session-manager-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+
+.session-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:18px
+}
+
+.session-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  padding:14px;
+  border:1px solid #dfe6ee;
+  border-radius:14px;
+  background:#f8fafc
+}
+
+.session-row.active{
+  border-color:#3157d5;
+  background:#eef2ff;
+  box-shadow:0 0 0 2px #3157d51a
+}
+
+.session-main{
+  min-width:220px;
+  flex:1
+}
+
+.session-title-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap
+}
+
+.session-title-line strong{
+  font-size:16px
+}
+
+.session-active-badge{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:4px 8px;
+  background:#3157d5;
+  color:white;
+  font-size:11px;
+  font-weight:800
+}
+
+.session-meta{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:7px;
+  color:#64748b;
+  font-size:13px
+}
+
+.session-status{
+  display:inline-flex;
+  border-radius:999px;
+  padding:2px 8px;
+  font-weight:800;
+  font-size:12px
+}
+
+.status-open{
+  background:#dcfce7;
+  color:#166534
+}
+
+.status-closed{
+  background:#fef3c7;
+  color:#92400e
+}
+
+.status-locked{
+  background:#e2e8f0;
+  color:#334155
+}
+
+.session-controls{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end
+}
+
+.session-controls button,
+.session-controls select{
+  padding:8px 10px;
+  border-radius:9px
+}
+
+.session-controls .session-scan{
+  background:#3157d5;
+  color:white;
+  border-color:#3157d5
+}
+
+.session-controls .session-results{
+  background:#eef2ff;
+  color:#2849b8;
+  border-color:#cbd5ff
+}
+
+.session-empty{
+  margin-top:16px;
+  padding:20px;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  border-radius:14px;
+  color:#64748b
+}
+
+.session-empty p{
+  margin-bottom:0
+}
+
+.group-archives-panel{
+  margin-bottom:18px;
+  border-color:#dbe4f0
+}
+
+.archive-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:18px
+}
+
+.archive-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:14px
+}
+
+.archive-meta{
+  margin-top:4px;
+  font-size:13px;
+  color:#64748b
+}
+
+.restore-group{
+  background:#eef2ff;
+  color:#2849b8;
+  border-color:#cbd5ff
 }
 
 
@@ -267,7 +477,6 @@ textarea{
   background:#e5e7eb
 }
 
-/* Nom */
 .ccf-detailed-table th:nth-child(1),
 .ccf-detailed-table td:nth-child(1){
   position:sticky;
@@ -284,110 +493,92 @@ textarea{
   background:#d8dde3
 }
 
-/* Classe */
 .ccf-detailed-table th:nth-child(2),
 .ccf-detailed-table td:nth-child(2){
   min-width:75px
 }
 
-/* Estimation C1 */
 .ccf-detailed-table th:nth-child(3),
 .ccf-detailed-table td:nth-child(3){
   background:#fff3c4
 }
 
-/* Course 1 */
 .ccf-detailed-table th:nth-child(4),
 .ccf-detailed-table td:nth-child(4){
   background:#f8fafc
 }
 
-/* Ecart C1 */
 .ccf-detailed-table th:nth-child(5),
 .ccf-detailed-table td:nth-child(5){
   background:#e7f5e1
 }
 
-/* Estimation C2 */
 .ccf-detailed-table th:nth-child(6),
 .ccf-detailed-table td:nth-child(6){
   background:#fff3c4
 }
 
-/* Course 2 */
 .ccf-detailed-table th:nth-child(7),
 .ccf-detailed-table td:nth-child(7){
   background:#f8fafc
 }
 
-/* Ecart C2 */
 .ccf-detailed-table th:nth-child(8),
 .ccf-detailed-table td:nth-child(8){
   background:#e7f5e1
 }
 
-/* Ecart cumulé */
 .ccf-detailed-table th:nth-child(9),
 .ccf-detailed-table td:nth-child(9){
   background:#dff4fb
 }
 
-/* Niveau estimation */
 .ccf-detailed-table th:nth-child(10),
 .ccf-detailed-table td:nth-child(10){
   background:#dff4fb
 }
 
-/* Meilleur */
 .ccf-detailed-table th:nth-child(11),
 .ccf-detailed-table td:nth-child(11){
   background:#f4dcfa
 }
 
-/* Performance */
 .ccf-detailed-table th:nth-child(12),
 .ccf-detailed-table td:nth-child(12){
   background:#d8f2fb
 }
 
-/* Ecart 200 */
 .ccf-detailed-table th:nth-child(13),
 .ccf-detailed-table td:nth-child(13){
   background:#e9ddff
 }
 
-/* Efficacité */
 .ccf-detailed-table th:nth-child(14),
 .ccf-detailed-table td:nth-child(14){
   background:#ddd1ff
 }
 
-/* AFL1 */
 .ccf-detailed-table th:nth-child(15),
 .ccf-detailed-table td:nth-child(15){
   background:#b9df78;
   font-weight:800
 }
 
-/* Répartition */
 .ccf-detailed-table th:nth-child(16),
 .ccf-detailed-table td:nth-child(16){
   background:#eef2f7
 }
 
-/* AFL2 */
 .ccf-detailed-table th:nth-child(17),
 .ccf-detailed-table td:nth-child(17){
   background:#d9f2bf
 }
 
-/* AFL3 */
 .ccf-detailed-table th:nth-child(18),
 .ccf-detailed-table td:nth-child(18){
   background:#cceba9
 }
 
-/* Note finale */
 .ccf-detailed-table th:nth-child(19),
 .ccf-detailed-table td:nth-child(19){
   background:#d9efff;
@@ -554,6 +745,48 @@ textarea{
   .card{
     padding:14px;
     border-radius:16px
+  }
+
+  .session-manager-header,
+  .session-manager-empty,
+  .archives-header{
+    flex-direction:column;
+    align-items:stretch
+  }
+
+  .session-manager-actions{
+    justify-content:flex-start
+  }
+
+  .session-manager-actions button{
+    flex:1
+  }
+
+  .session-row{
+    align-items:stretch;
+    flex-direction:column
+  }
+
+  .session-main{
+    min-width:0
+  }
+
+  .session-controls{
+    justify-content:flex-start
+  }
+
+  .session-controls button,
+  .session-controls select{
+    flex:1 1 130px
+  }
+
+  .archive-row{
+    align-items:stretch;
+    flex-direction:column
+  }
+
+  .archive-row button{
+    width:100%
   }
 
   .ccf-results-card{
