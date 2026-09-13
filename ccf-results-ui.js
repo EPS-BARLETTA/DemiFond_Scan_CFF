@@ -1,21 +1,25 @@
 (() => {
   "use strict";
 
-  /*
-   * DemiFond Scan CCF
-   * Interface complémentaire des résultats
-   *
-   * Objectifs :
-   * - conserver le tableau détaillé existant ;
-   * - ajouter une vue "Saisie rapide" ;
-   * - ne pas modifier app.js ;
-   * - utiliser les données AFL déjà gérées par evaluation-ccf.js.
-   */
-
   const ALLOCATION_POINTS = {
-    2: { 1: 0.5, 2: 1, 3: 1.5, 4: 2 },
-    4: { 1: 1, 2: 2, 3: 3, 4: 4 },
-    6: { 1: 1.5, 2: 3, 3: 4.5, 4: 6 }
+    2: {
+      1: 0.5,
+      2: 1,
+      3: 1.5,
+      4: 2
+    },
+    4: {
+      1: 1,
+      2: 2,
+      3: 3,
+      4: 4
+    },
+    6: {
+      1: 1.5,
+      2: 3,
+      3: 4.5,
+      4: 6
+    }
   };
 
   let originalRenderResults = null;
@@ -30,57 +34,102 @@
   }
 
   function formatPoints(value) {
-    if (value == null || !Number.isFinite(Number(value))) {
+    if (
+      value == null ||
+      !Number.isFinite(
+        Number(value)
+      )
+    ) {
       return "—";
     }
 
-    return Number(value).toLocaleString("fr-FR", {
-      maximumFractionDigits: 2
-    });
+    return Number(value)
+      .toLocaleString(
+        "fr-FR",
+        {
+          maximumFractionDigits: 2
+        }
+      );
   }
 
   function getAllocation(student) {
-    const allowed = ["2-6", "4-4", "6-2"];
+    const allowed = [
+      "2-6",
+      "4-4",
+      "6-2"
+    ];
 
-    const key = allowed.includes(student.aflAllocation)
-      ? student.aflAllocation
-      : "4-4";
+    const key =
+      allowed.includes(
+        student.aflAllocation
+      )
+        ? student.aflAllocation
+        : "4-4";
 
-    const parts = key.split("-").map(Number);
+    const [
+      afl2Max,
+      afl3Max
+    ] =
+      key
+        .split("-")
+        .map(Number);
 
     return {
       key,
-      afl2Max: parts[0],
-      afl3Max: parts[1]
+      afl2Max,
+      afl3Max
     };
   }
 
-  function getLevelPoints(maxPoints, level) {
-    const numericLevel = Number(level);
+  function getLevelPoints(
+    maxPoints,
+    level
+  ) {
+    const numericLevel =
+      Number(level);
 
     if (!numericLevel) {
       return null;
     }
 
-    return ALLOCATION_POINTS[maxPoints]?.[numericLevel] ?? null;
+    return (
+      ALLOCATION_POINTS[
+        maxPoints
+      ]?.[
+        numericLevel
+      ] ??
+      null
+    );
   }
 
   function getStudentById(id) {
     try {
       const session =
-        typeof activeSession === "function"
+        typeof activeSession ===
+        "function"
           ? activeSession()
           : null;
 
-      if (!session || !Array.isArray(session.students)) {
+      if (
+        !session ||
+        !Array.isArray(
+          session.students
+        )
+      ) {
         return null;
       }
 
       return session.students.find(
-        student => String(student.id) === String(id)
+        student =>
+          String(student.id) ===
+          String(id)
       );
     } catch (error) {
-      console.error("Impossible de retrouver l'élève :", error);
+      console.error(
+        "Impossible de retrouver l'élève :",
+        error
+      );
+
       return null;
     }
   }
@@ -89,98 +138,202 @@
     let students = [];
 
     try {
-      if (typeof visibleStudents === "function") {
-        students = [...visibleStudents()];
+      if (
+        typeof visibleStudents ===
+        "function"
+      ) {
+        students = [
+          ...visibleStudents()
+        ];
       }
     } catch (error) {
-      console.error("Impossible de récupérer les élèves :", error);
+      console.error(
+        "Impossible de récupérer les élèves :",
+        error
+      );
     }
 
-    return students.sort((a, b) => {
-      const nameA =
-        `${a.last || ""} ${a.first || ""}`.trim();
+    return students.sort(
+      (a, b) => {
+        const nameA =
+          `${
+            a.last || ""
+          } ${
+            a.first || ""
+          }`.trim();
 
-      const nameB =
-        `${b.last || ""} ${b.first || ""}`.trim();
+        const nameB =
+          `${
+            b.last || ""
+          } ${
+            b.first || ""
+          }`.trim();
 
-      return nameA.localeCompare(nameB, "fr", {
-        sensitivity: "base"
-      });
-    });
+        return nameA.localeCompare(
+          nameB,
+          "fr",
+          {
+            sensitivity:
+              "base"
+          }
+        );
+      }
+    );
   }
 
   function getAFL1(student) {
     try {
-      if (typeof score === "function") {
-        return score(student);
+      if (
+        typeof score ===
+        "function"
+      ) {
+        return score(
+          student
+        );
       }
     } catch (error) {
-      console.error("Erreur calcul AFL1 :", error);
+      console.error(
+        "Erreur calcul AFL1 :",
+        error
+      );
     }
 
     return null;
   }
 
-  function saveAndRefresh() {
+  function isLocked() {
     try {
-      if (typeof save === "function") {
+      const session =
+        typeof activeSession ===
+        "function"
+          ? activeSession()
+          : null;
+
+      return (
+        session?.status ===
+        "locked"
+      );
+    } catch (error) {
+      console.error(
+        error
+      );
+
+      return false;
+    }
+  }
+
+  function notifyLocked() {
+    if (
+      typeof toast ===
+      "function"
+    ) {
+      toast(
+        "Évaluation verrouillée"
+      );
+    }
+
+    alert(
+      "Cette évaluation est verrouillée.\n\n" +
+      "Repasse-la en « En cours » pour modifier AFL2 ou AFL3."
+    );
+  }
+
+  function saveAndRefresh() {
+    if (isLocked()) {
+      notifyLocked();
+      refreshViews();
+      return;
+    }
+
+    try {
+      if (
+        typeof save ===
+        "function"
+      ) {
         save();
       }
     } catch (error) {
-      console.error("Erreur sauvegarde :", error);
+      console.error(
+        "Erreur sauvegarde :",
+        error
+      );
     }
 
     refreshViews();
   }
 
-  /*
-   * Création des deux onglets :
-   * - Tableau détaillé
-   * - Saisie rapide
-   */
   function ensureResultsInterface() {
-    const resultRows = document.getElementById("resultRows");
+    const resultRows =
+      document.getElementById(
+        "resultRows"
+      );
 
     if (!resultRows) {
       return;
     }
 
-    const card = resultRows.closest(".card");
+    const card =
+      resultRows.closest(
+        ".card"
+      );
 
     if (!card) {
       return;
     }
 
-    if (card.dataset.ccfResultsUi === "ready") {
+    if (
+      card.dataset
+        .ccfResultsUi ===
+      "ready"
+    ) {
       return;
     }
 
-    card.dataset.ccfResultsUi = "ready";
-    card.classList.add("ccf-results-card");
+    card.dataset.ccfResultsUi =
+      "ready";
 
-    const title = card.querySelector("h2");
+    card.classList.add(
+      "ccf-results-card"
+    );
+
+    const title =
+      card.querySelector(
+        "h2"
+      );
 
     if (title) {
-      title.textContent = "Résultats CCF demi-fond";
+      title.textContent =
+        "Résultats CCF demi-fond";
     }
 
-    /*
-     * Tableau détaillé existant.
-     */
-    const detailedContainer = resultRows.closest(".table");
+    const detailedContainer =
+      resultRows.closest(
+        ".table"
+      );
 
-    if (detailedContainer) {
-      detailedContainer.id = "ccfDetailedView";
-      detailedContainer.classList.add("ccf-detailed-view");
+    if (
+      detailedContainer
+    ) {
+      detailedContainer.id =
+        "ccfDetailedView";
+
+      detailedContainer
+        .classList
+        .add(
+          "ccf-detailed-view"
+        );
     }
 
-    /*
-     * Onglets.
-     */
-    const tabs = document.createElement("div");
+    const tabs =
+      document.createElement(
+        "div"
+      );
 
-    tabs.id = "ccfViewTabs";
-    tabs.className = "ccf-view-tabs";
+    tabs.id =
+      "ccfViewTabs";
+
+    tabs.className =
+      "ccf-view-tabs";
 
     tabs.innerHTML = `
       <button
@@ -200,39 +353,80 @@
       </button>
     `;
 
-    const filters = document.getElementById("resultFilters");
+    const filters =
+      document.getElementById(
+        "resultFilters"
+      );
 
     if (filters) {
-      filters.before(tabs);
-    } else if (detailedContainer) {
-      detailedContainer.before(tabs);
+      filters.before(
+        tabs
+      );
+    } else if (
+      detailedContainer
+    ) {
+      detailedContainer.before(
+        tabs
+      );
     }
 
-    /*
-     * Second tableau : saisie rapide.
-     */
-    const quickView = document.createElement("div");
+    const quickView =
+      document.createElement(
+        "div"
+      );
 
-    quickView.id = "ccfQuickView";
-    quickView.className = "ccf-quick-view hidden";
+    quickView.id =
+      "ccfQuickView";
+
+    quickView.className =
+      "ccf-quick-view hidden";
 
     quickView.innerHTML = `
       <div class="ccf-quick-header">
 
         <div>
-          <h3>Saisie rapide des évaluations</h3>
+
+          <h3>
+            Saisie rapide des évaluations
+          </h3>
 
           <p>
             AFL1 est calculé automatiquement.
-            Choisis ensuite la répartition et les niveaux AFL2 / AFL3.
+            Choisis ensuite la répartition et
+            les niveaux AFL2 / AFL3.
           </p>
+
         </div>
 
       </div>
 
-      <div class="table ccf-quick-table-container">
+      <div
+        id="ccfQuickLockNotice"
+        class="hidden"
+        style="
+          margin-bottom:14px;
+          padding:12px 14px;
+          border-radius:12px;
+          background:#f1f5f9;
+          border:1px solid #cbd5e1;
+          color:#334155;
+          font-weight:700
+        "
+      >
+        🔒 Évaluation verrouillée —
+        consultation uniquement.
+      </div>
 
-        <table class="ccf-quick-table">
+      <div
+        class="
+          table
+          ccf-quick-table-container
+        "
+      >
+
+        <table
+          class="ccf-quick-table"
+        >
 
           <thead>
             <tr>
@@ -246,69 +440,120 @@
             </tr>
           </thead>
 
-          <tbody id="ccfQuickRows"></tbody>
+          <tbody
+            id="ccfQuickRows"
+          ></tbody>
 
         </table>
 
       </div>
     `;
 
-    if (detailedContainer) {
-      detailedContainer.after(quickView);
+    if (
+      detailedContainer
+    ) {
+      detailedContainer.after(
+        quickView
+      );
     } else {
-      card.appendChild(quickView);
+      card.appendChild(
+        quickView
+      );
     }
 
-    /*
-     * Gestion des onglets.
-     */
     tabs
-      .querySelectorAll("[data-ccf-view]")
-      .forEach(button => {
-        button.addEventListener("click", () => {
-          const view = button.dataset.ccfView;
+      .querySelectorAll(
+        "[data-ccf-view]"
+      )
+      .forEach(
+        button => {
+          button.addEventListener(
+            "click",
+            () => {
+              const view =
+                button
+                  .dataset
+                  .ccfView;
 
-          tabs
-            .querySelectorAll("[data-ccf-view]")
-            .forEach(item => {
-              item.classList.toggle(
-                "active",
-                item === button
-              );
-            });
+              tabs
+                .querySelectorAll(
+                  "[data-ccf-view]"
+                )
+                .forEach(
+                  item => {
+                    item
+                      .classList
+                      .toggle(
+                        "active",
+                        item ===
+                          button
+                      );
+                  }
+                );
 
-          if (detailedContainer) {
-            detailedContainer.classList.toggle(
-              "hidden",
-              view !== "detailed"
-            );
-          }
+              if (
+                detailedContainer
+              ) {
+                detailedContainer
+                  .classList
+                  .toggle(
+                    "hidden",
+                    view !==
+                      "detailed"
+                  );
+              }
 
-          quickView.classList.toggle(
-            "hidden",
-            view !== "quick"
+              quickView
+                .classList
+                .toggle(
+                  "hidden",
+                  view !==
+                    "quick"
+                );
+
+              if (
+                view ===
+                "quick"
+              ) {
+                renderQuickTable();
+              }
+            }
           );
-
-          if (view === "quick") {
-            renderQuickTable();
-          }
-        });
-      });
+        }
+      );
   }
 
-  /*
-   * Tableau rapide.
-   */
   function renderQuickTable() {
-    const tbody = document.getElementById("ccfQuickRows");
+    const tbody =
+      document.getElementById(
+        "ccfQuickRows"
+      );
 
     if (!tbody) {
       return;
     }
 
-    const students = getVisibleStudentsAlphabetically();
+    const locked =
+      isLocked();
 
-    if (!students.length) {
+    const notice =
+      document.getElementById(
+        "ccfQuickLockNotice"
+      );
+
+    if (notice) {
+      notice.classList.toggle(
+        "hidden",
+        !locked
+      );
+    }
+
+    const students =
+      getVisibleStudentsAlphabetically();
+
+    if (
+      !students.length
+    ) {
       tbody.innerHTML = `
         <tr>
           <td colspan="7">
@@ -320,292 +565,445 @@
       return;
     }
 
-    tbody.innerHTML = students
-      .map(student => {
-        const afl1 = getAFL1(student);
+    tbody.innerHTML =
+      students
+        .map(
+          student => {
+            const afl1 =
+              getAFL1(
+                student
+              );
 
-        const allocation = getAllocation(student);
+            const allocation =
+              getAllocation(
+                student
+              );
 
-        const afl2Level =
-          student.afl2Level || "";
+            const afl2Level =
+              student
+                .afl2Level ||
+              "";
 
-        const afl3Level =
-          student.afl3Level || "";
+            const afl3Level =
+              student
+                .afl3Level ||
+              "";
 
-        const afl2Points = getLevelPoints(
-          allocation.afl2Max,
-          afl2Level
-        );
+            const afl2Points =
+              getLevelPoints(
+                allocation
+                  .afl2Max,
+                afl2Level
+              );
 
-        const afl3Points = getLevelPoints(
-          allocation.afl3Max,
-          afl3Level
-        );
+            const afl3Points =
+              getLevelPoints(
+                allocation
+                  .afl3Max,
+                afl3Level
+              );
 
-        let finalScore = null;
+            let finalScore =
+              null;
 
-        if (
-          afl1 &&
-          afl2Points != null &&
-          afl3Points != null
-        ) {
-          finalScore = Math.min(
-            20,
-            Number(afl1.total) +
-              Number(afl2Points) +
-              Number(afl3Points)
+            if (
+              afl1 &&
+              afl2Points != null &&
+              afl3Points != null
+            ) {
+              finalScore =
+                Math.min(
+                  20,
+                  Number(
+                    afl1.total
+                  ) +
+                  Number(
+                    afl2Points
+                  ) +
+                  Number(
+                    afl3Points
+                  )
+                );
+            }
+
+            return `
+              <tr
+                data-student-id="${escapeHtml(
+                  student.id
+                )}"
+              >
+
+                <td
+                  class="ccf-quick-student"
+                >
+
+                  <strong>
+                    ${escapeHtml(
+                      String(
+                        student.last ||
+                          ""
+                      ).toUpperCase()
+                    )}
+                    ${escapeHtml(
+                      student.first ||
+                        ""
+                    )}
+                  </strong>
+
+                </td>
+
+                <td>
+                  ${escapeHtml(
+                    student.classroom ||
+                      ""
+                  )}
+                </td>
+
+                <td
+                  class="ccf-quick-afl1"
+                >
+
+                  <strong>
+                    ${
+                      afl1
+                        ? formatPoints(
+                            afl1.total
+                          )
+                        : "—"
+                    }
+                  </strong>
+
+                </td>
+
+                <td>
+
+                  <select
+                    class="ccf-quick-allocation"
+                    data-student-id="${escapeHtml(
+                      student.id
+                    )}"
+                    ${
+                      locked
+                        ? "disabled"
+                        : ""
+                    }
+                  >
+
+                    <option
+                      value="2-6"
+                      ${
+                        allocation.key ===
+                        "2-6"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      2-6
+                    </option>
+
+                    <option
+                      value="4-4"
+                      ${
+                        allocation.key ===
+                        "4-4"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      4-4
+                    </option>
+
+                    <option
+                      value="6-2"
+                      ${
+                        allocation.key ===
+                        "6-2"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      6-2
+                    </option>
+
+                  </select>
+
+                </td>
+
+                <td>
+
+                  <select
+                    class="ccf-quick-level"
+                    data-student-id="${escapeHtml(
+                      student.id
+                    )}"
+                    data-field="afl2Level"
+                    ${
+                      locked
+                        ? "disabled"
+                        : ""
+                    }
+                  >
+
+                    <option value="">
+                      —
+                    </option>
+
+                    ${[
+                      1,
+                      2,
+                      3,
+                      4
+                    ]
+                      .map(
+                        level => `
+                          <option
+                            value="${level}"
+                            ${
+                              String(
+                                afl2Level
+                              ) ===
+                              String(
+                                level
+                              )
+                                ? "selected"
+                                : ""
+                            }
+                          >
+                            Niveau ${level}
+                          </option>
+                        `
+                      )
+                      .join("")}
+
+                  </select>
+
+                  <span
+                    class="ccf-quick-points"
+                  >
+                    ${
+                      afl2Points ==
+                      null
+                        ? "—"
+                        : `${formatPoints(
+                            afl2Points
+                          )} / ${
+                            allocation
+                              .afl2Max
+                          }`
+                    }
+                  </span>
+
+                </td>
+
+                <td>
+
+                  <select
+                    class="ccf-quick-level"
+                    data-student-id="${escapeHtml(
+                      student.id
+                    )}"
+                    data-field="afl3Level"
+                    ${
+                      locked
+                        ? "disabled"
+                        : ""
+                    }
+                  >
+
+                    <option value="">
+                      —
+                    </option>
+
+                    ${[
+                      1,
+                      2,
+                      3,
+                      4
+                    ]
+                      .map(
+                        level => `
+                          <option
+                            value="${level}"
+                            ${
+                              String(
+                                afl3Level
+                              ) ===
+                              String(
+                                level
+                              )
+                                ? "selected"
+                                : ""
+                            }
+                          >
+                            Niveau ${level}
+                          </option>
+                        `
+                      )
+                      .join("")}
+
+                  </select>
+
+                  <span
+                    class="ccf-quick-points"
+                  >
+                    ${
+                      afl3Points ==
+                      null
+                        ? "—"
+                        : `${formatPoints(
+                            afl3Points
+                          )} / ${
+                            allocation
+                              .afl3Max
+                          }`
+                    }
+                  </span>
+
+                </td>
+
+                <td
+                  class="ccf-quick-final"
+                >
+
+                  <strong>
+                    ${
+                      finalScore ==
+                      null
+                        ? "—"
+                        : formatPoints(
+                            finalScore
+                          )
+                    }
+                  </strong>
+
+                </td>
+
+              </tr>
+            `;
+          }
+        )
+        .join("");
+
+    tbody
+      .querySelectorAll(
+        ".ccf-quick-allocation"
+      )
+      .forEach(
+        select => {
+          select.addEventListener(
+            "change",
+            () => {
+              if (
+                isLocked()
+              ) {
+                renderQuickTable();
+                notifyLocked();
+                return;
+              }
+
+              const student =
+                getStudentById(
+                  select
+                    .dataset
+                    .studentId
+                );
+
+              if (!student) {
+                return;
+              }
+
+              student.aflAllocation =
+                select.value;
+
+              saveAndRefresh();
+            }
           );
         }
+      );
 
-        return `
-          <tr data-student-id="${escapeHtml(student.id)}">
-
-            <td class="ccf-quick-student">
-              <strong>
-                ${escapeHtml(
-                  String(student.last || "").toUpperCase()
-                )}
-                ${escapeHtml(student.first || "")}
-              </strong>
-            </td>
-
-            <td>
-              ${escapeHtml(student.classroom || "")}
-            </td>
-
-            <td class="ccf-quick-afl1">
-              <strong>
-                ${
-                  afl1
-                    ? formatPoints(afl1.total)
-                    : "—"
-                }
-              </strong>
-            </td>
-
-            <td>
-
-              <select
-                class="ccf-quick-allocation"
-                data-student-id="${escapeHtml(student.id)}"
-              >
-
-                <option
-                  value="2-6"
-                  ${
-                    allocation.key === "2-6"
-                      ? "selected"
-                      : ""
-                  }
-                >
-                  2-6
-                </option>
-
-                <option
-                  value="4-4"
-                  ${
-                    allocation.key === "4-4"
-                      ? "selected"
-                      : ""
-                  }
-                >
-                  4-4
-                </option>
-
-                <option
-                  value="6-2"
-                  ${
-                    allocation.key === "6-2"
-                      ? "selected"
-                      : ""
-                  }
-                >
-                  6-2
-                </option>
-
-              </select>
-
-            </td>
-
-            <td>
-
-              <select
-                class="ccf-quick-level"
-                data-student-id="${escapeHtml(student.id)}"
-                data-field="afl2Level"
-              >
-
-                <option value="">—</option>
-
-                ${[1, 2, 3, 4]
-                  .map(
-                    level => `
-                      <option
-                        value="${level}"
-                        ${
-                          String(afl2Level) ===
-                          String(level)
-                            ? "selected"
-                            : ""
-                        }
-                      >
-                        Niveau ${level}
-                      </option>
-                    `
-                  )
-                  .join("")}
-
-              </select>
-
-              <span class="ccf-quick-points">
-                ${
-                  afl2Points == null
-                    ? "—"
-                    : `${formatPoints(
-                        afl2Points
-                      )} / ${allocation.afl2Max}`
-                }
-              </span>
-
-            </td>
-
-            <td>
-
-              <select
-                class="ccf-quick-level"
-                data-student-id="${escapeHtml(student.id)}"
-                data-field="afl3Level"
-              >
-
-                <option value="">—</option>
-
-                ${[1, 2, 3, 4]
-                  .map(
-                    level => `
-                      <option
-                        value="${level}"
-                        ${
-                          String(afl3Level) ===
-                          String(level)
-                            ? "selected"
-                            : ""
-                        }
-                      >
-                        Niveau ${level}
-                      </option>
-                    `
-                  )
-                  .join("")}
-
-              </select>
-
-              <span class="ccf-quick-points">
-                ${
-                  afl3Points == null
-                    ? "—"
-                    : `${formatPoints(
-                        afl3Points
-                      )} / ${allocation.afl3Max}`
-                }
-              </span>
-
-            </td>
-
-            <td class="ccf-quick-final">
-
-              <strong>
-                ${
-                  finalScore == null
-                    ? "—"
-                    : formatPoints(finalScore)
-                }
-              </strong>
-
-            </td>
-
-          </tr>
-        `;
-      })
-      .join("");
-
-    /*
-     * Modification de la répartition.
-     */
     tbody
-      .querySelectorAll(".ccf-quick-allocation")
-      .forEach(select => {
-        select.addEventListener("change", () => {
-          const student = getStudentById(
-            select.dataset.studentId
+      .querySelectorAll(
+        ".ccf-quick-level"
+      )
+      .forEach(
+        select => {
+          select.addEventListener(
+            "change",
+            () => {
+              if (
+                isLocked()
+              ) {
+                renderQuickTable();
+                notifyLocked();
+                return;
+              }
+
+              const student =
+                getStudentById(
+                  select
+                    .dataset
+                    .studentId
+                );
+
+              if (!student) {
+                return;
+              }
+
+              const field =
+                select
+                  .dataset
+                  .field;
+
+              student[field] =
+                select.value ===
+                ""
+                  ? ""
+                  : Number(
+                      select.value
+                    );
+
+              saveAndRefresh();
+            }
           );
-
-          if (!student) {
-            return;
-          }
-
-          student.aflAllocation = select.value;
-
-          saveAndRefresh();
-        });
-      });
-
-    /*
-     * Modification AFL2 / AFL3.
-     */
-    tbody
-      .querySelectorAll(".ccf-quick-level")
-      .forEach(select => {
-        select.addEventListener("change", () => {
-          const student = getStudentById(
-            select.dataset.studentId
-          );
-
-          if (!student) {
-            return;
-          }
-
-          const field = select.dataset.field;
-
-          student[field] =
-            select.value === ""
-              ? ""
-              : Number(select.value);
-
-          saveAndRefresh();
-        });
-      });
+        }
+      );
   }
 
-  /*
-   * Prépare le tableau détaillé pour le futur CSS.
-   *
-   * On ne modifie pas ici les calculs ni les données.
-   */
   function decorateDetailedTable() {
-    const table = document.querySelector(
-      "#ccfDetailedView table"
-    );
+    const table =
+      document.querySelector(
+        "#ccfDetailedView table"
+      );
 
     if (!table) {
       return;
     }
 
-    table.classList.add("ccf-detailed-table");
-
-    const headers = table.querySelectorAll(
-      "thead th"
+    table.classList.add(
+      "ccf-detailed-table"
     );
 
-    headers.forEach((header, index) => {
-      header.dataset.column = String(index);
-    });
+    const headers =
+      table.querySelectorAll(
+        "thead th"
+      );
+
+    headers.forEach(
+      (
+        header,
+        index
+      ) => {
+        header.dataset.column =
+          String(index);
+      }
+    );
   }
 
-  /*
-   * Rafraîchit les deux vues.
-   */
   function refreshViews() {
-    if (typeof originalRenderResults === "function") {
+    if (
+      typeof originalRenderResults ===
+      "function"
+    ) {
       originalRenderResults();
     }
 
@@ -614,19 +1012,18 @@
     renderQuickTable();
   }
 
-  /*
-   * Installation.
-   *
-   * evaluation-ccf.js doit être chargé AVANT ce fichier.
-   */
   function install() {
     if (
-      typeof window.renderResults === "function" &&
-      window.renderResults !== refreshViews
+      typeof window.renderResults ===
+        "function" &&
+      window.renderResults !==
+        refreshViews
     ) {
-      originalRenderResults = window.renderResults;
+      originalRenderResults =
+        window.renderResults;
 
-      window.renderResults = refreshViews;
+      window.renderResults =
+        refreshViews;
     }
 
     ensureResultsInterface();
@@ -634,7 +1031,10 @@
     renderQuickTable();
   }
 
-  if (document.readyState === "loading") {
+  if (
+    document.readyState ===
+    "loading"
+  ) {
     document.addEventListener(
       "DOMContentLoaded",
       install
@@ -642,4 +1042,5 @@
   } else {
     install();
   }
+
 })();
