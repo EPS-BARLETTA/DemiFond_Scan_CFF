@@ -4,8 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#172554">
+
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/app.css">
+
   <title>DemiFond Scan CCF</title>
 </head>
 
@@ -34,9 +36,17 @@
 </header>
 
 <nav>
-  <button data-page="group" class="active">Groupe</button>
-  <button data-page="scan">Scanner</button>
-  <button data-page="results">Résultats</button>
+  <button data-page="group" class="active">
+    Groupe
+  </button>
+
+  <button data-page="scan">
+    Scanner
+  </button>
+
+  <button data-page="results">
+    Résultats
+  </button>
 </nav>
 
 <main>
@@ -44,12 +54,23 @@
   <section id="group" class="page">
 
     <div class="toolbar">
+
       <select id="groups"></select>
-      <button id="addGroup">+ Groupe</button>
-      <button id="archive">Archiver</button>
+
+      <button id="addGroup">
+        + Groupe
+      </button>
+
+      <button id="archive">
+        Archiver le groupe
+      </button>
+
     </div>
 
-    <div id="filters" class="filters"></div>
+    <div
+      id="filters"
+      class="filters"
+    ></div>
 
     <div class="card">
 
@@ -57,17 +78,35 @@
 
       <div class="form">
 
-        <input id="last" placeholder="Nom">
-        <input id="first" placeholder="Prénom">
-        <input id="classroom" placeholder="Classe (TA, TB…)">
+        <input
+          id="last"
+          placeholder="Nom"
+        >
+
+        <input
+          id="first"
+          placeholder="Prénom"
+        >
+
+        <input
+          id="classroom"
+          placeholder="Classe (TA, TB…)"
+        >
 
         <select id="sex">
           <option value="F">Fille</option>
           <option value="M">Garçon</option>
         </select>
 
-        <input id="p1" placeholder="Projet 1 (3:20)">
-        <input id="p2" placeholder="Projet 2 (3:18)">
+        <input
+          id="p1"
+          placeholder="Projet 1 (3:20)"
+        >
+
+        <input
+          id="p2"
+          placeholder="Projet 2 (3:18)"
+        >
 
         <button id="addStudent">
           Ajouter
@@ -76,6 +115,7 @@
       </div>
 
       <div class="table">
+
         <table>
 
           <thead>
@@ -93,6 +133,7 @@
           <tbody id="students"></tbody>
 
         </table>
+
       </div>
 
     </div>
@@ -100,7 +141,10 @@
   </section>
 
 
-  <section id="scan" class="page hidden">
+  <section
+    id="scan"
+    class="page hidden"
+  >
 
     <div class="scanGrid">
 
@@ -173,7 +217,10 @@
   </section>
 
 
-  <section id="results" class="page hidden">
+  <section
+    id="results"
+    class="page hidden"
+  >
 
     <div class="card">
 
@@ -189,6 +236,7 @@
         <table>
 
           <thead>
+
             <tr>
               <th>Élève</th>
               <th>Classe</th>
@@ -202,6 +250,7 @@
               <th>AFL3</th>
               <th>/20</th>
             </tr>
+
           </thead>
 
           <tbody id="resultRows"></tbody>
@@ -223,21 +272,31 @@
 ></div>
 
 
+<!-- Lecture QR locale / hors connexion -->
 <script src="/jsQR.js"></script>
 
+<!-- Gestion groupes -->
 <script src="/groups.js"></script>
 
 <script src="/group-presets.js"></script>
 
 <script src="/qr-ui.js"></script>
 
+<!-- Moteur principal -->
 <script src="/app.js"></script>
 
+<!-- Évaluation CCF -->
 <script src="/evaluation-ccf.js?v=1"></script>
 
+<!-- Deux vues résultats -->
 <script src="/ccf-results-ui.js?v=1"></script>
 
+<!-- Gestion groupe permanent -> évaluations -> archives -->
+<script src="/group-sessions-ui.js?v=1"></script>
+
+<!-- Scanner iPad -->
 <script src="/scanner-ios.js?v=1"></script>
+
 
 <script>
   if ('serviceWorker' in navigator) {
