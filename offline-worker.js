@@ -1,54 +1,149 @@
-const VERSION='df-ccf-3';
-const FILES=['/','/index.html','/app.css','/app.js','/evaluation-ccf.js','/scanner-ios.js','/groups.js','/group-presets.js','/qr-ui.js','/manifest.webmanifest'];
+const VERSION = 'df-ccf-4';
 
-self.addEventListener('install',event=>{
+const FILES = [
+  '/',
+  '/index.html',
+  '/app.css',
+  '/app.js',
+  '/evaluation-ccf.js',
+  '/ccf-results-ui.js',
+  '/scanner-ios.js',
+  '/groups.js',
+  '/group-presets.js',
+  '/qr-ui.js',
+  '/manifest.webmanifest'
+];
+
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(VERSION)
-      .then(cache=>cache.addAll(FILES))
-      .then(()=>self.skipWaiting())
+    caches
+      .open(VERSION)
+      .then(cache => cache.addAll(FILES))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate',event=>{
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(key=>key!==VERSION).map(key=>caches.delete(key))))
-      .then(()=>self.clients.claim())
+    caches
+      .keys()
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== VERSION)
+            .map(key => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET') return;
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
 
-  const request=event.request;
-  const url=new URL(request.url);
-  const sameOrigin=url.origin===self.location.origin;
-  const networkFirst=sameOrigin && (
-    request.mode==='navigate' ||
-    request.destination==='script' ||
-    request.destination==='style' ||
-    request.destination==='document'
-  );
+  const request = event.request;
+  const url = new URL(request.url);
 
-  if(networkFirst){
+  const sameOrigin =
+    url.origin === self.location.origin;
+
+  const networkFirst =
+    sameOrigin &&
+    (
+      request.mode === 'navigate' ||
+      request.destination === 'script' ||
+      request.destination === 'style' ||
+      request.destination === 'document'
+    );
+
+  if (networkFirst) {
     event.respondWith(
       fetch(request)
-        .then(response=>{
-          const copy=response.clone();
-          caches.open(VERSION).then(cache=>cache.put(request,copy));
+        .then(response => {
+          if (
+            response &&
+            response.ok
+          ) {
+            const copy =
+              response.clone();
+
+            caches
+              .open(VERSION)
+              .then(cache =>
+                cache.put(
+                  request,
+                  copy
+                )
+              );
+          }
+
           return response;
         })
-        .catch(()=>caches.match(request).then(cached=>cached||caches.match('/index.html')))
+        .catch(async () => {
+          const cached =
+            await caches.match(
+              request
+            );
+
+          if (cached) {
+            return cached;
+          }
+
+          if (
+            request.mode ===
+            'navigate'
+          ) {
+            return caches.match(
+              '/index.html'
+            );
+          }
+
+          return new Response(
+            '',
+            {
+              status: 503,
+              statusText:
+                'Offline'
+            }
+          );
+        })
     );
+
     return;
   }
 
   event.respondWith(
-    caches.match(request)
-      .then(cached=>cached||fetch(request).then(response=>{
-        const copy=response.clone();
-        caches.open(VERSION).then(cache=>cache.put(request,copy));
-        return response;
-      }))
+    caches
+      .match(request)
+      .then(cached => {
+        if (cached) {
+          return cached;
+        }
+
+        return fetch(request)
+          .then(response => {
+            if (
+              response &&
+              response.ok &&
+              sameOrigin
+            ) {
+              const copy =
+                response.clone();
+
+              caches
+                .open(VERSION)
+                .then(cache =>
+                  cache.put(
+                    request,
+                    copy
+                  )
+                );
+            }
+
+            return response;
+          });
+      })
   );
 });
