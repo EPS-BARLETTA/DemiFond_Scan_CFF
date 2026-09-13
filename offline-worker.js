@@ -1,4 +1,4 @@
-const VERSION = 'df-ccf-6';
+const VERSION = 'df-ccf-7';
 
 const FILES = [
   '/',
