@@ -1,4 +1,4 @@
-const VERSION = 'df-ccf-4';
+const VERSION = 'df-ccf-5';
 
 const FILES = [
   '/',
@@ -11,6 +11,7 @@ const FILES = [
   '/groups.js',
   '/group-presets.js',
   '/qr-ui.js',
+  '/jsQR.js',
   '/manifest.webmanifest'
 ];
 
@@ -83,9 +84,7 @@ self.addEventListener('fetch', event => {
         })
         .catch(async () => {
           const cached =
-            await caches.match(
-              request
-            );
+            await caches.match(request);
 
           if (cached) {
             return cached;
@@ -104,8 +103,7 @@ self.addEventListener('fetch', event => {
             '',
             {
               status: 503,
-              statusText:
-                'Offline'
+              statusText: 'Offline'
             }
           );
         })
