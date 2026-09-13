@@ -1,4 +1,4 @@
-const VERSION = 'df-ccf-5';
+const VERSION = 'df-ccf-6';
 
 const FILES = [
   '/',
@@ -7,6 +7,7 @@ const FILES = [
   '/app.js',
   '/evaluation-ccf.js',
   '/ccf-results-ui.js',
+  '/group-sessions-ui.js',
   '/scanner-ios.js',
   '/groups.js',
   '/group-presets.js',
