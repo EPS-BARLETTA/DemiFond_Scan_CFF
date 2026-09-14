@@ -1,1 +1,484 @@
-(()=>{const $=id=>document.getElementById(id);let stream=null,raf=null,last='';function msg(t){let e=$('scanMessage');if(e){e.className='scan-bad';e.textContent=t}}async function start(){try{if(stream)stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});let v=$('video');v.srcObject=stream;await v.play();let canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});const loop=()=>{if(!stream)return;if(v.readyState>=2&&v.videoWidth&&v.videoHeight&&window.jsQR){let maxW=900,scale=Math.min(1,maxW/v.videoWidth);canvas.width=Math.round(v.videoWidth*scale);canvas.height=Math.round(v.videoHeight*scale);ctx.drawImage(v,0,0,canvas.width,canvas.height);let im=ctx.getImageData(0,0,canvas.width,canvas.height),code=jsQR(im.data,im.width,im.height,{inversionAttempts:'dontInvert'});if(code&&code.data&&code.data!==last){last=code.data;let ta=$('qrText');if(ta)ta.value=code.data;let btn=$('readText');if(btn)btn.click();setTimeout(()=>last='',1400)}}raf=requestAnimationFrame(loop)};loop()}catch(e){msg('Accès caméra refusé ou indisponible. Vérifie l’autorisation Caméra dans Safari.')}}function stop(){if(raf)cancelAnimationFrame(raf);raf=null;stream?.getTracks().forEach(t=>t.stop());stream=null;let v=$('video');if(v)v.srcObject=null}function init(){let a=$('camera'),s=$('cameraStop');if(a)a.onclick=start;if(s)s.onclick=stop}document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();})();
+(() => {
+  "use strict";
+
+  const $ =
+    id =>
+      document.getElementById(id);
+
+  let stream =
+    null;
+
+  let raf =
+    null;
+
+  let last =
+    "";
+
+  let lastScanAt =
+    0;
+
+  const SCAN_INTERVAL =
+    120;
+
+  const MAX_WIDTH =
+    900;
+
+
+  function msg(text) {
+
+    const element =
+      $("scanMessage");
+
+    if (!element) {
+      return;
+    }
+
+    element.className =
+      "scan-bad";
+
+    element.textContent =
+      text;
+
+  }
+
+
+  function isScanPageVisible() {
+
+    const page =
+      document.getElementById(
+        "scan"
+      );
+
+    return (
+      page &&
+      !page.classList.contains(
+        "hidden"
+      )
+    );
+
+  }
+
+
+  async function start() {
+
+    try {
+
+      if (stream) {
+        stop();
+      }
+
+
+      stream =
+        await navigator
+          .mediaDevices
+          .getUserMedia({
+
+            video: {
+
+              facingMode: {
+                ideal:
+                  "environment"
+              }
+
+            },
+
+            audio:
+              false
+
+          });
+
+
+      const video =
+        $("video");
+
+
+      if (!video) {
+
+        stop();
+
+        return;
+
+      }
+
+
+      video.srcObject =
+        stream;
+
+
+      await video.play();
+
+
+      const canvas =
+        document.createElement(
+          "canvas"
+        );
+
+
+      const ctx =
+        canvas.getContext(
+          "2d",
+          {
+            willReadFrequently:
+              true
+          }
+        );
+
+
+      function loop(
+        now
+      ) {
+
+        if (!stream) {
+          return;
+        }
+
+
+        /*
+          Si on quitte la page Scanner,
+          on coupe automatiquement
+          la caméra.
+        */
+
+        if (
+          !isScanPageVisible()
+        ) {
+
+          stop();
+
+          return;
+
+        }
+
+
+        /*
+          On ne tente pas un décodage
+          QR à chaque image vidéo.
+        */
+
+        if (
+          now -
+          lastScanAt <
+          SCAN_INTERVAL
+        ) {
+
+          raf =
+            requestAnimationFrame(
+              loop
+            );
+
+          return;
+
+        }
+
+
+        lastScanAt =
+          now;
+
+
+        if (
+          video.readyState >= 2 &&
+          video.videoWidth &&
+          video.videoHeight &&
+          window.jsQR
+        ) {
+
+          const scale =
+            Math.min(
+              1,
+              MAX_WIDTH /
+                video.videoWidth
+            );
+
+
+          canvas.width =
+            Math.round(
+              video.videoWidth *
+              scale
+            );
+
+
+          canvas.height =
+            Math.round(
+              video.videoHeight *
+              scale
+            );
+
+
+          ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+
+          const image =
+            ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+
+          const code =
+            jsQR(
+              image.data,
+              image.width,
+              image.height,
+              {
+                inversionAttempts:
+                  "dontInvert"
+              }
+            );
+
+
+          if (
+            code &&
+            code.data &&
+            code.data !==
+              last
+          ) {
+
+            last =
+              code.data;
+
+
+            const textarea =
+              $("qrText");
+
+
+            if (textarea) {
+              textarea.value =
+                code.data;
+            }
+
+
+            const button =
+              $("readText");
+
+
+            if (button) {
+              button.click();
+            }
+
+
+            setTimeout(
+              () => {
+
+                last =
+                  "";
+
+              },
+              1400
+            );
+
+          }
+
+        }
+
+
+        raf =
+          requestAnimationFrame(
+            loop
+          );
+
+      }
+
+
+      raf =
+        requestAnimationFrame(
+          loop
+        );
+
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+
+      msg(
+        "Accès caméra refusé ou indisponible. Vérifie l’autorisation Caméra dans Safari."
+      );
+
+    }
+
+  }
+
+
+  function stop() {
+
+    if (raf) {
+
+      cancelAnimationFrame(
+        raf
+      );
+
+    }
+
+
+    raf =
+      null;
+
+
+    if (stream) {
+
+      stream
+        .getTracks()
+        .forEach(
+          track =>
+            track.stop()
+        );
+
+    }
+
+
+    stream =
+      null;
+
+
+    const video =
+      $("video");
+
+
+    if (video) {
+
+      video.srcObject =
+        null;
+
+    }
+
+  }
+
+
+  function initButtons() {
+
+    const startButton =
+      $("camera");
+
+    const stopButton =
+      $("cameraStop");
+
+
+    if (startButton) {
+
+      startButton.onclick =
+        start;
+
+    }
+
+
+    if (stopButton) {
+
+      stopButton.onclick =
+        stop;
+
+    }
+
+  }
+
+
+  function installNavigationGuard() {
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        const navButton =
+          event.target
+            ?.closest?.(
+              "nav button[data-page]"
+            );
+
+
+        if (!navButton) {
+          return;
+        }
+
+
+        const destination =
+          navButton.dataset.page;
+
+
+        if (
+          destination !==
+          "scan"
+        ) {
+
+          stop();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  function installVisibilityGuard() {
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+
+        if (
+          document.hidden
+        ) {
+
+          stop();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  function installPageHideGuard() {
+
+    window.addEventListener(
+      "pagehide",
+      () => {
+
+        stop();
+
+      }
+    );
+
+  }
+
+
+  function init() {
+
+    initButtons();
+
+    installNavigationGuard();
+
+    installVisibilityGuard();
+
+    installPageHideGuard();
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      init
+    );
+
+  } else {
+
+    init();
+
+  }
+
+})();
