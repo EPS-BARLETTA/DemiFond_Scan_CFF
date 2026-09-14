@@ -102,11 +102,6 @@
 
     db.activeGroupId = space.id;
 
-    /*
-     * On n'invente jamais une évaluation active.
-     * Si l'espace possède des évaluations,
-     * on ouvre la plus récente.
-     */
     const sessions = [
       ...(space.sessions || [])
     ].sort(
@@ -133,6 +128,172 @@
     setTimeout(renderSpaces, 0);
   }
 
+  function deleteActiveSpace() {
+    const space =
+      activeSpace();
+
+    if (!space) {
+      alert(
+        "Aucun espace sélectionné."
+      );
+      return;
+    }
+
+    const evaluationCount =
+      Array.isArray(space.sessions)
+        ? space.sessions.length
+        : 0;
+
+    const studentCount =
+      countStudents(space);
+
+    const firstConfirm =
+      confirm(
+        `Supprimer définitivement l’espace "${space.name}" ?\n\n` +
+        `${evaluationCount} évaluation(s)\n` +
+        `${studentCount} élève(s)\n\n` +
+        `Toutes les évaluations et tous les résultats de cet espace seront supprimés.\n\n` +
+        `Cette action est irréversible.`
+      );
+
+    if (!firstConfirm) {
+      return;
+    }
+
+    const secondConfirm =
+      confirm(
+        `CONFIRMATION FINALE\n\n` +
+        `Tu vas supprimer définitivement :\n` +
+        `"${space.name}"\n\n` +
+        `Impossible de récupérer cet espace ensuite.\n\n` +
+        `Confirmer la suppression ?`
+      );
+
+    if (!secondConfirm) {
+      return;
+    }
+
+    const index =
+      db.groups.findIndex(
+        group =>
+          String(group.id) ===
+          String(space.id)
+      );
+
+    if (index === -1) {
+      return;
+    }
+
+    db.groups.splice(
+      index,
+      1
+    );
+
+    const remaining =
+      db.groups.filter(
+        group => !group.archived
+      );
+
+    if (remaining.length) {
+      const next =
+        remaining[0];
+
+      db.activeGroupId =
+        next.id;
+
+      const sessions = [
+        ...(next.sessions || [])
+      ].sort(
+        (a, b) =>
+          Number(b.createdAt || 0) -
+          Number(a.createdAt || 0)
+      );
+
+      db.activeSessionId =
+        sessions[0]?.id || null;
+    } else {
+      db.activeGroupId = null;
+      db.activeSessionId = null;
+    }
+
+    try {
+      filter = "ALL";
+    } catch {}
+
+    if (typeof save === "function") {
+      save();
+    }
+
+    if (typeof render === "function") {
+      render();
+    }
+
+    setTimeout(
+      renderSpaces,
+      0
+    );
+
+    if (typeof toast === "function") {
+      toast(
+        "Espace supprimé"
+      );
+    }
+  }
+
+  function ensureDeleteButton() {
+    const toolbar =
+      document.querySelector(
+        "#group .toolbar"
+      );
+
+    if (!toolbar) {
+      return;
+    }
+
+    let button =
+      document.getElementById(
+        "deleteSpace"
+      );
+
+    if (!button) {
+      button =
+        document.createElement(
+          "button"
+        );
+
+      button.id =
+        "deleteSpace";
+
+      button.type =
+        "button";
+
+      button.textContent =
+        "Supprimer l’espace";
+
+      button.style.background =
+        "#b91c1c";
+
+      button.style.color =
+        "#ffffff";
+
+      button.style.borderColor =
+        "#991b1b";
+
+      button.style.fontWeight =
+        "800";
+
+      toolbar.appendChild(
+        button
+      );
+    }
+
+    button.disabled =
+      !activeSpace();
+
+    button.onclick =
+      deleteActiveSpace;
+  }
+
   function renderContext() {
     const space =
       activeSpace();
@@ -151,7 +312,9 @@
 
     if (!space) {
       host.innerHTML = `
-        <strong>Aucun espace sélectionné</strong>
+        <strong>
+          Aucun espace sélectionné
+        </strong>
         <span>
           Crée ou ouvre un espace avant de scanner.
         </span>
@@ -201,7 +364,9 @@
       banner.className =
         "card active-context-banner";
 
-      scanPage.prepend(banner);
+      scanPage.prepend(
+        banner
+      );
     }
   }
 
@@ -213,6 +378,7 @@
       return;
     }
 
+    ensureDeleteButton();
     ensureContextBanner();
 
     const spaces =
@@ -229,6 +395,7 @@
       <div class="spaces-overview-head">
 
         <div>
+
           <div class="session-manager-eyebrow">
             MES ESPACES
           </div>
@@ -241,6 +408,7 @@
             Chaque espace conserve ses propres
             évaluations et ses propres résultats.
           </p>
+
         </div>
 
       </div>
@@ -339,10 +507,6 @@
         };
       });
 
-    /*
-     * Harmonisation du vocabulaire
-     * provenant de l'ancien module Groupe.
-     */
     document
       .querySelectorAll(
         ".session-manager-eyebrow"
@@ -359,15 +523,28 @@
         }
       });
 
+    const archiveButton =
+      document.getElementById(
+        "archive"
+      );
+
+    if (archiveButton) {
+      archiveButton.style.background =
+        "#f59e0b";
+
+      archiveButton.style.color =
+        "#ffffff";
+
+      archiveButton.style.borderColor =
+        "#d97706";
+
+      archiveButton.style.fontWeight =
+        "800";
+    }
+
     renderContext();
   }
 
-  /*
-   * Le module existant peut reconstruire
-   * l'interface après un scan ou un changement
-   * d'évaluation. On réactualise alors notre
-   * vue sans modifier les données.
-   */
   const observer =
     new MutationObserver(() => {
       clearTimeout(
