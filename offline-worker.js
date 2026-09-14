@@ -1,148 +1,395 @@
-const VERSION = 'df-ccf-7';
+const VERSION =
+  "df-ccf-8";
+
 
 const FILES = [
-  '/',
-  '/index.html',
-  '/app.css',
-  '/app.js',
-  '/evaluation-ccf.js',
-  '/ccf-results-ui.js',
-  '/group-sessions-ui.js',
-  '/scanner-ios.js',
-  '/groups.js',
-  '/group-presets.js',
-  '/qr-ui.js',
-  '/jsQR.js',
-  '/manifest.webmanifest'
+
+  "/",
+
+  "/index.html",
+
+  "/app.css",
+
+  "/modern-ui.css",
+
+  "/app.js",
+
+  "/storage-safety.js",
+
+  "/evaluation-ccf.js",
+
+  "/ccf-results-ui.js",
+
+  "/group-sessions-ui.js",
+
+  "/spaces-ui.js",
+
+  "/help-ui.js",
+
+  "/scanner-ios.js",
+
+  "/groups.js",
+
+  "/group-presets.js",
+
+  "/qr-ui.js",
+
+  "/jsQR.js",
+
+  "/manifest.webmanifest"
+
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches
-      .open(VERSION)
-      .then(cache => cache.addAll(FILES))
-      .then(() => self.skipWaiting())
-  );
-});
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then(keys =>
-        Promise.all(
-          keys
-            .filter(key => key !== VERSION)
-            .map(key => caches.delete(key))
+/* =========================================
+   INSTALLATION
+========================================= */
+
+self.addEventListener(
+  "install",
+  event => {
+
+    event.waitUntil(
+
+      caches
+        .open(VERSION)
+
+        .then(
+          cache =>
+            cache.addAll(
+              FILES
+            )
         )
-      )
-      .then(() => self.clients.claim())
-  );
-});
 
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') {
-    return;
-  }
+        .then(
+          () =>
+            self.skipWaiting()
+        )
 
-  const request = event.request;
-  const url = new URL(request.url);
-
-  const sameOrigin =
-    url.origin === self.location.origin;
-
-  const networkFirst =
-    sameOrigin &&
-    (
-      request.mode === 'navigate' ||
-      request.destination === 'script' ||
-      request.destination === 'style' ||
-      request.destination === 'document'
     );
 
-  if (networkFirst) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (
-            response &&
-            response.ok
-          ) {
-            const copy =
-              response.clone();
+  }
+);
 
-            caches
-              .open(VERSION)
-              .then(cache =>
-                cache.put(
-                  request,
-                  copy
+
+/* =========================================
+   ACTIVATION
+========================================= */
+
+self.addEventListener(
+  "activate",
+  event => {
+
+    event.waitUntil(
+
+      caches
+        .keys()
+
+        .then(
+          keys =>
+            Promise.all(
+
+              keys
+
+                .filter(
+                  key =>
+                    key !== VERSION
                 )
-              );
-          }
 
-          return response;
-        })
-        .catch(async () => {
-          const cached =
-            await caches.match(request);
+                .map(
+                  key =>
+                    caches.delete(
+                      key
+                    )
+                )
 
-          if (cached) {
-            return cached;
-          }
+            )
+        )
 
-          if (
-            request.mode ===
-            'navigate'
-          ) {
-            return caches.match(
-              '/index.html'
-            );
-          }
+        .then(
+          () =>
+            self.clients.claim()
+        )
 
-          return new Response(
-            '',
-            {
-              status: 503,
-              statusText: 'Offline'
-            }
-          );
-        })
     );
 
+  }
+);
+
+
+/* =========================================
+   RECHERCHE DANS LE CACHE
+
+   ignoreSearch permet par exemple :
+
+   /spaces-ui.js?v=1
+
+   de retrouver :
+
+   /spaces-ui.js
+========================================= */
+
+async function findCached(
+  request
+) {
+
+  return caches.match(
+    request,
+    {
+      ignoreSearch: true
+    }
+  );
+
+}
+
+
+/* =========================================
+   MISE EN CACHE
+========================================= */
+
+async function cacheResponse(
+  request,
+  response
+) {
+
+  if (
+    !response ||
+    !response.ok
+  ) {
     return;
   }
 
-  event.respondWith(
-    caches
-      .match(request)
-      .then(cached => {
-        if (cached) {
-          return cached;
-        }
 
-        return fetch(request)
-          .then(response => {
-            if (
-              response &&
-              response.ok &&
-              sameOrigin
-            ) {
-              const copy =
-                response.clone();
+  const cache =
+    await caches.open(
+      VERSION
+    );
 
-              caches
-                .open(VERSION)
-                .then(cache =>
-                  cache.put(
-                    request,
-                    copy
-                  )
+
+  /*
+    On enregistre sans dépendre
+    du paramètre ?v=...
+  */
+
+  const url =
+    new URL(
+      request.url
+    );
+
+
+  const cleanRequest =
+    new Request(
+      url.origin +
+      url.pathname,
+      {
+        method: "GET"
+      }
+    );
+
+
+  await cache.put(
+    cleanRequest,
+    response.clone()
+  );
+
+}
+
+
+/* =========================================
+   FETCH
+========================================= */
+
+self.addEventListener(
+  "fetch",
+  event => {
+
+    const request =
+      event.request;
+
+
+    if (
+      request.method !==
+      "GET"
+    ) {
+      return;
+    }
+
+
+    const url =
+      new URL(
+        request.url
+      );
+
+
+    const sameOrigin =
+      url.origin ===
+      self.location.origin;
+
+
+    /*
+      Navigation, scripts et styles :
+      priorité au réseau.
+
+      Si internet ne répond pas,
+      on utilise le cache.
+    */
+
+    const networkFirst =
+      sameOrigin &&
+      (
+        request.mode ===
+          "navigate" ||
+
+        request.destination ===
+          "script" ||
+
+        request.destination ===
+          "style" ||
+
+        request.destination ===
+          "document"
+      );
+
+
+    if (networkFirst) {
+
+      event.respondWith(
+
+        fetch(request)
+
+          .then(
+            async response => {
+
+              await cacheResponse(
+                request,
+                response
+              );
+
+              return response;
+
+            }
+          )
+
+          .catch(
+            async () => {
+
+              const cached =
+                await findCached(
+                  request
                 );
+
+
+              if (cached) {
+                return cached;
+              }
+
+
+              /*
+                Si une page HTML est demandée
+                hors connexion, retour vers
+                index.html.
+              */
+
+              if (
+                request.mode ===
+                "navigate"
+              ) {
+
+                const fallback =
+                  await caches.match(
+                    "/index.html"
+                  );
+
+
+                if (fallback) {
+                  return fallback;
+                }
+
+              }
+
+
+              return new Response(
+                "Application indisponible hors connexion.",
+                {
+                  status: 503,
+                  statusText:
+                    "Offline",
+                  headers: {
+                    "Content-Type":
+                      "text/plain; charset=utf-8"
+                  }
+                }
+              );
+
+            }
+          )
+
+      );
+
+
+      return;
+    }
+
+
+    /*
+      Autres fichiers :
+      priorité au cache.
+    */
+
+    event.respondWith(
+
+      findCached(
+        request
+      )
+
+        .then(
+          cached => {
+
+            if (cached) {
+              return cached;
             }
 
-            return response;
-          });
-      })
-  );
-});
+
+            return fetch(
+              request
+            )
+
+              .then(
+                async response => {
+
+                  if (
+                    sameOrigin
+                  ) {
+
+                    await cacheResponse(
+                      request,
+                      response
+                    );
+
+                  }
+
+
+                  return response;
+
+                }
+              )
+
+              .catch(
+                () =>
+                  new Response(
+                    "",
+                    {
+                      status: 503,
+                      statusText:
+                        "Offline"
+                    }
+                  )
+              );
+
+          }
+        )
+
+    );
+
+  }
+);
