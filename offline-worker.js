@@ -1,5 +1,5 @@
 const VERSION =
-  "df-ccf-8";
+  "df-ccf-9";
 
 
 const FILES = [
@@ -13,6 +13,8 @@ const FILES = [
   "/modern-ui.css",
 
   "/app.js",
+
+  "/qr-validation.js",
 
   "/storage-safety.js",
 
@@ -119,14 +121,6 @@ self.addEventListener(
 
 /* =========================================
    RECHERCHE DANS LE CACHE
-
-   ignoreSearch permet par exemple :
-
-   /spaces-ui.js?v=1
-
-   de retrouver :
-
-   /spaces-ui.js
 ========================================= */
 
 async function findCached(
@@ -166,11 +160,6 @@ async function cacheResponse(
     );
 
 
-  /*
-    On enregistre sans dépendre
-    du paramètre ?v=...
-  */
-
   const url =
     new URL(
       request.url
@@ -182,7 +171,8 @@ async function cacheResponse(
       url.origin +
       url.pathname,
       {
-        method: "GET"
+        method:
+          "GET"
       }
     );
 
@@ -226,14 +216,6 @@ self.addEventListener(
       self.location.origin;
 
 
-    /*
-      Navigation, scripts et styles :
-      priorité au réseau.
-
-      Si internet ne répond pas,
-      on utilise le cache.
-    */
-
     const networkFirst =
       sameOrigin &&
       (
@@ -251,11 +233,15 @@ self.addEventListener(
       );
 
 
-    if (networkFirst) {
+    if (
+      networkFirst
+    ) {
 
       event.respondWith(
 
-        fetch(request)
+        fetch(
+          request
+        )
 
           .then(
             async response => {
@@ -279,16 +265,12 @@ self.addEventListener(
                 );
 
 
-              if (cached) {
+              if (
+                cached
+              ) {
                 return cached;
               }
 
-
-              /*
-                Si une page HTML est demandée
-                hors connexion, retour vers
-                index.html.
-              */
 
               if (
                 request.mode ===
@@ -301,7 +283,9 @@ self.addEventListener(
                   );
 
 
-                if (fallback) {
+                if (
+                  fallback
+                ) {
                   return fallback;
                 }
 
@@ -311,9 +295,12 @@ self.addEventListener(
               return new Response(
                 "Application indisponible hors connexion.",
                 {
-                  status: 503,
+                  status:
+                    503,
+
                   statusText:
                     "Offline",
+
                   headers: {
                     "Content-Type":
                       "text/plain; charset=utf-8"
@@ -331,11 +318,6 @@ self.addEventListener(
     }
 
 
-    /*
-      Autres fichiers :
-      priorité au cache.
-    */
-
     event.respondWith(
 
       findCached(
@@ -345,7 +327,9 @@ self.addEventListener(
         .then(
           cached => {
 
-            if (cached) {
+            if (
+              cached
+            ) {
               return cached;
             }
 
@@ -379,7 +363,9 @@ self.addEventListener(
                   new Response(
                     "",
                     {
-                      status: 503,
+                      status:
+                        503,
+
                       statusText:
                         "Offline"
                     }
