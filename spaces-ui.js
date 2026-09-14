@@ -1,6 +1,9 @@
 (() => {
   "use strict";
 
+  let internalRender = false;
+  let observerTimer = null;
+
   function esc(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -23,7 +26,9 @@
   function activeSpace() {
     try {
       return getGroups().find(
-        g => String(g.id) === String(db.activeGroupId)
+        g =>
+          String(g.id) ===
+          String(db.activeGroupId)
       ) || null;
     } catch {
       return null;
@@ -31,58 +36,81 @@
   }
 
   function activeEvaluation() {
-    const space = activeSpace();
+    const space =
+      activeSpace();
 
     if (!space) {
       return null;
     }
 
     return (space.sessions || []).find(
-      s => String(s.id) === String(db.activeSessionId)
+      s =>
+        String(s.id) ===
+        String(db.activeSessionId)
     ) || null;
   }
 
   function countStudents(space) {
-    const ids = new Set();
+    const ids =
+      new Set();
 
-    (space.sessions || []).forEach(session => {
-      (session.students || []).forEach(student => {
-        ids.add(
-          student.externalId ||
-          student.id ||
-          `${student.last}-${student.first}`
+    (space.sessions || []).forEach(
+      session => {
+        (session.students || []).forEach(
+          student => {
+            ids.add(
+              student.externalId ||
+              student.id ||
+              `${student.last}-${student.first}`
+            );
+          }
         );
-      });
-    });
+      }
+    );
 
     return ids.size;
   }
 
   function ensureContainer() {
     const page =
-      document.getElementById("group");
+      document.getElementById(
+        "group"
+      );
 
     if (!page) {
       return null;
     }
 
     let box =
-      document.getElementById("spacesOverview");
+      document.getElementById(
+        "spacesOverview"
+      );
 
     if (!box) {
       box =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
-      box.id = "spacesOverview";
-      box.className = "card";
+      box.id =
+        "spacesOverview";
+
+      box.className =
+        "card";
 
       const toolbar =
-        page.querySelector(".toolbar");
+        page.querySelector(
+          ".toolbar"
+        );
 
       if (toolbar) {
-        toolbar.after(box);
+        toolbar.after(
+          box
+        );
       } else {
-        page.prepend(box);
+        page.prepend(
+          box
+        );
       }
     }
 
@@ -90,42 +118,58 @@
   }
 
   function selectSpace(id) {
-    const space = getGroups().find(
-      item =>
-        String(item.id) ===
-        String(id)
-    );
+    const space =
+      getGroups().find(
+        item =>
+          String(item.id) ===
+          String(id)
+      );
 
     if (!space) {
       return;
     }
 
-    db.activeGroupId = space.id;
+    db.activeGroupId =
+      space.id;
 
     const sessions = [
       ...(space.sessions || [])
     ].sort(
       (a, b) =>
-        Number(b.createdAt || 0) -
-        Number(a.createdAt || 0)
+        Number(
+          b.createdAt || 0
+        ) -
+        Number(
+          a.createdAt || 0
+        )
     );
 
     db.activeSessionId =
       sessions[0]?.id || null;
 
     try {
-      filter = "ALL";
+      filter =
+        "ALL";
     } catch {}
 
-    if (typeof save === "function") {
+    if (
+      typeof save ===
+      "function"
+    ) {
       save();
     }
 
-    if (typeof render === "function") {
+    if (
+      typeof render ===
+      "function"
+    ) {
       render();
     }
 
-    setTimeout(renderSpaces, 0);
+    setTimeout(
+      renderSpaces,
+      0
+    );
   }
 
   function deleteActiveSpace() {
@@ -140,12 +184,16 @@
     }
 
     const evaluationCount =
-      Array.isArray(space.sessions)
+      Array.isArray(
+        space.sessions
+      )
         ? space.sessions.length
         : 0;
 
     const studentCount =
-      countStudents(space);
+      countStudents(
+        space
+      );
 
     const firstConfirm =
       confirm(
@@ -191,10 +239,13 @@
 
     const remaining =
       db.groups.filter(
-        group => !group.archived
+        group =>
+          !group.archived
       );
 
-    if (remaining.length) {
+    if (
+      remaining.length
+    ) {
       const next =
         remaining[0];
 
@@ -205,26 +256,42 @@
         ...(next.sessions || [])
       ].sort(
         (a, b) =>
-          Number(b.createdAt || 0) -
-          Number(a.createdAt || 0)
+          Number(
+            b.createdAt || 0
+          ) -
+          Number(
+            a.createdAt || 0
+          )
       );
 
       db.activeSessionId =
         sessions[0]?.id || null;
+
     } else {
-      db.activeGroupId = null;
-      db.activeSessionId = null;
+
+      db.activeGroupId =
+        null;
+
+      db.activeSessionId =
+        null;
     }
 
     try {
-      filter = "ALL";
+      filter =
+        "ALL";
     } catch {}
 
-    if (typeof save === "function") {
+    if (
+      typeof save ===
+      "function"
+    ) {
       save();
     }
 
-    if (typeof render === "function") {
+    if (
+      typeof render ===
+      "function"
+    ) {
       render();
     }
 
@@ -233,7 +300,10 @@
       0
     );
 
-    if (typeof toast === "function") {
+    if (
+      typeof toast ===
+      "function"
+    ) {
       toast(
         "Espace supprimé"
       );
@@ -315,16 +385,19 @@
         <strong>
           Aucun espace sélectionné
         </strong>
+
         <span>
           Crée ou ouvre un espace avant de scanner.
         </span>
       `;
+
       return;
     }
 
     host.innerHTML = `
       <strong>
-        Espace : ${esc(space.name)}
+        Espace :
+        ${esc(space.name)}
       </strong>
 
       <span>
@@ -343,7 +416,9 @@
 
   function ensureContextBanner() {
     const scanPage =
-      document.getElementById("scan");
+      document.getElementById(
+        "scan"
+      );
 
     if (!scanPage) {
       return;
@@ -356,7 +431,9 @@
 
     if (!banner) {
       banner =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       banner.id =
         "activeContextBanner";
@@ -370,7 +447,34 @@
     }
   }
 
+  function styleArchiveButton() {
+    const archiveButton =
+      document.getElementById(
+        "archive"
+      );
+
+    if (!archiveButton) {
+      return;
+    }
+
+    archiveButton.style.background =
+      "#f59e0b";
+
+    archiveButton.style.color =
+      "#ffffff";
+
+    archiveButton.style.borderColor =
+      "#d97706";
+
+    archiveButton.style.fontWeight =
+      "800";
+  }
+
   function renderSpaces() {
+    if (internalRender) {
+      return;
+    }
+
     const box =
       ensureContainer();
 
@@ -378,185 +482,221 @@
       return;
     }
 
-    ensureDeleteButton();
-    ensureContextBanner();
+    internalRender =
+      true;
 
-    const spaces =
-      getGroups().filter(
-        group => !group.archived
-      );
+    try {
 
-    const activeId =
-      String(
-        db?.activeGroupId || ""
-      );
+      ensureDeleteButton();
+      ensureContextBanner();
+      styleArchiveButton();
 
-    box.innerHTML = `
-      <div class="spaces-overview-head">
+      const spaces =
+        getGroups().filter(
+          group =>
+            !group.archived
+        );
 
-        <div>
+      const activeId =
+        String(
+          db?.activeGroupId ||
+          ""
+        );
 
-          <div class="session-manager-eyebrow">
-            MES ESPACES
+      box.innerHTML = `
+        <div
+          class="spaces-overview-head"
+        >
+
+          <div>
+
+            <div
+              class="session-manager-eyebrow"
+            >
+              MES ESPACES
+            </div>
+
+            <h2>
+              Espaces d’évaluation
+            </h2>
+
+            <p>
+              Chaque espace conserve ses propres
+              évaluations et ses propres résultats.
+            </p>
+
           </div>
-
-          <h2>
-            Espaces d’évaluation
-          </h2>
-
-          <p>
-            Chaque espace conserve ses propres
-            évaluations et ses propres résultats.
-          </p>
 
         </div>
 
-      </div>
+        ${
+          spaces.length
+            ? `
+              <div
+                class="spaces-grid"
+              >
 
-      ${
-        spaces.length
-          ? `
-            <div class="spaces-grid">
+                ${spaces.map(
+                  space => {
 
-              ${spaces.map(space => {
+                    const sessions =
+                      Array.isArray(
+                        space.sessions
+                      )
+                        ? space.sessions
+                        : [];
 
-                const sessions =
-                  Array.isArray(
-                    space.sessions
-                  )
-                    ? space.sessions
-                    : [];
+                    const isActive =
+                      String(
+                        space.id
+                      ) === activeId;
 
-                const isActive =
-                  String(space.id) ===
-                  activeId;
+                    const students =
+                      countStudents(
+                        space
+                      );
 
-                const students =
-                  countStudents(space);
+                    return `
+                      <button
+                        type="button"
+                        class="
+                          space-card
+                          ${
+                            isActive
+                              ? "active"
+                              : ""
+                          }
+                        "
+                        data-space-id="${esc(
+                          space.id
+                        )}"
+                      >
 
-                return `
-                  <button
-                    type="button"
-                    class="
-                      space-card
-                      ${isActive ? "active" : ""}
-                    "
-                    data-space-id="${esc(space.id)}"
-                  >
+                        <strong>
+                          ${esc(
+                            space.name
+                          )}
+                        </strong>
 
-                    <strong>
-                      ${esc(space.name)}
-                    </strong>
+                        <span>
+                          ${sessions.length}
+                          évaluation${
+                            sessions.length > 1
+                              ? "s"
+                              : ""
+                          }
+                        </span>
 
-                    <span>
-                      ${sessions.length}
-                      évaluation${
-                        sessions.length > 1
-                          ? "s"
-                          : ""
-                      }
-                    </span>
+                        <span>
+                          ${students}
+                          élève${
+                            students > 1
+                              ? "s"
+                              : ""
+                          }
+                        </span>
 
-                    <span>
-                      ${students}
-                      élève${
-                        students > 1
-                          ? "s"
-                          : ""
-                      }
-                    </span>
+                        ${
+                          isActive
+                            ? `
+                              <b>
+                                ✓ Espace actif
+                              </b>
+                            `
+                            : `
+                              <b>
+                                Ouvrir
+                              </b>
+                            `
+                        }
 
-                    ${
-                      isActive
-                        ? `
-                          <b>
-                            ✓ Espace actif
-                          </b>
-                        `
-                        : `
-                          <b>
-                            Ouvrir
-                          </b>
-                        `
-                    }
+                      </button>
+                    `;
+                  }
+                ).join("")}
 
-                  </button>
-                `;
-              }).join("")}
-
-            </div>
-          `
-          : `
-            <div class="empty">
-              Aucun espace enregistré.
-              Utilise « + Nouvel espace ».
-            </div>
-          `
-      }
-    `;
-
-    box
-      .querySelectorAll(
-        "[data-space-id]"
-      )
-      .forEach(button => {
-        button.onclick = () => {
-          selectSpace(
-            button.dataset.spaceId
-          );
-        };
-      });
-
-    document
-      .querySelectorAll(
-        ".session-manager-eyebrow"
-      )
-      .forEach(el => {
-        if (
-          el.textContent
-            .trim()
-            .toUpperCase() ===
-          "GROUPE PERMANENT"
-        ) {
-          el.textContent =
-            "ESPACE";
+              </div>
+            `
+            : `
+              <div
+                class="empty"
+              >
+                Aucun espace enregistré.
+                Utilise « + Nouvel espace ».
+              </div>
+            `
         }
-      });
+      `;
 
-    const archiveButton =
-      document.getElementById(
-        "archive"
+      box
+        .querySelectorAll(
+          "[data-space-id]"
+        )
+        .forEach(
+          button => {
+            button.onclick =
+              () => {
+                selectSpace(
+                  button.dataset.spaceId
+                );
+              };
+          }
+        );
+
+      document
+        .querySelectorAll(
+          ".session-manager-eyebrow"
+        )
+        .forEach(
+          el => {
+            if (
+              el.textContent
+                .trim()
+                .toUpperCase() ===
+              "GROUPE PERMANENT"
+            ) {
+              el.textContent =
+                "ESPACE";
+            }
+          }
+        );
+
+      renderContext();
+
+    } finally {
+
+      requestAnimationFrame(
+        () => {
+          internalRender =
+            false;
+        }
       );
-
-    if (archiveButton) {
-      archiveButton.style.background =
-        "#f59e0b";
-
-      archiveButton.style.color =
-        "#ffffff";
-
-      archiveButton.style.borderColor =
-        "#d97706";
-
-      archiveButton.style.fontWeight =
-        "800";
     }
-
-    renderContext();
   }
 
   const observer =
-    new MutationObserver(() => {
-      clearTimeout(
-        observer.timer
-      );
+    new MutationObserver(
+      () => {
 
-      observer.timer =
-        setTimeout(
-          renderSpaces,
-          50
+        if (
+          internalRender
+        ) {
+          return;
+        }
+
+        clearTimeout(
+          observerTimer
         );
-    });
+
+        observerTimer =
+          setTimeout(
+            () => {
+              renderSpaces();
+            },
+            80
+          );
+      }
+    );
 
   function init() {
     renderSpaces();
@@ -571,7 +711,9 @@
 
     window.addEventListener(
       "storage",
-      renderSpaces
+      () => {
+        renderSpaces();
+      }
     );
   }
 
@@ -579,11 +721,15 @@
     document.readyState ===
     "loading"
   ) {
+
     document.addEventListener(
       "DOMContentLoaded",
       init
     );
+
   } else {
+
     init();
   }
+
 })();
