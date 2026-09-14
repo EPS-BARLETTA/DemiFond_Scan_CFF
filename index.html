@@ -89,9 +89,15 @@
 
     </label>
 
-    <!-- Le bouton Mode d'emploi
-         sera ajouté automatiquement
-         par help-ui.js -->
+    <!--
+      Le bouton Mode d'emploi
+      est ajouté automatiquement
+      par help-ui.js
+
+      Le bouton Récupération
+      est ajouté automatiquement
+      par storage-safety.js
+    -->
 
   </div>
 
@@ -539,6 +545,10 @@
 <script src="/app.js"></script>
 
 
+<!-- Sauvegarde locale sécurisée -->
+<script src="/storage-safety.js?v=1"></script>
+
+
 <!-- Évaluation CCF -->
 <script src="/evaluation-ccf.js?v=1"></script>
 
@@ -568,23 +578,23 @@
 <script>
 
   if (
-    'serviceWorker' in navigator
+    "serviceWorker" in navigator
   ) {
 
     window.addEventListener(
-      'load',
+      "load",
       () => {
 
         navigator
           .serviceWorker
           .register(
-            '/offline-worker.js'
+            "/offline-worker.js"
           )
           .catch(
             error => {
 
               console.error(
-                'Service worker non enregistré :',
+                "Service worker non enregistré :",
                 error
               );
 
