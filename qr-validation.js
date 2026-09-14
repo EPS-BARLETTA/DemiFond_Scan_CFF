@@ -1,12 +1,6 @@
 (() => {
   "use strict";
 
-  /*
-    DemiFond Scan CCF
-    Validation stricte des QR provenant
-    de Chrono Carnet EPS.
-  */
-
   const EXPECTED_TYPE =
     "DF_CCF_RESULT";
 
@@ -14,31 +8,23 @@
     1;
 
 
-  function reject(
-    message
-  ) {
+  function reject(message) {
 
     const text =
       `QR refusé : ${message}`;
-
 
     if (
       typeof scanError ===
       "function"
     ) {
 
-      scanError(
-        text
-      );
+      scanError(text);
 
     } else {
 
-      alert(
-        text
-      );
+      alert(text);
 
     }
-
 
     console.warn(
       "[QR VALIDATION]",
@@ -59,7 +45,6 @@
       value.trim().length >
         0
     );
-
   }
 
 
@@ -76,7 +61,6 @@
       ) &&
       number > 0
     );
-
   }
 
 
@@ -96,7 +80,6 @@
         message:
           "temps intermédiaires absents."
       };
-
     }
 
 
@@ -108,16 +91,13 @@
       return {
         ok: false,
         message:
-          "le QR doit contenir exactement 4 passages : 200, 400, 600 et 800 m."
+          "le QR doit contenir exactement 4 passages."
       };
-
     }
 
 
     const values =
-      splits.map(
-        Number
-      );
+      splits.map(Number);
 
 
     if (
@@ -135,7 +115,6 @@
         message:
           "un des temps intermédiaires est invalide."
       };
-
     }
 
 
@@ -153,28 +132,24 @@
         return {
           ok: false,
           message:
-            "les temps 200 / 400 / 600 / 800 m ne sont pas croissants."
+            "les temps intermédiaires ne sont pas croissants."
         };
-
       }
-
     }
 
-
-    /*
-      Le dernier passage doit correspondre
-      au temps total.
-
-      On laisse 2 secondes de tolérance
-      pour rester compatible avec
-      d'éventuels arrondis.
-    */
 
     const finalSplit =
       values[
         values.length - 1
       ];
 
+
+    /*
+      Le dernier temps cumulé doit
+      correspondre au temps total.
+
+      Tolérance : 2 secondes.
+    */
 
     if (
       Math.abs(
@@ -187,9 +162,8 @@
       return {
         ok: false,
         message:
-          "le temps total ne correspond pas au passage des 800 m."
+          "le temps total ne correspond pas au dernier passage."
       };
-
     }
 
 
@@ -197,7 +171,6 @@
       ok: true,
       values
     };
-
   }
 
 
@@ -209,9 +182,7 @@
       !data ||
       typeof data !==
         "object" ||
-      Array.isArray(
-        data
-      )
+      Array.isArray(data)
     ) {
 
       return {
@@ -219,7 +190,6 @@
         message:
           "format de données inconnu."
       };
-
     }
 
 
@@ -233,7 +203,6 @@
         message:
           "ce QR n'est pas un résultat DemiFond CCF."
       };
-
     }
 
 
@@ -249,7 +218,6 @@
         message:
           "version de QR incompatible."
       };
-
     }
 
 
@@ -264,7 +232,6 @@
         message:
           "identifiant élève absent."
       };
-
     }
 
 
@@ -282,7 +249,6 @@
         message:
           "nom ou prénom absent."
       };
-
     }
 
 
@@ -297,7 +263,6 @@
         message:
           "classe absente."
       };
-
     }
 
 
@@ -317,7 +282,6 @@
         message:
           "sexe F/M absent ou invalide."
       };
-
     }
 
 
@@ -339,9 +303,8 @@
       return {
         ok: false,
         message:
-          "numéro de 800 m invalide."
+          "numéro de course invalide."
       };
-
     }
 
 
@@ -356,39 +319,13 @@
         message:
           "temps total invalide."
       };
-
     }
 
-
-    /*
-      Limite très large :
-      évite seulement les données
-      manifestement absurdes.
-
-      800 m inférieur à 30 s ou
-      supérieur à 30 minutes.
-    */
 
     const totalMs =
       Number(
         data.totalMs
       );
-
-
-    if (
-      totalMs <
-        30000 ||
-      totalMs >
-        1800000
-    ) {
-
-      return {
-        ok: false,
-        message:
-          "temps du 800 m manifestement incohérent."
-      };
-
-    }
 
 
     const splitCheck =
@@ -403,14 +340,15 @@
     ) {
 
       return splitCheck;
-
     }
 
 
     return {
+
       ok: true,
 
       data: {
+
         ...data,
 
         race,
@@ -433,7 +371,6 @@
             .toUpperCase()
       }
     };
-
   }
 
 
@@ -477,11 +414,7 @@
         data =
           typeof raw ===
             "string"
-
-            ? JSON.parse(
-                raw
-              )
-
+            ? JSON.parse(raw)
             : raw;
 
       } catch {
@@ -489,14 +422,11 @@
         return reject(
           "contenu illisible ou JSON invalide."
         );
-
       }
 
 
       const result =
-        validatePayload(
-          data
-        );
+        validatePayload(data);
 
 
       if (
@@ -506,20 +436,12 @@
         return reject(
           result.message
         );
-
       }
 
-
-      /*
-        À partir d'ici le QR est valide.
-        Seulement maintenant on appelle
-        le moteur historique de app.js.
-      */
 
       return originalHandleQR(
         result.data
       );
-
     }
 
 
@@ -535,7 +457,6 @@
     console.info(
       "[QR VALIDATION] Protection active."
     );
-
   }
 
 
