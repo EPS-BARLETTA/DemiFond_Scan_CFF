@@ -285,6 +285,20 @@
     }
 
 
+    if (
+      !isNonEmptyString(
+        data.project
+      )
+    ) {
+
+      return {
+        ok: false,
+        message:
+          "projet de performance absent."
+      };
+    }
+
+
     const race =
       Number(
         data.race
