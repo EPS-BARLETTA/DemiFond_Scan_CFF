@@ -569,7 +569,7 @@
       const t = n => r.find(x=>x.race===n)?.total500Ms;
       const p = n => r.find(x=>x.race===n)?.project;
       return `
-        <tr>
+        <tr data-student-id="${esc(student.id)}">
           <td><b>${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")}</b></td>
           <td>${esc(student.classroom||"")}</td>
           <td>${esc(p(1)||"—")}</td>
@@ -577,7 +577,10 @@
           <td>${esc(p(2)||"—")}</td>
           <td>${timeLabel(t(2))}</td>
           <td><b>${sc ? fmtPts(sc.afl1)+"/12" : "—"}</b></td>
-          <td><button type="button" class="student-edit" data-id="${esc(student.id)}">✏️ Corriger</button></td>
+          <td>
+            <button type="button" class="student-edit" data-id="${esc(student.id)}">✏️ Corriger</button>
+            <button type="button" class="student-delete-hold" data-student-id="${esc(student.id)}" title="Maintenir pour supprimer">Supprimer</button>
+          </td>
         </tr>
       `;
     }).join("");
