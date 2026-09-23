@@ -74,10 +74,18 @@
       .filter(x => x.ms != null)
       .sort((a,b)=>a.ms-b.ms);
 
+    if (!thresholds.length) return 0;
+
+    if (total < thresholds[0].ms) {
+      return thresholds[0].p;
+    }
+
     let points = 0;
+
     for (const row of thresholds) {
-      if (total <= row.ms) {
+      if (total >= row.ms) {
         points = row.p;
+      } else {
         break;
       }
     }
@@ -106,10 +114,23 @@
 
   function efficiencySeconds(student) {
     const races = student.exam500?.races || [];
-    if (races.length < 3) return null;
-    const vals = races.map(r=>Number(r.total500Ms||0)).filter(v=>v>0);
-    if (vals.length < 3) return null;
-    return Math.round((Math.max(...vals)-Math.min(...vals))/1000);
+    const c1 = races.find(r => Number(r.race) === 1);
+    const c2 = races.find(r => Number(r.race) === 2);
+
+    if (
+      !c1?.total500Ms ||
+      !c2?.total500Ms
+    ) {
+      return null;
+    }
+
+    return Math.round(
+      Math.abs(
+        Number(c1.total500Ms) -
+        Number(c2.total500Ms)
+      ) /
+      1000
+    );
   }
 
   function score500(student) {
@@ -120,6 +141,31 @@
     const gapPts = tableScore(settings().gap, gap);
     const effPts = tableScore(settings().efficiency, eff);
 
+    const afl2 =
+      student.exam500Afl2 === "" ||
+      student.exam500Afl2 == null
+        ? null
+        : Number(student.exam500Afl2);
+
+    const afl3 =
+      student.exam500Afl3 === "" ||
+      student.exam500Afl3 == null
+        ? null
+        : Number(student.exam500Afl3);
+
+    const total20 =
+      afl2 == null ||
+      afl3 == null
+        ? null
+        : Math.min(
+            20,
+            perf +
+            effPts +
+            gapPts +
+            afl2 +
+            afl3
+          );
+
     return {
       perf,
       gap,
@@ -127,6 +173,9 @@
       eff,
       effPts,
       afl1: perf + effPts,
+      afl2,
+      afl3,
+      total20,
       totalRaceMs: student.exam500.races.reduce((s,r)=>s+Number(r.total500Ms||0),0)
     };
   }
@@ -315,6 +364,196 @@
     window.handleQR = wrapped;
   }
 
+  function open500Editor(studentId) {
+    const session = activeSession();
+    const student =
+      session?.students?.find(
+        s =>
+          String(s.id) ===
+            String(studentId) ||
+          String(s.externalId) ===
+            String(studentId)
+      );
+
+    if (!student) return;
+
+    let d =
+      document.getElementById(
+        "exam500EditDialog"
+      );
+
+    if (!d) {
+      d =
+        document.createElement(
+          "dialog"
+        );
+
+      d.id =
+        "exam500EditDialog";
+
+      document.body.appendChild(
+        d
+      );
+    }
+
+    const races =
+      student.exam500?.races || [];
+
+    const race =
+      n =>
+        races.find(
+          r =>
+            Number(r.race) === n
+        ) || {
+          race:n,
+          project:null,
+          projectMs:null,
+          split250Ms:0,
+          total500Ms:0
+        };
+
+    const c1 = race(1);
+    const c2 = race(2);
+    const c3 = race(3);
+
+    const inputTime =
+      ms =>
+        ms
+          ? timeLabel(ms)
+              .replace("min ",":")
+              .replace("s","")
+          : "";
+
+    d.innerHTML = `
+      <div style="min-width:min(900px,94vw);max-height:88vh;overflow:auto;padding:8px">
+        <h2>Corriger — ${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")}</h2>
+
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px">
+          <label>Nom<input id="e500Last" value="${esc(student.last||"")}"></label>
+          <label>Prénom<input id="e500First" value="${esc(student.first||"")}"></label>
+          <label>Classe<input id="e500Class" value="${esc(student.classroom||"")}"></label>
+          <label>Sexe
+            <select id="e500Sex">
+              <option value="F" ${student.sex==="F"?"selected":""}>Fille</option>
+              <option value="M" ${student.sex==="M"?"selected":""}>Garçon</option>
+            </select>
+          </label>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+          ${[c1,c2,c3].map((r,index)=>`
+            <section style="border:1px solid #d8e1f3;border-radius:14px;padding:12px">
+              <h3>Course ${index+1}</h3>
+
+              ${index < 2 ? `
+                <label>Annonce
+                  <input id="e500Project${index+1}" value="${esc(r.project||"")}" placeholder="2:00">
+                </label>
+              ` : ""}
+
+              <label>250 m
+                <input id="e500Split${index+1}" value="${inputTime(r.split250Ms)}" placeholder="0:55">
+              </label>
+
+              <label>500 m
+                <input id="e500Total${index+1}" value="${inputTime(r.total500Ms)}" placeholder="1:50">
+              </label>
+            </section>
+          `).join("")}
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px">
+          <label>AFL2 · Carnet / échauffement /2
+            <input id="e500Afl2" type="number" min="0" max="2" step="0.25" value="${student.exam500Afl2 ?? ""}">
+          </label>
+
+          <label>AFL3 · Partenaire / starter /4
+            <input id="e500Afl3" type="number" min="0" max="4" step="0.25" value="${student.exam500Afl3 ?? ""}">
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+          <button id="e500Cancel" type="button">Annuler</button>
+          <button id="e500Save" type="button">Enregistrer et recalculer</button>
+        </div>
+      </div>
+    `;
+
+    d.querySelector("#e500Cancel").onclick =
+      () => d.close();
+
+    d.querySelector("#e500Save").onclick =
+      () => {
+        student.last =
+          d.querySelector("#e500Last").value.trim();
+
+        student.first =
+          d.querySelector("#e500First").value.trim();
+
+        student.classroom =
+          d.querySelector("#e500Class").value.trim().toUpperCase();
+
+        student.sex =
+          d.querySelector("#e500Sex").value;
+
+        student.exam500.races =
+          [1,2,3].map(n => {
+            const projectInput =
+              d.querySelector(
+                "#e500Project" + n
+              );
+
+            const project =
+              projectInput
+                ? projectInput.value.trim()
+                : null;
+
+            return {
+              race:n,
+              project,
+              projectMs:
+                project
+                  ? parseTime(project)
+                  : null,
+              split250Ms:
+                parseTime(
+                  d.querySelector(
+                    "#e500Split" + n
+                  ).value
+                ) || 0,
+              total500Ms:
+                parseTime(
+                  d.querySelector(
+                    "#e500Total" + n
+                  ).value
+                ) || 0
+            };
+          });
+
+        student.exam500Afl2 =
+          d.querySelector("#e500Afl2").value;
+
+        student.exam500Afl3 =
+          d.querySelector("#e500Afl3").value;
+
+        save();
+        d.close();
+
+        if (
+          typeof render ===
+            "function"
+        ) {
+          render();
+        }
+
+        toast?.(
+          "3 × 500 recalculé"
+        );
+      };
+
+    d.showModal();
+  }
+
   function render500TableIfNeeded() {
     const session = activeSession();
     if (!session || session.type !== "exam500") return;
@@ -344,7 +583,10 @@
     }).join("");
 
     body.querySelectorAll(".student-edit").forEach(button => {
-      button.onclick = () => openDetail?.(button.dataset.id);
+      button.onclick = () =>
+        open500Editor(
+          button.dataset.id
+        );
     });
 
     const head = document.querySelector(".student-list-card thead tr");
@@ -378,6 +620,9 @@
           <td>${sc ? fmtPts(sc.effPts)+"/6" : "—"}</td>
           <td>${sc ? sc.gap+" s" : "—"}</td>
           <td>${sc ? fmtPts(sc.gapPts)+"/2" : "—"}</td>
+          <td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)+"/2"}</td>
+          <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)+"/4"}</td>
+          <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)+"/20"}</b></td>
         </tr>
       `;
     }).join("");
@@ -385,7 +630,7 @@
     const head = document.querySelector("#results .table thead tr");
     if (head) {
       head.innerHTML =
-        "<th>Élève</th><th>Classe</th><th>C1</th><th>C2</th><th>C3</th><th>Cumul</th><th>Perf /6</th><th>Indice</th><th>Efficacité /6</th><th>Écart annonces</th><th>/2</th>";
+        "<th>Élève</th><th>Classe</th><th>C1</th><th>C2</th><th>C3</th><th>Cumul</th><th>Perf /6</th><th>Écart C1-C2</th><th>Efficacité /6</th><th>Écart annonces</th><th>/2</th><th>AFL2 /2</th><th>AFL3 /4</th><th>/20</th>";
     }
 
     const title = document.querySelector("#results h2");
