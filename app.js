@@ -11,6 +11,7 @@ function emptyDB() {
     activeGroupId: null,
     activeSessionId: null,
     history: [],
+    trainingScans: [],
     settings: {}
   };
 }
@@ -74,6 +75,10 @@ function normalizeDB(data) {
     history: Array.isArray(data.history)
       ? data.history
       : [],
+    trainingScans:
+      Array.isArray(data.trainingScans)
+        ? data.trainingScans
+        : [],
     settings:
       data.settings &&
       typeof data.settings === 'object'
