@@ -92,29 +92,12 @@
   }
 
   function renderTrainingResults() {
-    const resultsPage =
-      document.getElementById("results");
+    const card =
+      document.getElementById(
+        "trainingResultsCard"
+      );
 
-    if (!resultsPage) return;
-
-    let card =
-      document.getElementById("trainingResultsCard");
-
-    if (!card) {
-      card =
-        document.createElement("div");
-
-      card.id =
-        "trainingResultsCard";
-
-      card.className =
-        "card";
-
-      card.style.marginTop =
-        "18px";
-
-      resultsPage.appendChild(card);
-    }
+    if (!card) return;
 
     const rows =
       ensureStore()
@@ -228,7 +211,30 @@
         " · " +
         esc(toolLabel(item.tool)) +
         " · " +
-        esc(item.result);
+        esc(item.result) +
+        "<br><br>" +
+        '<button type="button" id="openTrainingResults" class="btn primary">Voir les résultats</button>';
+
+      const openResults =
+        document.getElementById(
+          "openTrainingResults"
+        );
+
+      if (openResults) {
+        openResults.onclick =
+          () => {
+            renderTrainingResults();
+
+            if (
+              typeof showPage ===
+                "function"
+            ) {
+              showPage(
+                "training-results"
+              );
+            }
+          };
+      }
     }
 
     toast?.("Résultat hors CCF enregistré");
@@ -278,7 +284,7 @@
         if (
           document
             .querySelector(
-              'nav button[data-page="results"].active'
+              'nav button[data-page="training-results"].active'
             )
         ) {
           renderTrainingResults();
