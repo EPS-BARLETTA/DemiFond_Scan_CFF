@@ -181,18 +181,69 @@
   }
 
   function ensureBaremeButton() {
-    const manager = document.getElementById("groupSessionManager");
-    if (!manager || document.getElementById("exam500BaremeBtn")) return;
+    const manager =
+      document.getElementById(
+        "groupSessionManager"
+      );
 
-    const actions = manager.querySelector(".session-manager-actions");
+    const existing =
+      document.getElementById(
+        "exam500BaremeBtn"
+      );
+
+    const session =
+      typeof activeSession ===
+        "function"
+        ? activeSession()
+        : null;
+
+    const isExam500 =
+      session?.type ===
+        "exam500";
+
+    /*
+     * Le barème 3 × 500 ne doit jamais être visible
+     * dans une évaluation 2 × 800.
+     */
+    if (!isExam500) {
+      existing?.remove();
+      return;
+    }
+
+    if (
+      !manager ||
+      existing
+    ) {
+      return;
+    }
+
+    const actions =
+      manager.querySelector(
+        ".session-manager-actions"
+      );
+
     if (!actions) return;
 
-    const button = document.createElement("button");
-    button.id = "exam500BaremeBtn";
-    button.type = "button";
-    button.textContent = "⚙️ Barème 3 × 500";
-    button.onclick = openBaremeDialog;
-    actions.appendChild(button);
+    const button =
+      document.createElement(
+        "button"
+      );
+
+    button.id =
+      "exam500BaremeBtn";
+
+    button.type =
+      "button";
+
+    button.textContent =
+      "⚙️ Barème 3 × 500";
+
+    button.onclick =
+      openBaremeDialog;
+
+    actions.appendChild(
+      button
+    );
   }
 
   function openBaremeDialog() {
