@@ -344,6 +344,21 @@
       return true;
     }
 
+    /*
+     * Ne jamais mélanger 2 × 800 et 3 × 500 dans la même évaluation.
+     */
+    if (
+      session.type &&
+      session.type !== "exam500"
+    ) {
+      scanError(
+        "Cette évaluation est configurée pour le 2 × 800. Crée une évaluation séparée pour le 3 × 500."
+      );
+      return true;
+    }
+
+    session.type = "exam500";
+
     let student = findStudent(session, data.studentId);
     if (!student) {
       student = buildStudent(data);
