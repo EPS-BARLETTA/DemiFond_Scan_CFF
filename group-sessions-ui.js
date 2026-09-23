@@ -629,13 +629,15 @@
                       : 0;
 
                   return `
-                    <div
+                    <details
                       class="
                         session-row
                         ${isActive ? "active" : ""}
                       "
                       data-session-id="${escHtml(session.id)}"
+                      ${isActive ? "open" : ""}
                     >
+                      <summary class="session-summary">
 
                       <div class="session-main">
 
@@ -658,7 +660,7 @@
                                 <span
                                   class="session-active-badge"
                                 >
-                                  Active
+                                  Évaluation active
                                 </span>
                               `
                               : ""
@@ -701,6 +703,8 @@
                         </div>
 
                       </div>
+
+                      </summary>
 
                       <div
                         class="session-controls"
@@ -787,7 +791,7 @@
 
                       </div>
 
-                    </div>
+                    </details>
                   `;
                 })
                 .join("")}
