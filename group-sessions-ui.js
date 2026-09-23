@@ -635,7 +635,6 @@
                         ${isActive ? "active" : ""}
                       "
                       data-session-id="${escHtml(session.id)}"
-                      ${isActive ? "open" : ""}
                     >
                       <summary class="session-summary">
 
@@ -789,6 +788,13 @@
                           Renommer
                         </button>
 
+                        <button
+                          type="button"
+                          class="session-collapse"
+                        >
+                          Replier
+                        </button>
+
                       </div>
 
                     </details>
@@ -909,6 +915,27 @@
             renameSession(
               button.dataset.sessionId
             );
+          };
+      });
+
+    document
+      .querySelectorAll(
+        ".session-collapse"
+      )
+      .forEach(button => {
+        button.onclick =
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const details =
+              button.closest(
+                ".session-row"
+              );
+
+            if (details) {
+              details.open = false;
+            }
           };
       });
 
