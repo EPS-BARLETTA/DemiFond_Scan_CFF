@@ -1190,6 +1190,21 @@
                   student
                 );
 
+              const locked =
+                sessionLocked();
+
+              const project1 =
+                projectOf(
+                  student,
+                  1
+                );
+
+              const project2 =
+                projectOf(
+                  student,
+                  2
+                );
+
               return `
                 <tr>
 
@@ -1216,66 +1231,80 @@
                   </td>
 
                   <td>
-                    ${esc(
-                      projectOf(
-                        student,
-                        1
-                      )
-                    )}
-                    ${
-                      pm
-                        ? " · " +
-                          fmtSec(
-                            pm.e1
-                          )
+                    <div class="project-cell">
+                      <strong>
+                        ${esc(
+                          project1 ||
+                            "—"
+                        )}
+                      </strong>
+                      ${pm
+                        ? `<small>${fmtSec(pm.e1)} d'écart</small>`
                         : ""
-                    }
+                      }
+                    </div>
                   </td>
 
                   <td>
-                    ${esc(
-                      projectOf(
-                        student,
-                        2
-                      )
-                    )}
-                    ${
-                      pm
-                        ? " · " +
-                          fmtSec(
-                            pm.e2
-                          )
+                    <strong>
+                      ${fmtTime(
+                        student
+                          .races?.[1]
+                          ?.totalMs
+                      )}
+                    </strong>
+                  </td>
+
+                  <td>
+                    <div class="project-cell">
+                      <strong>
+                        ${esc(
+                          project2 ||
+                            "—"
+                        )}
+                      </strong>
+                      ${pm
+                        ? `<small>${fmtSec(pm.e2)} d'écart</small>`
                         : ""
-                    }
+                      }
+                    </div>
                   </td>
 
                   <td>
-                    ${fmtTime(
-                      student
-                        .races?.[1]
-                        ?.totalMs
-                    )}
-                  </td>
-
-                  <td>
-                    ${fmtTime(
-                      student
-                        .races?.[2]
-                        ?.totalMs
-                    )}
+                    <strong>
+                      ${fmtTime(
+                        student
+                          .races?.[2]
+                          ?.totalMs
+                      )}
+                    </strong>
                   </td>
 
                   <td>
                     <b>
-                      ${
-                        sc
-                          ? fmtPts(
-                              sc.total
-                            ) +
-                            "/12"
-                          : "—"
+                      ${sc
+                        ? fmtPts(
+                            sc.total
+                          ) +
+                          "/12"
+                        : "—"
                       }
                     </b>
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      class="student-edit"
+                      data-id="${escAttr(
+                        student.id
+                      )}"
+                    >
+                      ${locked
+                        ? "Voir"
+                        : "✏️ Corriger"
+                      }
+                    </button>
                   </td>
 
                 </tr>
@@ -1283,6 +1312,20 @@
             }
           )
           .join("");
+
+      body
+        .querySelectorAll(
+          ".student-edit"
+        )
+        .forEach(
+          button => {
+            button.onclick =
+              () =>
+                openDetail(
+                  button.dataset.id
+                );
+          }
+        );
     };
 
   function field(
