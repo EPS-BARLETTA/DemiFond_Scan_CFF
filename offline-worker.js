@@ -1,5 +1,5 @@
 const VERSION =
-  "df-ccf-10";
+  "df-ccf-11";
 
 
 const FILES = [
@@ -19,6 +19,8 @@ const FILES = [
   "/storage-safety.js",
 
   "/evaluation-ccf.js",
+
+  "/archive-ui.js",
 
   "/ccf-results-ui.js",
 
