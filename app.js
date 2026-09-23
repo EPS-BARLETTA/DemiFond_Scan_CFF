@@ -1078,7 +1078,7 @@ function renderStudents() {
             score(student);
 
           return `
-            <tr>
+            <tr data-student-id="${esc(student.id)}">
               <td>
                 <b>
                   ${esc(
@@ -1139,6 +1139,17 @@ function renderStudents() {
                       : '—'
                   }
                 </b>
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="student-delete-hold"
+                  data-student-id="${esc(student.id)}"
+                  title="Maintenir pour supprimer"
+                >
+                  Supprimer
+                </button>
               </td>
             </tr>
           `;
