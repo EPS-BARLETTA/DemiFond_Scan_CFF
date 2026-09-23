@@ -989,3 +989,65 @@ td{
     padding:11px 12px;
   }
 }
+
+
+/* =========================================================
+   ÉVALUATIONS REPLIABLES
+   ========================================================= */
+
+.session-row{
+  display:block;
+  padding:0;
+}
+
+.session-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:15px 17px;
+  cursor:pointer;
+  list-style:none;
+}
+
+.session-summary::-webkit-details-marker{
+  display:none;
+}
+
+.session-summary::after{
+  content:"▾";
+  flex:0 0 auto;
+  color:#64748b;
+  font-size:18px;
+  transform:rotate(-90deg);
+  transition:transform .15s ease;
+}
+
+.session-row[open] .session-summary::after{
+  transform:rotate(0deg);
+}
+
+.session-row .session-controls{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:0 17px 15px;
+  border-top:1px solid #edf1f7;
+  margin-top:0;
+  padding-top:12px;
+}
+
+.session-row:not([open]) .session-controls{
+  display:none;
+}
+
+.session-row:not([open]) .session-summary{
+  padding-top:14px;
+  padding-bottom:14px;
+}
+
+@media(max-width:900px){
+  .session-summary{
+    align-items:flex-start;
+  }
+}
