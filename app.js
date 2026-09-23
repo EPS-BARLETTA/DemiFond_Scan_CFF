@@ -10,7 +10,8 @@ function emptyDB() {
     groups: [],
     activeGroupId: null,
     activeSessionId: null,
-    history: []
+    history: [],
+    settings: {}
   };
 }
 
@@ -38,7 +39,8 @@ function loadDB() {
         })),
         activeGroupId: legacy.active || null,
         activeSessionId: null,
-        history: legacy.history || []
+        history: legacy.history || [],
+        settings: {}
       };
 
       localStorage.setItem(
@@ -71,7 +73,12 @@ function normalizeDB(data) {
       null,
     history: Array.isArray(data.history)
       ? data.history
-      : []
+      : [],
+    settings:
+      data.settings &&
+      typeof data.settings === 'object'
+        ? data.settings
+        : {}
   };
 
   out.groups.forEach(g => {
