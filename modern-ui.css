@@ -866,3 +866,126 @@ td{
     border-radius:20px;
   }
 }
+
+
+/* =========================================================
+   ERGONOMIE V3 — TABLEAU DE SUIVI INTUITIF
+   ========================================================= */
+
+.student-list-card{
+  padding:22px 24px 24px;
+}
+
+.student-list-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:12px;
+}
+
+.student-list-head h2{
+  margin:0 0 4px;
+}
+
+.student-list-head p{
+  margin:0;
+  color:var(--ui-muted);
+  font-size:14px;
+}
+
+.manual-entry{
+  margin:10px 0 16px;
+  border:1px solid #d8e1f3;
+  border-radius:14px;
+  background:#f8faff;
+}
+
+.manual-entry > summary{
+  cursor:pointer;
+  list-style:none;
+  padding:12px 14px;
+  color:var(--ui-primary-dark);
+  font-weight:800;
+}
+
+.manual-entry > summary::-webkit-details-marker{
+  display:none;
+}
+
+.manual-entry[open] > summary{
+  border-bottom:1px solid #d8e1f3;
+}
+
+.manual-entry .form{
+  margin:0;
+  border:0;
+  border-radius:0 0 14px 14px;
+  background:#fff;
+}
+
+.project-cell{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:96px;
+}
+
+.project-cell strong{
+  color:#1e293b;
+  font-size:15px;
+}
+
+.project-cell small{
+  color:#64748b;
+  font-size:12px;
+  line-height:1.2;
+  white-space:nowrap;
+}
+
+.student-edit{
+  min-height:34px;
+  padding:7px 10px;
+  border-color:#c7d2fe;
+  background:#eef2ff;
+  color:#2743a5;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.student-list-card .table{
+  overflow:auto;
+}
+
+.student-list-card table{
+  min-width:980px;
+}
+
+.student-list-card th{
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.student-list-card td{
+  vertical-align:middle;
+}
+
+@media(max-width:900px){
+  .student-list-card{
+    padding:18px;
+  }
+
+  .student-list-card table{
+    min-width:920px;
+  }
+}
+
+@media(max-width:700px){
+  .student-list-head{
+    flex-direction:column;
+  }
+
+  .manual-entry > summary{
+    padding:11px 12px;
+  }
+}
