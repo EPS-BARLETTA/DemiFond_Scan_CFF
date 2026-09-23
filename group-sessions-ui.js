@@ -1329,17 +1329,11 @@
         "readText"
       );
 
-    if (camera) {
-      camera.disabled = locked;
-    }
-
-    if (qrText) {
-      qrText.disabled = locked;
-    }
-
-    if (readText) {
-      readText.disabled = locked;
-    }
+    // Le scanner reste disponible même si une évaluation CCF est verrouillée.
+    // Le type de QR décide ensuite s'il peut être enregistré.
+    if (camera) camera.disabled = false;
+    if (qrText) qrText.disabled = false;
+    if (readText) readText.disabled = false;
 
     [
       "last",
@@ -1484,9 +1478,7 @@
       ".ccf-quick-allocation",
       ".ccf-quick-level",
       "#saveCCFDetail",
-      "#addStudent",
-      "#readText",
-      "#camera"
+      "#addStudent"
     ].join(",");
 
     document.addEventListener(
@@ -1613,7 +1605,6 @@
     }
 
     installQRGuard();
-    installNavigationGuard();
     installEditGuard();
 
     renderApp();
