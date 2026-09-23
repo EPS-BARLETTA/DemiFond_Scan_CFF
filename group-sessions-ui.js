@@ -123,6 +123,154 @@
     alert(lockedMessage());
   }
 
+  function studentPanel() {
+    return document.querySelector(
+      "#group .student-list-card"
+    );
+  }
+
+  function setStudentPanelVisible(
+    visible,
+    session = activeSessionSafe()
+  ) {
+    const card =
+      studentPanel();
+
+    const filters =
+      document.getElementById(
+        "filters"
+      );
+
+    if (card) {
+      card.classList.toggle(
+        "hidden",
+        !visible
+      );
+
+      const title =
+        card.querySelector(
+          ".student-list-head h2"
+        );
+
+      if (
+        title &&
+        visible &&
+        session
+      ) {
+        title.textContent =
+          "Élèves — " +
+          (
+            session.label ||
+            "Évaluation"
+          );
+      }
+    }
+
+    if (filters) {
+      filters.classList.toggle(
+        "hidden",
+        !visible
+      );
+    }
+  }
+
+  function activateSessionInline(
+    sessionId
+  ) {
+    const session =
+      setActiveSession(
+        sessionId
+      );
+
+    if (!session) {
+      return null;
+    }
+
+    document
+      .querySelectorAll(
+        ".session-row"
+      )
+      .forEach(row => {
+        const active =
+          String(
+            row.dataset.sessionId
+          ) ===
+          String(
+            session.id
+          );
+
+        row.classList.toggle(
+          "active",
+          active
+        );
+
+        if (!active) {
+          row.open = false;
+        }
+
+        const badge =
+          row.querySelector(
+            ".session-active-badge"
+          );
+
+        if (badge) {
+          badge.remove();
+        }
+
+        if (active) {
+          const titleLine =
+            row.querySelector(
+              ".session-title-line"
+            );
+
+          if (
+            titleLine &&
+            !titleLine.querySelector(
+              ".session-active-badge"
+            )
+          ) {
+            const activeBadge =
+              document.createElement(
+                "span"
+              );
+
+            activeBadge.className =
+              "session-active-badge";
+
+            activeBadge.textContent =
+              "Évaluation active";
+
+            titleLine.appendChild(
+              activeBadge
+            );
+          }
+        }
+      });
+
+    if (
+      typeof renderFilters ===
+      "function"
+    ) {
+      renderFilters();
+    }
+
+    if (
+      typeof renderStudents ===
+      "function"
+    ) {
+      renderStudents();
+    }
+
+    applyLockState();
+
+    setStudentPanelVisible(
+      true,
+      session
+    );
+
+    return session;
+  }
+
   function renderApp() {
     if (typeof originalRender === "function") {
       originalRender();
@@ -132,6 +280,9 @@
     renderSessionManager();
     renderArchives();
     applyLockState();
+    setStudentPanelVisible(
+      false
+    );
   }
 
   function setActiveSession(sessionId) {
@@ -832,6 +983,41 @@
   function bindManagerButtons() {
     document
       .querySelectorAll(
+        ".session-row"
+      )
+      .forEach(details => {
+        details.addEventListener(
+          "toggle",
+          () => {
+            if (details.open) {
+              activateSessionInline(
+                details.dataset.sessionId
+              );
+            } else if (
+              String(
+                db.activeSessionId
+              ) ===
+              String(
+                details.dataset.sessionId
+              )
+            ) {
+              const anyOpen =
+                document.querySelector(
+                  ".session-row[open]"
+                );
+
+              if (!anyOpen) {
+                setStudentPanelVisible(
+                  false
+                );
+              }
+            }
+          }
+        );
+      });
+
+    document
+      .querySelectorAll(
         "#newEvaluation"
       )
       .forEach(button => {
@@ -935,6 +1121,9 @@
 
             if (details) {
               details.open = false;
+              setStudentPanelVisible(
+                false
+              );
             }
           };
       });
