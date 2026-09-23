@@ -1051,3 +1051,42 @@ td{
     align-items:flex-start;
   }
 }
+
+
+/* =========================================================
+   ÉVALUATIONS COMPACTES PAR DÉFAUT
+   ========================================================= */
+
+.session-row{
+  margin-bottom:10px;
+}
+
+.session-summary{
+  min-height:58px;
+}
+
+.session-row:not([open]) .session-summary{
+  border-radius:16px;
+}
+
+.session-row:not([open]) .session-main{
+  width:100%;
+}
+
+.session-row:not([open]) .session-title-line{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.session-row:not([open]) .session-meta{
+  margin-top:4px;
+}
+
+.session-collapse{
+  margin-left:auto;
+  background:#f8fafc;
+  color:#475569;
+  border-color:#cbd5e1;
+  font-weight:800;
+}
