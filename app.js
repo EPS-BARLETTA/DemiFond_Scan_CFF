@@ -1577,48 +1577,6 @@ function init() {
             const page =
               button.dataset.page;
 
-            if (
-              page === 'scan'
-            ) {
-              const g =
-                activeGroup();
-
-              const s =
-                activeSession();
-
-              if (
-                s &&
-                s.status ===
-                'locked'
-              ) {
-                return scanError(
-                  'Évaluation verrouillée : scanner indisponible.'
-                );
-              }
-
-              if (!g || !s) {
-                const ok =
-                  prepareScanner();
-
-                if (!ok) {
-                  return;
-                }
-
-                const selected =
-                  activeSession();
-
-                if (
-                  selected &&
-                  selected.status ===
-                  'locked'
-                ) {
-                  return scanError(
-                    'Évaluation verrouillée : scanner indisponible.'
-                  );
-                }
-              }
-            }
-
             showPage(page);
             render();
           };
