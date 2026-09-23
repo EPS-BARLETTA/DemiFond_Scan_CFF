@@ -441,8 +441,12 @@
 
       if (
         data &&
-        data.type ===
-          "DF_3X500_RESULT"
+        [
+          "DF_3X500_RESULT",
+          "DF_TRAINING_RESULT"
+        ].includes(
+          data.type
+        )
       ) {
         return originalHandleQR(
           data
