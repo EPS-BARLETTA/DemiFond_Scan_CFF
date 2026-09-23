@@ -738,6 +738,21 @@ function handleQR(raw) {
     );
   }
 
+  /*
+   * Une évaluation ne peut contenir qu'un seul protocole.
+   * Le premier scan fixe le type de l'évaluation.
+   */
+  if (
+    session.type &&
+    session.type !== 'ccf'
+  ) {
+    return scanError(
+      'Cette évaluation est configurée pour le 3 × 500. Crée une évaluation séparée pour le 2 × 800.'
+    );
+  }
+
+  session.type = 'ccf';
+
   const race =
     Number(data.race);
 
