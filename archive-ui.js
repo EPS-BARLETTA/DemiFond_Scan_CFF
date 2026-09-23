@@ -208,6 +208,8 @@
         "<td>" + fmtTime(s.races?.[2]?.totalMs) + "</td>" +
         "<td>" + (sc ? fmtTime(sc.best) : "—") + "</td>" +
         "<td>" + (sc ? fmtPts(sc.pp) : "—") + "</td>" +
+        "<td>" + (sc ? fmtTime(sc.fastest200) : "—") + "</td>" +
+        "<td>" + (sc ? fmtTime(sc.slowest200) : "—") + "</td>" +
         "<td>" + (sc ? fmtPts(sc.rp) : "—") + "</td>" +
         "<td class=\"strong\">" +
           (sc ? fmtPts(sc.total) + "/12" : "—") +
@@ -280,6 +282,15 @@
             "</p>" +
             "<p><b>Performance :</b> " +
               (sc ? fmtPts(sc.pp) + "/6" : "—") +
+            "</p>" +
+            "<p><b>200 m le plus rapide :</b> " +
+              (sc ? fmtTime(sc.fastest200) : "—") +
+            "</p>" +
+            "<p><b>200 m le plus lent :</b> " +
+              (sc ? fmtTime(sc.slowest200) : "—") +
+            "</p>" +
+            "<p><b>Écart 200 :</b> " +
+              (sc ? fmtTime(sc.spread) : "—") +
             "</p>" +
             "<p><b>Efficacité :</b> " +
               (sc ? fmtPts(sc.rp) + "/6" : "—") +
@@ -370,6 +381,8 @@
               "<th>C2</th>" +
               "<th>Meilleur</th>" +
               "<th>Perf /6</th>" +
+              "<th>200 + rapide</th>" +
+              "<th>200 + lent</th>" +
               "<th>Eff. /6</th>" +
               "<th>AFL1 /12</th>" +
               "<th>Répart.</th>" +
