@@ -439,6 +439,17 @@
       }
 
 
+      if (
+        data &&
+        data.type ===
+          "DF_3X500_RESULT"
+      ) {
+        return originalHandleQR(
+          data
+        );
+      }
+
+
       const result =
         validatePayload(data);
 
