@@ -941,6 +941,15 @@
 
                         <button
                           type="button"
+                          class="session-delete-hold"
+                          data-session-id="${escHtml(session.id)}"
+                          title="Maintenir pour supprimer"
+                        >
+                          Supprimer
+                        </button>
+
+                        <button
+                          type="button"
                           class="session-collapse"
                         >
                           Replier
