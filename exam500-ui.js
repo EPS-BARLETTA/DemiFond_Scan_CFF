@@ -605,24 +605,24 @@
 
     body.innerHTML = visibleStudents().map(student => {
       const sc = score500(student);
-      const r = student.exam500?.races || [];
-      const t = n => r.find(x=>x.race===n)?.total500Ms;
       return `
         <tr>
-          <td><b>${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")}</b></td>
-          <td>${esc(student.classroom||"")}</td>
-          <td>${timeLabel(t(1))}</td>
-          <td>${timeLabel(t(2))}</td>
-          <td>${timeLabel(t(3))}</td>
+          <td>
+            <b>
+              ${esc(String(student.last||"").toUpperCase())}
+              ${esc(student.first||"")}
+            </b>
+          </td>
+          <td>${esc(student.sex||"")}</td>
           <td>${sc ? timeLabel(sc.totalRaceMs) : "—"}</td>
-          <td>${sc ? fmtPts(sc.perf)+"/6" : "—"}</td>
-          <td>${sc ? sc.eff+" s" : "—"}</td>
-          <td>${sc ? fmtPts(sc.effPts)+"/6" : "—"}</td>
-          <td>${sc ? sc.gap+" s" : "—"}</td>
-          <td>${sc ? fmtPts(sc.gapPts)+"/2" : "—"}</td>
-          <td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)+"/2"}</td>
-          <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)+"/4"}</td>
-          <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)+"/20"}</b></td>
+          <td><b>${sc ? fmtPts(sc.perf) : "—"}</b></td>
+          <td>${sc?.eff == null ? "—" : sc.eff+" s"}</td>
+          <td><b>${sc ? fmtPts(sc.effPts) : "—"}</b></td>
+          <td>${sc?.gap == null ? "—" : sc.gap+" s"}</td>
+          <td><b>${sc ? fmtPts(sc.gapPts) : "—"}</b></td>
+          <td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)}</td>
+          <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)}</td>
+          <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
         </tr>
       `;
     }).join("");
@@ -630,11 +630,36 @@
     const head = document.querySelector("#results .table thead tr");
     if (head) {
       head.innerHTML =
-        "<th>Élève</th><th>Classe</th><th>C1</th><th>C2</th><th>C3</th><th>Cumul</th><th>Perf /6</th><th>Écart C1-C2</th><th>Efficacité /6</th><th>Écart annonces</th><th>/2</th><th>AFL2 /2</th><th>AFL3 /4</th><th>/20</th>";
+        "<th>Nom / prénom</th>" +
+        "<th>Sexe</th>" +
+        "<th>Performance 3 × 500</th>" +
+        "<th>Performance /6</th>" +
+        "<th>Écart entre les 2 courses</th>" +
+        "<th>Note efficacité /6</th>" +
+        "<th>Écart annonces</th>" +
+        "<th>Note écart /2</th>" +
+        "<th>Carnet / échauffement /2</th>" +
+        "<th>Partenaire / starter /4</th>" +
+        "<th>Note /20</th>";
     }
 
     const title = document.querySelector("#results h2");
-    if (title) title.textContent = "Résultats 3 × 500";
+    if (title) {
+      title.textContent =
+        "Fiche d’évaluation · Demi-fond 3 × 500";
+    }
+
+    const tabs =
+      document.getElementById("ccfViewTabs");
+    if (tabs) {
+      tabs.classList.add("hidden");
+    }
+
+    const quick =
+      document.getElementById("ccfQuickView");
+    if (quick) {
+      quick.classList.add("hidden");
+    }
   }
 
   function installRenderHooks() {
