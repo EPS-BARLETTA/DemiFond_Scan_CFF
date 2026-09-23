@@ -473,6 +473,70 @@
     );
   }
 
+  function editableTime(ms) {
+    if (
+      ms == null ||
+      !Number.isFinite(
+        Number(ms)
+      ) ||
+      Number(ms) <= 0
+    ) {
+      return "";
+    }
+
+    return fmtTime(
+      Number(ms)
+    );
+  }
+
+  function parseEditableTime(value) {
+    const raw =
+      String(value || "")
+        .trim()
+        .replace(",", ".");
+
+    if (!raw) {
+      return 0;
+    }
+
+    if (/^\d+(?:\.\d+)?$/.test(raw)) {
+      const seconds =
+        Number(raw);
+
+      return Number.isFinite(seconds)
+        ? Math.round(seconds * 1000)
+        : 0;
+    }
+
+    const parts =
+      raw.split(":");
+
+    if (parts.length !== 2) {
+      return 0;
+    }
+
+    const minutes =
+      Number(parts[0]);
+
+    const seconds =
+      Number(parts[1]);
+
+    if (
+      !Number.isFinite(minutes) ||
+      !Number.isFinite(seconds)
+    ) {
+      return 0;
+    }
+
+    return Math.round(
+      (
+        minutes * 60 +
+        seconds
+      ) *
+      1000
+    );
+  }
+
   function escAttr(value) {
     return String(
       value ?? ""
@@ -1496,10 +1560,12 @@
           )}
 
           ${field(
-            "Temps total (ms)",
+            "Temps réalisé (min:s)",
             "e_t1",
-            r1.totalMs,
-            "number",
+            editableTime(
+              r1.totalMs
+            ),
+            "text",
             locked
           )}
 
@@ -1515,13 +1581,14 @@
                   `${
                     (index + 1) *
                     200
-                  } m cumulé (ms)`,
+                  } m cumulé (min:s)`,
                   `e_s1_${index}`,
-                  r1
-                    .splits
-                    ?.[index] ??
-                    "",
-                  "number",
+                  editableTime(
+                    r1
+                      .splits
+                      ?.[index]
+                  ),
+                  "text",
                   locked
                 )
             )
@@ -1547,10 +1614,12 @@
           )}
 
           ${field(
-            "Temps total (ms)",
+            "Temps réalisé (min:s)",
             "e_t2",
-            r2.totalMs,
-            "number",
+            editableTime(
+              r2.totalMs
+            ),
+            "text",
             locked
           )}
 
@@ -1566,13 +1635,14 @@
                   `${
                     (index + 1) *
                     200
-                  } m cumulé (ms)`,
+                  } m cumulé (min:s)`,
                   `e_s2_${index}`,
-                  r2
-                    .splits
-                    ?.[index] ??
-                    "",
-                  "number",
+                  editableTime(
+                    r2
+                      .splits
+                      ?.[index]
+                  ),
+                  "text",
                   locked
                 )
             )
@@ -1814,12 +1884,11 @@
               student
                 .races[race]
                 .totalMs =
-                Number(
+                parseEditableTime(
                   $(
                     `e_t${race}`
                   ).value
-                ) ||
-                0;
+                );
 
               student
                 .races[race]
@@ -1831,12 +1900,11 @@
                   3
                 ].map(
                   index =>
-                    Number(
+                    parseEditableTime(
                       $(
                         `e_s${race}_${index}`
                       ).value
-                    ) ||
-                    0
+                    )
                 );
             }
           );
