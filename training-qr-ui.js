@@ -245,37 +245,115 @@
   }
 
   function install() {
-    if (
-      typeof window.handleQR !== "function" ||
-      window.handleQR.__trainingBridge
-    ) {
-      renderTrainingResults();
-      return;
+    /*
+     * Route directe pour les QR Chrono / Minuteur / VMA.
+     * On intercepte le bouton "Valider" utilisé aussi par scanner-ios
+     * AVANT toute logique CCF, afin qu'un QR d'entraînement ne puisse
+     * jamais créer ou sélectionner une évaluation CCF.
+     */
+    const readButton =
+      document.getElementById(
+        "readText"
+      );
+
+    if (readButton) {
+      readButton.onclick =
+        () => {
+          const raw =
+            document
+              .getElementById(
+                "qrText"
+              )
+              ?.value
+              ?.trim();
+
+          if (!raw) {
+            scanError(
+              "Aucun QR à lire."
+            );
+            return;
+          }
+
+          let data = null;
+
+          try {
+            data =
+              JSON.parse(raw);
+          } catch {}
+
+          if (
+            data?.type ===
+              "DF_TRAINING_RESULT"
+          ) {
+            handleTraining(
+              data
+            );
+            return;
+          }
+
+          if (
+            typeof window.handleQR ===
+              "function"
+          ) {
+            window.handleQR(
+              raw
+            );
+          }
+        };
     }
 
-    const original =
-      window.handleQR;
+    /*
+     * Garde aussi le pont global pour les autres chemins d'entrée.
+     */
+    if (
+      typeof window.handleQR ===
+        "function" &&
+      !window.handleQR
+        .__trainingBridge
+    ) {
+      const original =
+        window.handleQR;
 
-    const wrapped =
-      function(raw) {
-        let data = raw;
+      const wrapped =
+        function(raw) {
+          let data = raw;
 
-        try {
-          if (typeof raw === "string") {
-            data = JSON.parse(raw);
+          try {
+            if (
+              typeof raw ===
+                "string"
+            ) {
+              data =
+                JSON.parse(raw);
+            }
+          } catch {}
+
+          if (
+            data?.type ===
+              "DF_TRAINING_RESULT"
+          ) {
+            handleTraining(
+              data
+            );
+            return;
           }
-        } catch {}
 
-        if (data?.type === "DF_TRAINING_RESULT") {
-          handleTraining(data);
-          return;
-        }
+          return original(
+            raw
+          );
+        };
 
-        return original(raw);
-      };
+      wrapped
+        .__trainingBridge =
+          true;
 
-    wrapped.__trainingBridge = true;
-    window.handleQR = wrapped;
+      window.handleQR =
+        wrapped;
+    }
+
+    window
+      .handleTrainingResult =
+        handleTraining;
 
     renderTrainingResults();
 
