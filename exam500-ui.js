@@ -61,6 +61,31 @@
     db.settings = db.settings || {};
     db.settings.exam500Bareme =
       db.settings.exam500Bareme || clone(DEFAULT_BAREME);
+
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
+
+    /*
+     * Chaque évaluation 3 × 500 conserve son propre barème.
+     * Le barème global sert uniquement de modèle pour une nouvelle évaluation.
+     * Ainsi, une archive HTML réimportée retrouve exactement son barème.
+     */
+    if (
+      session &&
+      session.type === "exam500"
+    ) {
+      if (!session.exam500Bareme) {
+        session.exam500Bareme =
+          clone(
+            db.settings.exam500Bareme
+          );
+      }
+
+      return session.exam500Bareme;
+    }
+
     return db.settings.exam500Bareme;
   }
 
@@ -198,6 +223,15 @@
 
     if (total < thresholds[0].ms) {
       return thresholds[0].p;
+    }
+
+    if (
+      total >
+      thresholds[
+        thresholds.length - 1
+      ].ms
+    ) {
+      return 0;
     }
 
     let points = 0;
@@ -513,6 +547,9 @@
           : null;
 
       if (session) {
+        session.exam500Bareme =
+          clone(DEFAULT_BAREME);
+
         session.exam500IndexMode = "c1c2";
         session.exam500Afl2Label =
           "Carnet / échauffement";
@@ -521,22 +558,6 @@
       }
 
       save();
-
-      const sessionAfter =
-        typeof activeSession === "function"
-          ? activeSession()
-          : null;
-
-      if (
-        sessionAfter &&
-        Array.isArray(sessionAfter.students) &&
-        sessionAfter.students.length !== studentCountBefore
-      ) {
-        console.error(
-          "3x500 safety: student count changed while editing barème/index"
-        );
-      }
-
       d.close();
 
       ensureBaremeButton();
@@ -569,7 +590,8 @@
         return;
       }
 
-      db.settings.exam500Bareme = next;
+      db.settings.exam500Bareme =
+        clone(next);
 
       const session =
         typeof activeSession === "function"
@@ -577,6 +599,8 @@
           : null;
 
       if (session) {
+        session.exam500Bareme =
+          clone(next);
         session.exam500IndexMode =
           d.querySelector("#b500IndexMode").value === "three"
             ? "three"
@@ -1294,7 +1318,13 @@
         "<th>Sexe</th>" +
         "<th>Performance 3 × 500</th>" +
         "<th>Performance /6</th>" +
-        "<th>Écart entre les 2 courses</th>" +
+        "<th>" +
+        (
+          indexMode() === "three"
+            ? "Écart sur les 3 courses"
+            : "Écart C1–C2"
+        ) +
+        "</th>" +
         "<th>Note efficacité /6</th>" +
         "<th>Écart annonces</th>" +
         "<th>Note écart /2</th>" +
