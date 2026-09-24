@@ -62,21 +62,21 @@
   <div>
 
     <button id="archiveFile">
-      📁 Archiver l’évaluation
+      📄 Sauvegarder cette évaluation
     </button>
 
     <button id="backup">
-      Sauvegarde complète
+      💾 Sauvegarder toute l’application
     </button>
 
     <label class="button">
 
-      Importer une sauvegarde
+      📥 Importer / restaurer
 
       <input
         id="restore"
         type="file"
-        accept="application/json"
+        accept=".html,.json,text/html,application/json"
         hidden
       >
 
@@ -126,7 +126,7 @@
         + Nouvel espace
       </button>
 
-      <button id="archive">
+      <button id="archive" class="hidden" aria-hidden="true" tabindex="-1">
         Archiver l’espace
       </button>
 
@@ -408,7 +408,7 @@
 <script src="/ccf-results-ui.js?v=1"></script>
 
 <!-- Espaces / évaluations -->
-<script src="/group-sessions-ui.js?v=6"></script>
+<script src="/group-sessions-ui.js?v=7"></script>
 
 <!-- Cartes espaces -->
 <script src="/spaces-ui.js?v=1"></script>
