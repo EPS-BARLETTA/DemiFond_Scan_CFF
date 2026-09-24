@@ -8,6 +8,29 @@
     return db.trainingScans;
   }
 
+  function currentContext() {
+    return {
+      groupId:
+        db.activeGroupId || null,
+      sessionId:
+        db.activeSessionId || null
+    };
+  }
+
+  function currentRows() {
+    const context =
+      currentContext();
+
+    return ensureStore()
+      .filter(
+        item =>
+          item.groupId ===
+            context.groupId &&
+          item.sessionId ===
+            context.sessionId
+      );
+  }
+
   function formatTime(ms) {
     if (!Number.isFinite(Number(ms)) || Number(ms) <= 0) {
       return "—";
@@ -119,7 +142,11 @@
       vma:
         data.vma == null ? null : Number(data.vma),
       createdAt:
-        data.createdAt || new Date().toISOString()
+        data.createdAt || new Date().toISOString(),
+      groupId:
+        db.activeGroupId || null,
+      sessionId:
+        db.activeSessionId || null
     };
   }
 
@@ -132,7 +159,7 @@
     if (!card) return;
 
     const rows =
-      ensureStore()
+      currentRows()
         .slice()
         .sort(
           (a, b) =>
@@ -149,9 +176,9 @@
         );
 
     card.innerHTML = `
-      <h2>Résultats hors CCF</h2>
+      <h2>Résultats Chrono performance</h2>
       <p style="margin-top:-6px;color:#64748b">
-        Chrono, minuteur et tests d'entraînement scannés indépendamment du CCF.
+        ${esc(activeSession()?.name || "Évaluation active")} · résultats scannés depuis Chrono Carnet EPS.
       </p>
 
       <div class="table" style="margin-top:14px">
@@ -162,8 +189,8 @@
               <th>Prénom</th>
               <th>Classe</th>
               <th>Sexe</th>
-              <th>Type</th>
-              <th>Résultat</th>
+              <th>Séance</th>
+              <th>Résultats</th>
             </tr>
           </thead>
           <tbody>
@@ -176,7 +203,7 @@
                         <td>${esc(item.first || "")}</td>
                         <td>${esc(item.classroom || "")}</td>
                         <td>${esc(item.sex || "")}</td>
-                        <td>${esc(toolLabel(item.tool))}</td>
+                        <td>${esc(item.seriesLabel || toolLabel(item.tool))}</td>
                         <td><b>${esc(item.result || "—")}</b></td>
                       </tr>
                     `
@@ -334,7 +361,11 @@
         "<br>" +
         esc(item.sex) +
         " · " +
-        esc(toolLabel(item.tool)) +
+        esc(
+          item.planMode === "series"
+            ? "Série / pyramide"
+            : toolLabel(item.tool)
+        ) +
         " · " +
         esc(item.result) +
         "<br><br>" +
@@ -362,7 +393,7 @@
       }
     }
 
-    toast?.("Résultat hors CCF enregistré");
+    toast?.("Résultat Chrono enregistré dans l’évaluation active");
 
     renderTrainingResults();
 
