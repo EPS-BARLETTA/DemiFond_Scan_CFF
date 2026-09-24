@@ -788,11 +788,34 @@
                     String(activeId);
 
                   const students =
-                    Array.isArray(
-                      session.students
-                    )
-                      ? session.students.length
-                      : 0;
+                    session.type === "training"
+                      ? new Set(
+                          (
+                            Array.isArray(
+                              db.trainingScans
+                            )
+                              ? db.trainingScans
+                              : []
+                          )
+                            .filter(
+                              item =>
+                                String(
+                                  item.sessionId
+                                ) ===
+                                String(
+                                  session.id
+                                )
+                            )
+                            .map(
+                              item =>
+                                item.studentId
+                            )
+                        ).size
+                      : Array.isArray(
+                          session.students
+                        )
+                        ? session.students.length
+                        : 0;
 
                   return `
                     <details
@@ -1130,10 +1153,35 @@
       .forEach(button => {
         button.onclick =
           () => {
+            const session =
+              sessionsOf(
+                activeGroupSafe()
+              ).find(
+                item =>
+                  String(item.id) ===
+                  String(
+                    button.dataset.sessionId
+                  )
+              );
+
             openSession(
               button.dataset.sessionId,
-              "results"
+              session?.type ===
+                "training"
+                ? "training-results"
+                : "results"
             );
+
+            if (
+              session?.type ===
+                "training" &&
+              typeof window
+                .renderTrainingResults ===
+                "function"
+            ) {
+              window
+                .renderTrainingResults();
+            }
           };
       });
 
