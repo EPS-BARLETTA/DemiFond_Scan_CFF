@@ -64,10 +64,76 @@
     return db.settings.exam500Bareme;
   }
 
+  function normalizedRaces(student) {
+    const races =
+      Array.isArray(
+        student?.exam500?.races
+      )
+        ? student.exam500.races
+        : [];
+
+    return [1,2,3].map(
+      race =>
+        races.find(
+          r =>
+            Number(r.race) === race
+        ) || null
+    );
+  }
+
+  function complete500(student) {
+    const [c1,c2,c3] =
+      normalizedRaces(student);
+
+    if (!c1 || !c2 || !c3) {
+      return false;
+    }
+
+    const validRace =
+      race => {
+        const split =
+          Number(race.split250Ms);
+
+        const total =
+          Number(race.total500Ms);
+
+        return (
+          Number.isFinite(split) &&
+          split > 0 &&
+          Number.isFinite(total) &&
+          total > split
+        );
+      };
+
+    return (
+      validRace(c1) &&
+      validRace(c2) &&
+      validRace(c3) &&
+      Number.isFinite(Number(c1.projectMs)) &&
+      Number(c1.projectMs) > 0 &&
+      Number.isFinite(Number(c2.projectMs)) &&
+      Number(c2.projectMs) > 0
+    );
+  }
+
   function performancePoints(student) {
-    const rows = student.sex === "M" ? settings().boys : settings().girls;
-    const total = (student.exam500?.races || []).reduce((s,r) => s + Number(r.total500Ms || 0), 0);
-    if (!total) return 0;
+    if (!complete500(student)) {
+      return 0;
+    }
+
+    const rows =
+      student.sex === "M"
+        ? settings().boys
+        : settings().girls;
+
+    const total =
+      normalizedRaces(student)
+        .reduce(
+          (sum,race) =>
+            sum +
+            Number(race.total500Ms),
+          0
+        );
 
     const thresholds = rows
       .map(([t,p]) => ({ms:parseTime(t), p:Number(p)}))
@@ -94,13 +160,32 @@
   }
 
   function gapSeconds(student) {
-    const races = student.exam500?.races || [];
-    if (races.length < 2) return null;
-    const a = races[0];
-    const b = races[1];
-    const e1 = a.projectMs ? Math.abs(Number(a.total500Ms)-Number(a.projectMs))/1000 : 0;
-    const e2 = b.projectMs ? Math.abs(Number(b.total500Ms)-Number(b.projectMs))/1000 : 0;
-    return Math.round(e1 + e2);
+    const [c1,c2] =
+      normalizedRaces(student);
+
+    if (
+      !c1 ||
+      !c2 ||
+      !Number.isFinite(Number(c1.projectMs)) ||
+      Number(c1.projectMs) <= 0 ||
+      !Number.isFinite(Number(c2.projectMs)) ||
+      Number(c2.projectMs) <= 0
+    ) {
+      return null;
+    }
+
+    return Math.round(
+      (
+        Math.abs(
+          Number(c1.total500Ms) -
+          Number(c1.projectMs)
+        ) +
+        Math.abs(
+          Number(c2.total500Ms) -
+          Number(c2.projectMs)
+        )
+      ) / 1000
+    );
   }
 
   function tableScore(rows, seconds) {
@@ -134,7 +219,9 @@
   }
 
   function score500(student) {
-    if (!student?.exam500?.races?.length) return null;
+    if (!complete500(student)) {
+      return null;
+    }
     const perf = performancePoints(student);
     const gap = gapSeconds(student);
     const eff = efficiencySeconds(student);
@@ -176,7 +263,14 @@
       afl2,
       afl3,
       total20,
-      totalRaceMs: student.exam500.races.reduce((s,r)=>s+Number(r.total500Ms||0),0)
+      totalRaceMs:
+        normalizedRaces(student)
+          .reduce(
+            (sum,race) =>
+              sum +
+              Number(race.total500Ms),
+            0
+          )
     };
   }
 
@@ -326,8 +420,150 @@
     d.showModal();
   }
 
+  function validate500Payload(data) {
+    if (
+      !data ||
+      typeof data !== "object" ||
+      data.type !== "DF_3X500_RESULT" ||
+      Number(data.v) !== 1
+    ) {
+      return {
+        ok:false,
+        message:"QR 3 × 500 invalide."
+      };
+    }
+
+    if (
+      !data.studentId ||
+      !String(data.last || "").trim() ||
+      !String(data.first || "").trim() ||
+      !String(data.classroom || "").trim() ||
+      !["F","M"].includes(
+        String(data.sex || "").toUpperCase()
+      )
+    ) {
+      return {
+        ok:false,
+        message:"Identité élève incomplète dans le QR 3 × 500."
+      };
+    }
+
+    if (
+      !Array.isArray(data.races) ||
+      data.races.length !== 3
+    ) {
+      return {
+        ok:false,
+        message:"Le QR doit contenir exactement les 3 courses de 500 m."
+      };
+    }
+
+    const ordered =
+      [1,2,3].map(
+        race =>
+          data.races.find(
+            item =>
+              Number(item.race) === race
+          )
+      );
+
+    if (ordered.some(race => !race)) {
+      return {
+        ok:false,
+        message:"Les courses 1, 2 et 3 doivent toutes être présentes."
+      };
+    }
+
+    for (
+      let index = 0;
+      index < ordered.length;
+      index++
+    ) {
+      const race =
+        ordered[index];
+
+      const split =
+        Number(race.split250Ms);
+
+      const total =
+        Number(race.total500Ms);
+
+      if (
+        !Number.isFinite(split) ||
+        split <= 0 ||
+        !Number.isFinite(total) ||
+        total <= split
+      ) {
+        return {
+          ok:false,
+          message:
+            "Temps 250 m / 500 m incohérents pour la course " +
+            (index + 1) +
+            "."
+        };
+      }
+
+      if (index < 2) {
+        const project =
+          parseTime(race.project);
+
+        if (
+          !project ||
+          project < 20000 ||
+          project > 600000
+        ) {
+          return {
+            ok:false,
+            message:
+              "Estimation obligatoire et invalide pour le 500 n°" +
+              (index + 1) +
+              "."
+          };
+        }
+      } else if (
+        race.project != null &&
+        String(race.project).trim() !== ""
+      ) {
+        return {
+          ok:false,
+          message:
+            "Le 500 n°3 doit rester libre, sans estimation."
+        };
+      }
+    }
+
+    return {
+      ok:true,
+      data:{
+        ...data,
+        sex:
+          String(data.sex).toUpperCase(),
+        classroom:
+          String(data.classroom)
+            .trim()
+            .toUpperCase(),
+        races:ordered
+      }
+    };
+  }
+
   function handle500(data) {
-    if (data.type !== "DF_3X500_RESULT") return false;
+    if (
+      data?.type !==
+        "DF_3X500_RESULT"
+    ) {
+      return false;
+    }
+
+    const checked =
+      validate500Payload(data);
+
+    if (!checked.ok) {
+      scanError(checked.message);
+      return true;
+    }
+
+    data = checked.data;
 
     let group = activeGroup();
     let session = activeSession();
@@ -359,17 +595,45 @@
 
     session.type = "exam500";
 
-    let student = findStudent(session, data.studentId);
-    if (!student) {
-      student = buildStudent(data);
-      session.students.push(student);
+    let student =
+      findStudent(
+        session,
+        data.studentId
+      );
+
+    if (
+      student?.exam500?.races?.length
+    ) {
+      const replace =
+        confirm(
+          String(student.last || "").toUpperCase() +
+          " " +
+          String(student.first || "") +
+          "\n\nUn résultat 3 × 500 est déjà enregistré.\n\nRemplacer ce relevé ?"
+        );
+
+      if (!replace) {
+        return true;
+      }
     }
 
-    updateIdentity(student,data);
+    if (!student) {
+      student =
+        buildStudent(data);
+
+      session.students.push(
+        student
+      );
+    }
+
+    updateIdentity(
+      student,
+      data
+    );
 
     student.exam500 = {
       projects: Array.isArray(data.projects) ? data.projects : [],
-      races: (data.races || []).map(r => ({
+      races: data.races.map(r => ({
         race:Number(r.race),
         project:r.project || null,
         projectMs:r.project ? parseTime(r.project) : null,
@@ -550,24 +814,24 @@
 
     d.querySelector("#e500Save").onclick =
       () => {
-        student.last =
+        const last =
           d.querySelector("#e500Last").value.trim();
 
-        student.first =
+        const first =
           d.querySelector("#e500First").value.trim();
 
-        student.classroom =
+        const classroom =
           d.querySelector("#e500Class").value.trim().toUpperCase();
 
-        student.sex =
-          d.querySelector("#e500Sex").value;
+        if (!last || !first || !classroom) {
+          alert("Nom, prénom et classe sont obligatoires.");
+          return;
+        }
 
-        student.exam500.races =
+        const previewRaces =
           [1,2,3].map(n => {
             const projectInput =
-              d.querySelector(
-                "#e500Project" + n
-              );
+              d.querySelector("#e500Project" + n);
 
             const project =
               projectInput
@@ -583,24 +847,110 @@
                   : null,
               split250Ms:
                 parseTime(
-                  d.querySelector(
-                    "#e500Split" + n
-                  ).value
+                  d.querySelector("#e500Split" + n).value
                 ) || 0,
               total500Ms:
                 parseTime(
-                  d.querySelector(
-                    "#e500Total" + n
-                  ).value
+                  d.querySelector("#e500Total" + n).value
                 ) || 0
             };
           });
 
-        student.exam500Afl2 =
+        for (let i = 0; i < 3; i++) {
+          const race = previewRaces[i];
+
+          if (
+            !race.split250Ms ||
+            !race.total500Ms ||
+            race.total500Ms <= race.split250Ms
+          ) {
+            alert(
+              "Vérifie les temps 250 m et 500 m de la course " +
+              (i + 1) +
+              "."
+            );
+            return;
+          }
+
+          if (
+            i < 2 &&
+            (
+              !race.projectMs ||
+              race.projectMs < 20000 ||
+              race.projectMs > 600000
+            )
+          ) {
+            alert(
+              "Une estimation valide est obligatoire pour les courses 1 et 2."
+            );
+            return;
+          }
+        }
+
+        const afl2Raw =
           d.querySelector("#e500Afl2").value;
 
-        student.exam500Afl3 =
+        const afl3Raw =
           d.querySelector("#e500Afl3").value;
+
+        const afl2 =
+          afl2Raw === ""
+            ? ""
+            : Number(afl2Raw);
+
+        const afl3 =
+          afl3Raw === ""
+            ? ""
+            : Number(afl3Raw);
+
+        if (
+          afl2 !== "" &&
+          (
+            !Number.isFinite(afl2) ||
+            afl2 < 0 ||
+            afl2 > 2
+          )
+        ) {
+          alert(
+            "Carnet / échauffement doit être compris entre 0 et 2."
+          );
+          return;
+        }
+
+        if (
+          afl3 !== "" &&
+          (
+            !Number.isFinite(afl3) ||
+            afl3 < 0 ||
+            afl3 > 4
+          )
+        ) {
+          alert(
+            "Partenaire / starter doit être compris entre 0 et 4."
+          );
+          return;
+        }
+
+        student.last =
+          last;
+
+        student.first =
+          first;
+
+        student.classroom =
+          classroom;
+
+        student.sex =
+          d.querySelector("#e500Sex").value;
+
+        student.exam500.races =
+          previewRaces;
+
+        student.exam500Afl2 =
+          afl2;
+
+        student.exam500Afl3 =
+          afl3;
 
         save();
         d.close();
@@ -642,6 +992,7 @@
           <td>${timeLabel(t(1))}</td>
           <td>${esc(p(2)||"—")}</td>
           <td>${timeLabel(t(2))}</td>
+          <td>${timeLabel(t(3))}</td>
           <td><b>${sc ? fmtPts(sc.afl1)+"/12" : "—"}</b></td>
           <td>
             <button type="button" class="student-edit" data-id="${esc(student.id)}">✏️ Corriger</button>
@@ -661,7 +1012,7 @@
     const head = document.querySelector(".student-list-card thead tr");
     if (head) {
       head.innerHTML =
-        "<th>Élève</th><th>Classe</th><th>Annonce C1</th><th>C1</th><th>Annonce C2</th><th>C2</th><th>AFL1</th><th>Action</th>";
+        "<th>Élève</th><th>Classe</th><th>Annonce C1</th><th>C1</th><th>Annonce C2</th><th>C2</th><th>C3 libre</th><th>AFL1</th><th>Action</th>";
     }
   }
 
