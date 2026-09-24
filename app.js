@@ -696,6 +696,32 @@ function handleQR(raw) {
     );
   }
 
+  /*
+   * Les QR Chrono / Minuteur / VMA doivent être routés
+   * AVANT toute validation CCF. Cela sécurise aussi le
+   * scan caméra iPad, même si un autre script a repris le
+   * bouton de validation.
+   */
+  if (
+    data?.type ===
+      'DF_TRAINING_RESULT'
+  ) {
+    if (
+      typeof window
+        .handleTrainingResult ===
+        'function'
+    ) {
+      return window
+        .handleTrainingResult(
+          data
+        );
+    }
+
+    return scanError(
+      'Module résultats entraînement indisponible.'
+    );
+  }
+
   if (
     !data ||
     !data.studentId ||
