@@ -175,49 +175,290 @@
             )
         );
 
-    card.innerHTML = `
-      <h2>Résultats Chrono performance</h2>
-      <p style="margin-top:-6px;color:#64748b">
-        ${esc(activeSession()?.name || "Évaluation active")} · résultats scannés depuis Chrono Carnet EPS.
-      </p>
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
 
-      <div class="table" style="margin-top:14px">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Prénom</th>
-              <th>Classe</th>
-              <th>Sexe</th>
-              <th>Séance</th>
-              <th>Résultats</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${
-              rows.length
-                ? rows.map(
-                    item => `
-                      <tr>
-                        <td><b>${esc(String(item.last || "").toUpperCase())}</b></td>
-                        <td>${esc(item.first || "")}</td>
-                        <td>${esc(item.classroom || "")}</td>
-                        <td>${esc(item.sex || "")}</td>
-                        <td>${esc(item.seriesLabel || toolLabel(item.tool))}</td>
-                        <td><b>${esc(item.result || "—")}</b></td>
-                      </tr>
-                    `
-                  ).join("")
-                : `
-                  <tr>
-                    <td colspan="6">Aucun résultat hors CCF scanné.</td>
-                  </tr>
-                `
+    const formatRaceCards =
+      item => {
+        if (
+          !Array.isArray(item.races) ||
+          !item.races.length
+        ) {
+          return (
+            '<div class="training-result-pill">' +
+            esc(item.result || "—") +
+            '</div>'
+          );
+        }
+
+        return item.races
+          .map(
+            (race,index) => {
+              const best =
+                Number(race.totalMs);
+
+              const detail =
+                Array.isArray(race.passes) &&
+                race.passes.length > 1
+                  ? '<small>' +
+                    race.passes
+                      .map(
+                        pass =>
+                          esc(
+                            String(pass.distance) +
+                            " m · " +
+                            formatTime(
+                              pass.cumulativeMs
+                            )
+                          )
+                      )
+                      .join(" · ") +
+                    '</small>'
+                  : '';
+
+              return (
+                '<div class="training-race-card">' +
+                  '<span class="training-race-index">' +
+                    (index + 1) +
+                  '</span>' +
+                  '<div>' +
+                    '<b>' +
+                      esc(
+                        String(race.distance) +
+                        " m"
+                      ) +
+                    '</b>' +
+                    '<strong>' +
+                      esc(
+                        formatTime(best)
+                      ) +
+                    '</strong>' +
+                    detail +
+                  '</div>' +
+                '</div>'
+              );
             }
-          </tbody>
-        </table>
-      </div>
-    `;
+          )
+          .join("");
+      };
+
+    card.innerHTML =
+      '<div class="training-results-head">' +
+        '<div>' +
+          '<p class="eyebrow">CHRONO PERFORMANCE</p>' +
+          '<h2>' +
+            esc(
+              session?.label ||
+              "Évaluation active"
+            ) +
+          '</h2>' +
+          '<p class="training-subtitle">' +
+            rows.length +
+            ' élève' +
+            (rows.length > 1 ? 's' : '') +
+            ' · résultats scannés depuis Chrono Carnet EPS' +
+          '</p>' +
+        '</div>' +
+      '</div>' +
+      (
+        rows.length
+          ? '<div class="training-student-grid">' +
+            rows
+              .map(
+                item =>
+                  '<article class="training-student-card">' +
+                    '<div class="training-student-head">' +
+                      '<div>' +
+                        '<h3>' +
+                          esc(
+                            String(
+                              item.last || ""
+                            ).toUpperCase()
+                          ) +
+                          ' ' +
+                          esc(
+                            item.first || ""
+                          ) +
+                        '</h3>' +
+                        '<p>' +
+                          esc(
+                            item.classroom || "—"
+                          ) +
+                          ' · ' +
+                          esc(
+                            item.sex || "—"
+                          ) +
+                        '</p>' +
+                      '</div>' +
+                      '<span class="training-session-badge">' +
+                        esc(
+                          item.seriesLabel ||
+                          toolLabel(item.tool)
+                        ) +
+                      '</span>' +
+                    '</div>' +
+                    '<div class="training-races">' +
+                      formatRaceCards(item) +
+                    '</div>' +
+                  '</article>'
+              )
+              .join("") +
+            '</div>'
+          : '<div class="training-empty">Aucun résultat scanné pour cette évaluation.</div>'
+      );
+
+    if (
+      !document.getElementById(
+        "trainingResultsStyles"
+      )
+    ) {
+      const style =
+        document.createElement(
+          "style"
+        );
+
+      style.id =
+        "trainingResultsStyles";
+
+      style.textContent = `
+        #trainingResultsCard{
+          padding:20px;
+          background:linear-gradient(180deg,#f8fbff 0%,#f4f7fb 100%);
+        }
+        .training-results-head{
+          display:flex;
+          align-items:flex-end;
+          justify-content:space-between;
+          gap:16px;
+          margin-bottom:18px;
+          padding:18px 20px;
+          background:white;
+          border:1px solid #dce5f2;
+          border-radius:18px;
+          box-shadow:0 8px 24px rgba(31,61,120,.06);
+        }
+        .training-results-head h2{
+          margin:2px 0 4px;
+          font-size:28px;
+        }
+        .training-results-head .eyebrow{
+          margin:0;
+          font-size:12px;
+          font-weight:800;
+          letter-spacing:.14em;
+          color:#3157d5;
+        }
+        .training-subtitle{
+          margin:0;
+          color:#667085;
+        }
+        .training-student-grid{
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+          gap:16px;
+        }
+        .training-student-card{
+          background:white;
+          border:1px solid #dce5f2;
+          border-radius:18px;
+          padding:16px;
+          box-shadow:0 8px 24px rgba(31,61,120,.06);
+        }
+        .training-student-head{
+          display:flex;
+          justify-content:space-between;
+          gap:14px;
+          align-items:flex-start;
+          margin-bottom:14px;
+        }
+        .training-student-head h3{
+          margin:0;
+          font-size:20px;
+        }
+        .training-student-head p{
+          margin:4px 0 0;
+          color:#667085;
+          font-weight:600;
+        }
+        .training-session-badge{
+          display:inline-flex;
+          align-items:center;
+          padding:7px 10px;
+          border-radius:999px;
+          background:#eef3ff;
+          color:#3157d5;
+          font-size:12px;
+          font-weight:800;
+          white-space:nowrap;
+        }
+        .training-races{
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+          gap:10px;
+        }
+        .training-race-card{
+          display:flex;
+          gap:10px;
+          align-items:flex-start;
+          padding:12px;
+          border-radius:14px;
+          background:#f8fafc;
+          border:1px solid #e4e9f2;
+        }
+        .training-race-index{
+          width:26px;
+          height:26px;
+          border-radius:50%;
+          display:grid;
+          place-items:center;
+          flex:0 0 auto;
+          background:#3157d5;
+          color:white;
+          font-size:12px;
+          font-weight:800;
+        }
+        .training-race-card b{
+          display:block;
+          font-size:12px;
+          color:#667085;
+          margin-bottom:2px;
+        }
+        .training-race-card strong{
+          display:block;
+          font-size:20px;
+          line-height:1.1;
+          color:#101828;
+        }
+        .training-race-card small{
+          display:block;
+          margin-top:6px;
+          color:#667085;
+          line-height:1.35;
+        }
+        .training-empty{
+          padding:24px;
+          border:1px dashed #c9d3e3;
+          border-radius:16px;
+          background:white;
+          color:#667085;
+          text-align:center;
+        }
+        @media(max-width:700px){
+          .training-student-grid{
+            grid-template-columns:1fr;
+          }
+          .training-results-head h2{
+            font-size:23px;
+          }
+        }
+      `;
+
+      document.head.appendChild(
+        style
+      );
+    }
   }
 
   function expandCompactChrono(data) {
