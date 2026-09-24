@@ -438,7 +438,135 @@
       "</main></body></html>";
   }
 
+  function buildTrainingReport(group, session, payload) {
+    const scans =
+      (Array.isArray(db.trainingScans) ? db.trainingScans : [])
+        .filter(function(item) {
+          return String(item.sessionId) === String(session.id) &&
+            String(item.groupId) === String(group.id);
+        })
+        .sort(function(a,b) {
+          return String(a.last || "").localeCompare(
+            String(b.last || ""),
+            "fr",
+            {sensitivity:"base"}
+          ) ||
+          String(a.first || "").localeCompare(
+            String(b.first || ""),
+            "fr",
+            {sensitivity:"base"}
+          );
+        });
+
+    const classes = [...new Set(
+      scans.map(function(item) {
+        return item.classroom;
+      }).filter(Boolean)
+    )].sort();
+
+    const raceCards = function(item) {
+      const races = Array.isArray(item.races) ? item.races : [];
+
+      return races.map(function(race,index) {
+        const passes = Array.isArray(race.passes) ? race.passes : [];
+        const detail = passes.length > 1
+          ? "<small>" +
+              passes.map(function(pass) {
+                return html(String(pass.distance) + " m · " + fmtTime(pass.cumulativeMs));
+              }).join(" · ") +
+            "</small>"
+          : "";
+
+        return "<div class=\"race\">" +
+          "<span class=\"num\">" + (index + 1) + "</span>" +
+          "<div><b>" + html(String(race.distance || "?") + " m") + "</b>" +
+          "<strong>" + fmtTime(race.totalMs) + "</strong>" +
+          detail + "</div></div>";
+      }).join("");
+    };
+
+    const studentCards = scans.map(function(item) {
+      return "<article class=\"student-card\">" +
+        "<header><div><h3>" +
+          html(String(item.last || "").toUpperCase()) + " " +
+          html(item.first || "") +
+        "</h3><p>" +
+          html(item.classroom || "—") + " · " +
+          html(item.sex || "—") +
+        "</p></div><span class=\"badge\">" +
+          html(item.seriesLabel || "Chrono performance") +
+        "</span></header>" +
+        "<div class=\"races\">" +
+          (raceCards(item) || "<p>—</p>") +
+        "</div></article>";
+    }).join("");
+
+    const dataJson = JSON.stringify(payload).replace(/</g, "\\u003c");
+    const exportDate = new Date().toLocaleString("fr-FR");
+
+    const style = [
+      ":root{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:#172033;background:#eef2f7}",
+      "*{box-sizing:border-box}",
+      "body{margin:0;padding:24px;background:#eef2f7}",
+      "main{max-width:1400px;margin:auto}",
+      ".hero{background:#172554;color:#fff;padding:24px;border-radius:20px;margin-bottom:16px}",
+      ".hero h1{margin:0 0 8px;font-size:28px}",
+      ".hero p{margin:4px 0;color:#dbeafe}",
+      ".cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}",
+      ".card{background:#fff;border-radius:16px;padding:16px;border:1px solid #d8e0ea}",
+      ".card b{display:block;font-size:26px;margin-top:5px}",
+      ".grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}",
+      ".student-card{background:#fff;border:1px solid #d8e0ea;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(31,61,120,.06)}",
+      ".student-card header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}",
+      ".student-card h3{margin:0;font-size:20px}",
+      ".student-card p{margin:4px 0;color:#64748b}",
+      ".badge{padding:7px 10px;border-radius:999px;background:#eef3ff;color:#3157d5;font-size:12px;font-weight:800;white-space:nowrap}",
+      ".races{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}",
+      ".race{display:flex;gap:10px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #e4e9f2}",
+      ".num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#3157d5;color:#fff;font-size:12px;font-weight:800;flex:0 0 auto}",
+      ".race b{display:block;font-size:12px;color:#64748b}",
+      ".race strong{display:block;font-size:20px;margin-top:2px}",
+      ".race small{display:block;margin-top:6px;color:#64748b;line-height:1.35}",
+      ".note{font-size:13px;color:#64748b;margin-top:16px}",
+      "@media(max-width:800px){body{padding:12px}.cards{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.hero h1{font-size:23px}}"
+    ].join("");
+
+    return "<!doctype html><html lang=\"fr\"><head>" +
+      "<meta charset=\"utf-8\">" +
+      "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
+      "<title>Archive Chrono — " + html(group.name) + "</title>" +
+      "<style>" + style + "</style></head><body><main>" +
+      "<section class=\"hero\">" +
+        "<h1>DemiFond Scan · Chrono performance</h1>" +
+        "<p><b>" + html(group.name) + "</b></p>" +
+        "<p>" + html(session.label || "") + " · " + html(statusLabel(session.status)) + "</p>" +
+        "<p>Archive créée le " + html(exportDate) + "</p>" +
+      "</section>" +
+      "<section class=\"cards\">" +
+        "<div class=\"card\">Élèves<b>" + scans.length + "</b></div>" +
+        "<div class=\"card\">Séance<b>" +
+          html(scans[0]?.seriesLabel || "Chrono") +
+        "</b></div>" +
+        "<div class=\"card\">Classes<b>" +
+          html(classes.join(" · ") || "—") +
+        "</b></div>" +
+      "</section>" +
+      "<h2>Résultats</h2>" +
+      (scans.length
+        ? "<section class=\"grid\">" + studentCards + "</section>"
+        : "<div class=\"card\">Aucun résultat enregistré.</div>") +
+      "<p class=\"note\">Ce fichier est à la fois une archive lisible et une sauvegarde réimportable dans DemiFond Scan CCF.</p>" +
+      "<script id=\"demifond-archive-data\" type=\"application/json\">" +
+        dataJson +
+      "<\/script>" +
+      "</main></body></html>";
+  }
+
   function buildReport(group, session, payload) {
+    if (session?.type === "training") {
+      return buildTrainingReport(group, session, payload);
+    }
+
     if (session?.type === "exam500") {
       return buildExam500Report(group, session, payload);
     }
