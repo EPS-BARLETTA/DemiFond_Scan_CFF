@@ -64,6 +64,60 @@
     return db.settings.exam500Bareme;
   }
 
+  function criterionLabels() {
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
+
+    return {
+      afl2:
+        String(
+          session?.exam500Afl2Label ||
+          "Carnet / échauffement"
+        ).trim() ||
+        "Carnet / échauffement",
+      afl3:
+        String(
+          session?.exam500Afl3Label ||
+          "Partenaire / starter"
+        ).trim() ||
+        "Partenaire / starter"
+    };
+  }
+
+  function scoreOptions(max, current) {
+    let html =
+      '<option value="">—</option>';
+
+    for (
+      let value = 0;
+      value <= max + 0.001;
+      value += 0.25
+    ) {
+      const rounded =
+        Math.round(value * 100) / 100;
+
+      const selected =
+        current != null &&
+        current !== "" &&
+        Number(current) === rounded
+          ? " selected"
+          : "";
+
+      html +=
+        '<option value="' +
+        rounded +
+        '"' +
+        selected +
+        '>' +
+        fmtPts(rounded) +
+        '</option>';
+    }
+
+    return html;
+  }
+
   function normalizedRaces(student) {
     const races =
       Array.isArray(
@@ -406,6 +460,18 @@
           </p>
         </div>
 
+        <div style="margin:14px 0;padding:12px;border:1px solid #d8e1f3;border-radius:12px">
+          <b>Intitulés des critères complémentaires</b>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px">
+            <label>Critère /2
+              <input id="b500Afl2Label" style="width:100%" value="${esc(criterionLabels().afl2)}">
+            </label>
+            <label>Critère /4
+              <input id="b500Afl3Label" style="width:100%" value="${esc(criterionLabels().afl3)}">
+            </label>
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
           <label><b>Performance filles /6</b><textarea id="b500Girls" style="width:100%;min-height:280px">${rowsToText(b.girls)}</textarea></label>
           <label><b>Performance garçons /6</b><textarea id="b500Boys" style="width:100%;min-height:280px">${rowsToText(b.boys)}</textarea></label>
@@ -448,6 +514,10 @@
 
       if (session) {
         session.exam500IndexMode = "c1c2";
+        session.exam500Afl2Label =
+          "Carnet / échauffement";
+        session.exam500Afl3Label =
+          "Partenaire / starter";
       }
 
       save();
@@ -481,6 +551,14 @@
           d.querySelector("#b500IndexMode").value === "three"
             ? "three"
             : "c1c2";
+
+        session.exam500Afl2Label =
+          d.querySelector("#b500Afl2Label").value.trim() ||
+          "Carnet / échauffement";
+
+        session.exam500Afl3Label =
+          d.querySelector("#b500Afl3Label").value.trim() ||
+          "Partenaire / starter";
       }
 
       save();
@@ -1129,8 +1207,16 @@
           <td><b>${sc ? fmtPts(sc.effPts) : "—"}</b></td>
           <td>${sc?.gap == null ? "—" : sc.gap+" s"}</td>
           <td><b>${sc ? fmtPts(sc.gapPts) : "—"}</b></td>
-          <td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)}</td>
-          <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)}</td>
+          <td>
+            <select class="exam500-inline-score" data-student-id="${esc(student.id)}" data-field="exam500Afl2" aria-label="${esc(criterionLabels().afl2)} sur 2">
+              ${scoreOptions(2, student.exam500Afl2)}
+            </select>
+          </td>
+          <td>
+            <select class="exam500-inline-score" data-student-id="${esc(student.id)}" data-field="exam500Afl3" aria-label="${esc(criterionLabels().afl3)} sur 4">
+              ${scoreOptions(4, student.exam500Afl3)}
+            </select>
+          </td>
           <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
         </tr>
       `;
@@ -1147,9 +1233,39 @@
         "<th>Note efficacité /6</th>" +
         "<th>Écart annonces</th>" +
         "<th>Note écart /2</th>" +
-        "<th>Carnet / échauffement /2</th>" +
-        "<th>Partenaire / starter /4</th>" +
+        "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
+        "<th>" + esc(criterionLabels().afl3) + " /4</th>" +
         "<th>Note /20</th>";
+
+      body.querySelectorAll(".exam500-inline-score").forEach(select => {
+        select.onchange = () => {
+          const currentSession =
+            activeSession();
+
+          const student =
+            currentSession?.students?.find(
+              item =>
+                String(item.id) ===
+                String(select.dataset.studentId)
+            );
+
+          if (!student) return;
+
+          const field =
+            select.dataset.field;
+
+          student[field] =
+            select.value === ""
+              ? ""
+              : Number(select.value);
+
+          save();
+
+          if (typeof render === "function") {
+            render();
+          }
+        };
+      });
     }
 
     const title = document.querySelector("#results h2");
