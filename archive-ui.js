@@ -718,38 +718,51 @@
   }
 
   async function exportArchive() {
-    const group = typeof activeGroup === "function"
-      ? activeGroup()
-      : null;
+    try {
+      const group = typeof activeGroup === "function"
+        ? activeGroup()
+        : null;
 
-    const session = typeof activeSession === "function"
-      ? activeSession()
-      : null;
+      const session = typeof activeSession === "function"
+        ? activeSession()
+        : null;
 
-    if (!group || !session) {
-      alert("Ouvre d’abord une évaluation à archiver.");
-      return;
-    }
+      if (!group || !session) {
+        alert("Ouvre d’abord une évaluation à archiver.");
+        return;
+      }
 
-    const payload = buildPayload(group, session);
-    const report = buildReport(group, session, payload);
+      const payload = buildPayload(group, session);
+      const report = buildReport(group, session, payload);
 
-    const filename =
-      "DemiFond_" +
-      safeName(group.name) +
-      "_" +
-      safeName(session.label || "evaluation") +
-      ".html";
+      if (!report || !String(report).trim()) {
+        throw new Error("Le document d’archive est vide.");
+      }
 
-    const blob = new Blob(
-      [report],
-      {type: "text/html;charset=utf-8"}
-    );
+      const filename =
+        "DemiFond_" +
+        safeName(group.name) +
+        "_" +
+        safeName(session.label || "evaluation") +
+        ".html";
 
-    await saveFile(blob, filename);
+      const blob = new Blob(
+        [report],
+        {type: "text/html;charset=utf-8"}
+      );
 
-    if (typeof toast === "function") {
-      toast("Archive prête à enregistrer dans Fichiers");
+      await saveFile(blob, filename);
+
+      if (typeof toast === "function") {
+        toast("Archive prête à enregistrer dans Fichiers");
+      }
+    } catch (error) {
+      console.error("Archive DemiFond", error);
+
+      alert(
+        "Impossible de créer l’archive.\n\n" +
+        (error?.message || "Erreur inconnue")
+      );
     }
   }
 
@@ -943,7 +956,11 @@
 
     if (button) {
       button.onclick =
-        exportArchive;
+        async function(event) {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          await exportArchive();
+        };
     }
 
     const restore =
@@ -982,4 +999,15 @@
   } else {
     install();
   }
+
+  /*
+   * Sécurité iPad/Safari :
+   * certains rechargements restaurent le DOM depuis le cache.
+   * On rebinde une fois au chargement complet.
+   */
+  window.addEventListener(
+    "load",
+    install,
+    {once:true}
+  );
 })();
