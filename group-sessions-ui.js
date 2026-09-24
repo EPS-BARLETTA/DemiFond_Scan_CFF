@@ -626,6 +626,15 @@
       archiveButton.textContent =
         "Archiver le groupe";
 
+      archiveButton.classList.add(
+        "hidden"
+      );
+
+      archiveButton.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
       archiveButton.onclick =
         event => {
           event.preventDefault();
@@ -668,6 +677,9 @@
           <button
             type="button"
             id="showArchives"
+            class="hidden"
+            aria-hidden="true"
+            tabindex="-1"
           >
             Groupes archivés
           </button>
@@ -747,6 +759,9 @@
           <button
             type="button"
             id="showArchives"
+            class="hidden"
+            aria-hidden="true"
+            tabindex="-1"
           >
             Groupes archivés
           </button>
