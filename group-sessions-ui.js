@@ -331,6 +331,13 @@
       return;
     }
 
+    /*
+     * On rend d'abord l'interface, puis on ouvre la page demandée.
+     * Sinon le rendu général peut remettre l'affichage sur "Mes espaces"
+     * juste après le clic sur Résultats.
+     */
+    renderApp();
+
     if (
       page &&
       typeof showPage === "function"
@@ -338,7 +345,24 @@
       showPage(page);
     }
 
-    renderApp();
+    if (
+      page === "training-results" &&
+      typeof window
+        .renderTrainingResults ===
+        "function"
+    ) {
+      window.renderTrainingResults();
+    }
+
+    if (
+      page === "results" &&
+      session.type === "exam500" &&
+      typeof window
+        .renderExam500View ===
+        "function"
+    ) {
+      window.renderExam500View();
+    }
   }
 
   function createNewSession() {
