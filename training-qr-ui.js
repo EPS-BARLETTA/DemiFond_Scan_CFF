@@ -193,7 +193,98 @@
     `;
   }
 
+  function expandCompactChrono(data) {
+    if (
+      !data ||
+      data.type !== "DF_TRAINING_RESULT" ||
+      data.tool !== "chrono" ||
+      Number(data.v) < 3 ||
+      !Array.isArray(data.r)
+    ) {
+      return data;
+    }
+
+    const races =
+      data.r.map(
+        (race,index) => {
+          const cumul =
+            Array.isArray(race.c)
+              ? race.c.map(Number)
+              : [];
+
+          return {
+            race: index + 1,
+            distance: Number(race.d) || 0,
+            splitDistance: Number(race.s) || 0,
+            passes:
+              cumul.map(
+                (value,i) => {
+                  const previous =
+                    i > 0
+                      ? cumul[i - 1]
+                      : 0;
+
+                  const lap =
+                    value - previous;
+
+                  const split =
+                    Number(race.s) ||
+                    Number(race.d) ||
+                    0;
+
+                  return {
+                    distance:
+                      Math.min(
+                        Number(race.d) || 0,
+                        (i + 1) * split
+                      ),
+                    cumulativeMs:
+                      value,
+                    lapMs:
+                      lap,
+                    speed:
+                      lap > 0 && split > 0
+                        ? split / (lap / 1000) * 3.6
+                        : 0
+                  };
+                }
+              ),
+            totalMs:
+              cumul.length
+                ? cumul[cumul.length - 1]
+                : null
+          };
+        }
+      );
+
+    return {
+      type: data.type,
+      v: data.v,
+      tool: data.tool,
+      resultId: data.id,
+      studentId: data.sid,
+      last: data.l,
+      first: data.f,
+      classroom: data.c,
+      sex: data.x,
+      planMode: data.m,
+      seriesLabel:
+        races
+          .map(
+            race =>
+              race.distance + "m"
+          )
+          .join("-"),
+      races,
+      createdAt:
+        new Date().toISOString()
+    };
+  }
+
   function handleTraining(data) {
+    data =
+      expandCompactChrono(data);
+
     if (!data || data.type !== "DF_TRAINING_RESULT") {
       return false;
     }
