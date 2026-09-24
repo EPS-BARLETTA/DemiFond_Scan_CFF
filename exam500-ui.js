@@ -1357,11 +1357,155 @@
     }
   }
 
+  function print500PDF() {
+    const group = activeGroup();
+    const session = activeSession();
+
+    if (!session || session.type !== "exam500") {
+      toast?.("Ouvre une évaluation 3 × 500 avant d’imprimer.");
+      return;
+    }
+
+    const students = visibleStudents();
+    const labels = criterionLabels();
+    const modeLabel =
+      indexMode() === "three"
+        ? "3 courses (meilleur ↔ moins bon)"
+        : "C1 ↔ C2";
+
+    const fmtMs = ms =>
+      ms == null || !Number.isFinite(Number(ms))
+        ? "—"
+        : timeLabel(Number(ms));
+
+    const fmtProject = ms =>
+      ms == null || !Number.isFinite(Number(ms))
+        ? "—"
+        : timeLabel(Number(ms));
+
+    const rows = students.map(student => {
+      const sc = score500(student);
+      const races = normalizedRaces(student);
+      const c1 = races[0] || {};
+      const c2 = races[1] || {};
+      const c3 = races[2] || {};
+
+      return `
+        <tr>
+          <td><b>${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")}</b></td>
+          <td>${esc(student.classroom||"")}</td>
+          <td>${esc(student.sex||"")}</td>
+          <td>${fmtProject(c1.projectMs)}</td>
+          <td>${fmtMs(c1.split250Ms)}</td>
+          <td>${fmtMs(c1.total500Ms)}</td>
+          <td>${fmtProject(c2.projectMs)}</td>
+          <td>${fmtMs(c2.split250Ms)}</td>
+          <td>${fmtMs(c2.total500Ms)}</td>
+          <td>${fmtMs(c3.split250Ms)}</td>
+          <td>${fmtMs(c3.total500Ms)}</td>
+          <td>${sc ? timeLabel(sc.totalRaceMs) : "—"}</td>
+          <td>${sc ? fmtPts(sc.perf) : "—"}</td>
+          <td>${sc?.eff == null ? "—" : sc.eff+" s"}</td>
+          <td>${sc ? fmtPts(sc.effPts) : "—"}</td>
+          <td>${sc?.gap == null ? "—" : sc.gap+" s"}</td>
+          <td>${sc ? fmtPts(sc.gapPts) : "—"}</td>
+          <td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)}</td>
+          <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)}</td>
+          <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
+        </tr>`;
+    }).join("");
+
+    const w = window.open("", "_blank");
+    if (!w) {
+      alert("Autorise les fenêtres surgissantes pour générer le PDF.");
+      return;
+    }
+
+    w.document.write(`<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Demi-fond 3 × 500</title>
+<style>
+  @page{size:A4 landscape;margin:8mm}
+  body{font-family:Arial,sans-serif;color:#111;margin:0;font-size:10px}
+  h1{font-size:20px;margin:0 0 4px}
+  .meta{margin:0 0 10px;color:#444;font-size:11px}
+  table{width:100%;border-collapse:collapse;table-layout:auto}
+  th,td{border:1px solid #aaa;padding:4px 3px;text-align:center;white-space:nowrap}
+  th{background:#e9eef7;font-size:9px}
+  td:first-child,th:first-child{text-align:left}
+  .c1{background:#fff8dc}.c2{background:#eef9ef}.c3{background:#eef6ff}
+  .score{background:#f4efff}
+  .note{background:#fff3c7}
+  .legend{margin-top:8px;font-size:9px;color:#555}
+  @media print{button{display:none}}
+</style>
+</head>
+<body>
+<h1>Fiche d’évaluation · Demi-fond 3 × 500</h1>
+<p class="meta">
+  <b>${esc(group?.name||"")}</b>
+  · ${esc(session.label||"")}
+  · Indice : ${esc(modeLabel)}
+  · ${students.length} élève${students.length>1?"s":""}
+</p>
+<table>
+<thead>
+<tr>
+  <th rowspan="2">Élève</th><th rowspan="2">Classe</th><th rowspan="2">Sexe</th>
+  <th colspan="3" class="c1">Course 1</th>
+  <th colspan="3" class="c2">Course 2</th>
+  <th colspan="2" class="c3">Course 3 libre</th>
+  <th colspan="6" class="score">Évaluation</th>
+  <th rowspan="2">${esc(labels.afl2)}<br>/2</th>
+  <th rowspan="2">${esc(labels.afl3)}<br>/4</th>
+  <th rowspan="2" class="note">Note<br>/20</th>
+</tr>
+<tr>
+  <th class="c1">Annonce</th><th class="c1">250</th><th class="c1">500</th>
+  <th class="c2">Annonce</th><th class="c2">250</th><th class="c2">500</th>
+  <th class="c3">250</th><th class="c3">500</th>
+  <th>Total 3×500</th><th>Perf /6</th><th>Indice</th><th>Indice /6</th><th>Écart annonces</th><th>Écart /2</th>
+</tr>
+</thead>
+<tbody>${rows}</tbody>
+</table>
+<p class="legend">
+  Indice utilisé : ${esc(modeLabel)}. C1 et C2 sont annoncées ; C3 est libre.
+</p>
+<script>window.onload=()=>window.print();<\/script>
+</body>
+</html>`);
+    w.document.close();
+  }
+
+  function install500PrintButton() {
+    const button =
+      document.getElementById("exportPdfCCF");
+
+    if (!button) return;
+
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
+
+    if (session?.type !== "exam500") return;
+
+    button.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      print500PDF();
+    };
+  }
+
   window.renderExam500View =
     function() {
       ensureBaremeButton();
       render500TableIfNeeded();
       render500ResultsIfNeeded();
+      install500PrintButton();
     };
 
   function installRenderHooks() {
@@ -1373,6 +1517,7 @@
       ensureBaremeButton();
       render500TableIfNeeded();
       render500ResultsIfNeeded();
+      install500PrintButton();
     };
 
     wrapped.__exam500View = true;
