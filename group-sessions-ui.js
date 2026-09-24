@@ -1177,9 +1177,16 @@
       .forEach(button => {
         button.onclick =
           () => {
+            const group =
+              activeGroupSafe();
+
             const session =
-              sessionsOf(
-                activeGroupSafe()
+              (
+                Array.isArray(
+                  group?.sessions
+                )
+                  ? group.sessions
+                  : []
               ).find(
                 item =>
                   String(item.id) ===
