@@ -791,6 +791,22 @@ function handleQR(raw) {
   if (
     student.races[race]
   ) {
+    const previous =
+      student.races[race];
+
+    const sameQR =
+      data.resultId &&
+      previous.resultId &&
+      String(data.resultId) ===
+        String(previous.resultId);
+
+    if (sameQR) {
+      scanError(
+        `${student.last} ${student.first} · QR déjà scanné.`
+      );
+      return;
+    }
+
     const replace =
       confirm(
         `${student.last} ` +
@@ -820,6 +836,9 @@ function handleQR(raw) {
 
     project:
       data.project || '',
+
+    resultId:
+      data.resultId || '',
 
     scannedAt:
       Date.now()
