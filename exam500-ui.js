@@ -1500,6 +1500,8 @@
     };
   }
 
+  window.score500 = score500;
+
   window.renderExam500View =
     function() {
       ensureBaremeButton();
