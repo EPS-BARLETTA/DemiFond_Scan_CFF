@@ -180,69 +180,157 @@
         ? activeSession()
         : null;
 
-    const formatRaceCards =
-      item => {
-        if (
-          !Array.isArray(item.races) ||
-          !item.races.length
-        ) {
-          return (
-            '<div class="training-result-pill">' +
-            esc(item.result || "—") +
-            '</div>'
-          );
-        }
+    const distances =
+      rows[0]?.races?.map(
+        race => Number(race.distance) || 0
+      ) || [];
 
-        return item.races
+    const raceDetail =
+      item =>
+        (Array.isArray(item.races) ? item.races : [])
           .map(
             (race,index) => {
-              const best =
-                Number(race.totalMs);
+              const passes =
+                Array.isArray(race.passes)
+                  ? race.passes
+                  : [];
 
-              const detail =
-                Array.isArray(race.passes) &&
-                race.passes.length > 1
-                  ? '<small>' +
-                    race.passes
+              const splitLine =
+                passes.length > 1
+                  ? passes
                       .map(
                         pass =>
+                          '<span>' +
                           esc(
                             String(pass.distance) +
-                            " m · " +
+                            ' m · ' +
                             formatTime(
                               pass.cumulativeMs
                             )
-                          )
+                          ) +
+                          '</span>'
                       )
-                      .join(" · ") +
-                    '</small>'
-                  : '';
+                      .join('')
+                  : '<span>Aucun intermédiaire</span>';
 
               return (
-                '<div class="training-race-card">' +
-                  '<span class="training-race-index">' +
+                '<section class="training-detail-race">' +
+                  '<h4>Course ' +
                     (index + 1) +
-                  '</span>' +
-                  '<div>' +
-                    '<b>' +
-                      esc(
-                        String(race.distance) +
-                        " m"
-                      ) +
-                    '</b>' +
-                    '<strong>' +
-                      esc(
-                        formatTime(best)
-                      ) +
-                    '</strong>' +
-                    detail +
+                    ' · ' +
+                    esc(
+                      String(race.distance || '?') +
+                      ' m'
+                    ) +
+                  '</h4>' +
+                  '<strong>' +
+                    esc(
+                      formatTime(
+                        race.totalMs
+                      )
+                    ) +
+                  '</strong>' +
+                  '<div class="training-splits">' +
+                    splitLine +
                   '</div>' +
-                '</div>'
+                '</section>'
               );
             }
           )
-          .join("");
-      };
+          .join('');
+
+    const summaryHead =
+      distances
+        .map(
+          (distance,index) =>
+            '<th>Course ' +
+            (index + 1) +
+            '<small>' +
+            esc(String(distance) + ' m') +
+            '</small></th>'
+        )
+        .join('');
+
+    const summaryRows =
+      rows
+        .map(
+          item => {
+            const races =
+              Array.isArray(item.races)
+                ? item.races
+                : [];
+
+            return (
+              '<tr>' +
+                '<td class="training-name"><b>' +
+                  esc(
+                    String(
+                      item.last || ''
+                    ).toUpperCase()
+                  ) +
+                  ' ' +
+                  esc(item.first || '') +
+                '</b></td>' +
+                '<td>' +
+                  esc(item.classroom || '—') +
+                '</td>' +
+                '<td>' +
+                  esc(item.sex || '—') +
+                '</td>' +
+                distances
+                  .map(
+                    (_,index) =>
+                      '<td class="training-time">' +
+                        esc(
+                          formatTime(
+                            races[index]
+                              ?.totalMs
+                          )
+                        ) +
+                      '</td>'
+                  )
+                  .join('') +
+              '</tr>'
+            );
+          }
+        )
+        .join('');
+
+    const details =
+      rows
+        .map(
+          item =>
+            '<details class="training-student-detail">' +
+              '<summary>' +
+                '<span>' +
+                  '<b>' +
+                    esc(
+                      String(
+                        item.last || ''
+                      ).toUpperCase()
+                    ) +
+                    ' ' +
+                    esc(item.first || '') +
+                  '</b>' +
+                  '<small>' +
+                    esc(item.classroom || '—') +
+                    ' · ' +
+                    esc(item.sex || '—') +
+                  '</small>' +
+                '</span>' +
+                '<span class="training-summary-badge">' +
+                  esc(
+                    item.seriesLabel ||
+                    toolLabel(item.tool)
+                  ) +
+                '</span>' +
+              '</summary>' +
+              '<div class="training-detail-grid">' +
+                raceDetail(item) +
+              '</div>' +
+            '</details>'
+        )
+        .join('');
 
     card.innerHTML =
       '<div class="training-results-head">' +
@@ -251,60 +339,40 @@
           '<h2>' +
             esc(
               session?.label ||
-              "Évaluation active"
+              'Évaluation active'
             ) +
           '</h2>' +
           '<p class="training-subtitle">' +
             rows.length +
             ' élève' +
             (rows.length > 1 ? 's' : '') +
-            ' · résultats scannés depuis Chrono Carnet EPS' +
+            ' · ' +
+            esc(
+              rows[0]?.seriesLabel ||
+              'Séance'
+            ) +
           '</p>' +
         '</div>' +
       '</div>' +
       (
         rows.length
-          ? '<div class="training-student-grid">' +
-            rows
-              .map(
-                item =>
-                  '<article class="training-student-card">' +
-                    '<div class="training-student-head">' +
-                      '<div>' +
-                        '<h3>' +
-                          esc(
-                            String(
-                              item.last || ""
-                            ).toUpperCase()
-                          ) +
-                          ' ' +
-                          esc(
-                            item.first || ""
-                          ) +
-                        '</h3>' +
-                        '<p>' +
-                          esc(
-                            item.classroom || "—"
-                          ) +
-                          ' · ' +
-                          esc(
-                            item.sex || "—"
-                          ) +
-                        '</p>' +
-                      '</div>' +
-                      '<span class="training-session-badge">' +
-                        esc(
-                          item.seriesLabel ||
-                          toolLabel(item.tool)
-                        ) +
-                      '</span>' +
-                    '</div>' +
-                    '<div class="training-races">' +
-                      formatRaceCards(item) +
-                    '</div>' +
-                  '</article>'
-              )
-              .join("") +
+          ? '<h3 class="training-section-title">Vue synthétique</h3>' +
+            '<div class="training-table-wrap">' +
+              '<table class="training-summary-table">' +
+                '<thead><tr>' +
+                  '<th>Élève</th>' +
+                  '<th>Classe</th>' +
+                  '<th>Sexe</th>' +
+                  summaryHead +
+                '</tr></thead>' +
+                '<tbody>' +
+                  summaryRows +
+                '</tbody>' +
+              '</table>' +
+            '</div>' +
+            '<h3 class="training-section-title">Détail par élève</h3>' +
+            '<div class="training-details-list">' +
+              details +
             '</div>'
           : '<div class="training-empty">Aucun résultat scanné pour cette évaluation.</div>'
       );
@@ -328,16 +396,12 @@
           background:linear-gradient(180deg,#f8fbff 0%,#f4f7fb 100%);
         }
         .training-results-head{
-          display:flex;
-          align-items:flex-end;
-          justify-content:space-between;
-          gap:16px;
-          margin-bottom:18px;
           padding:18px 20px;
           background:white;
           border:1px solid #dce5f2;
           border-radius:18px;
           box-shadow:0 8px 24px rgba(31,61,120,.06);
+          margin-bottom:18px;
         }
         .training-results-head h2{
           margin:2px 0 4px;
@@ -354,37 +418,84 @@
           margin:0;
           color:#667085;
         }
-        .training-student-grid{
-          display:grid;
-          grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-          gap:16px;
-        }
-        .training-student-card{
-          background:white;
-          border:1px solid #dce5f2;
-          border-radius:18px;
-          padding:16px;
-          box-shadow:0 8px 24px rgba(31,61,120,.06);
-        }
-        .training-student-head{
-          display:flex;
-          justify-content:space-between;
-          gap:14px;
-          align-items:flex-start;
-          margin-bottom:14px;
-        }
-        .training-student-head h3{
-          margin:0;
+        .training-section-title{
+          margin:20px 0 10px;
           font-size:20px;
         }
-        .training-student-head p{
-          margin:4px 0 0;
-          color:#667085;
-          font-weight:600;
+        .training-table-wrap{
+          overflow:auto;
+          background:white;
+          border:1px solid #dce5f2;
+          border-radius:16px;
+          box-shadow:0 8px 24px rgba(31,61,120,.05);
         }
-        .training-session-badge{
-          display:inline-flex;
+        .training-summary-table{
+          width:100%;
+          border-collapse:collapse;
+          min-width:760px;
+        }
+        .training-summary-table th,
+        .training-summary-table td{
+          padding:11px 12px;
+          border-bottom:1px solid #e8edf4;
+          text-align:center;
+          white-space:nowrap;
+        }
+        .training-summary-table th{
+          background:#f6f8fc;
+          color:#475467;
+          font-size:12px;
+          text-transform:uppercase;
+          letter-spacing:.04em;
+        }
+        .training-summary-table th small{
+          display:block;
+          margin-top:2px;
+          font-size:11px;
+          text-transform:none;
+          letter-spacing:0;
+          color:#3157d5;
+        }
+        .training-summary-table .training-name{
+          text-align:left;
+        }
+        .training-summary-table .training-time{
+          font-weight:800;
+          font-size:15px;
+          color:#101828;
+        }
+        .training-details-list{
+          display:grid;
+          gap:10px;
+        }
+        .training-student-detail{
+          background:white;
+          border:1px solid #dce5f2;
+          border-radius:14px;
+          overflow:hidden;
+          box-shadow:0 5px 16px rgba(31,61,120,.04);
+        }
+        .training-student-detail summary{
+          cursor:pointer;
+          list-style:none;
+          display:flex;
+          justify-content:space-between;
           align-items:center;
+          gap:12px;
+          padding:14px 16px;
+        }
+        .training-student-detail summary::-webkit-details-marker{
+          display:none;
+        }
+        .training-student-detail summary b{
+          font-size:16px;
+        }
+        .training-student-detail summary small{
+          display:block;
+          margin-top:3px;
+          color:#667085;
+        }
+        .training-summary-badge{
           padding:7px 10px;
           border-radius:999px;
           background:#eef3ff;
@@ -393,49 +504,32 @@
           font-weight:800;
           white-space:nowrap;
         }
-        .training-races{
+        .training-detail-grid{
           display:grid;
-          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+          grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
           gap:10px;
+          padding:0 16px 16px;
         }
-        .training-race-card{
-          display:flex;
-          gap:10px;
-          align-items:flex-start;
+        .training-detail-race{
           padding:12px;
-          border-radius:14px;
+          border-radius:12px;
           background:#f8fafc;
           border:1px solid #e4e9f2;
         }
-        .training-race-index{
-          width:26px;
-          height:26px;
-          border-radius:50%;
+        .training-detail-race h4{
+          margin:0 0 6px;
+          color:#475467;
+        }
+        .training-detail-race strong{
+          display:block;
+          font-size:22px;
+          margin-bottom:8px;
+        }
+        .training-splits{
           display:grid;
-          place-items:center;
-          flex:0 0 auto;
-          background:#3157d5;
-          color:white;
-          font-size:12px;
-          font-weight:800;
-        }
-        .training-race-card b{
-          display:block;
-          font-size:12px;
+          gap:3px;
           color:#667085;
-          margin-bottom:2px;
-        }
-        .training-race-card strong{
-          display:block;
-          font-size:20px;
-          line-height:1.1;
-          color:#101828;
-        }
-        .training-race-card small{
-          display:block;
-          margin-top:6px;
-          color:#667085;
-          line-height:1.35;
+          font-size:12px;
         }
         .training-empty{
           padding:24px;
@@ -446,12 +540,9 @@
           text-align:center;
         }
         @media(max-width:700px){
-          .training-student-grid{
-            grid-template-columns:1fr;
-          }
-          .training-results-head h2{
-            font-size:23px;
-          }
+          #trainingResultsCard{padding:12px}
+          .training-results-head h2{font-size:23px}
+          .training-detail-grid{grid-template-columns:1fr}
         }
       `;
 
