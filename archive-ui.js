@@ -464,42 +464,81 @@
       }).filter(Boolean)
     )].sort();
 
-    const raceCards = function(item) {
-      const races = Array.isArray(item.races) ? item.races : [];
+    const distances =
+      scans[0]?.races?.map(function(race) {
+        return Number(race.distance) || 0;
+      }) || [];
 
-      return races.map(function(race,index) {
-        const passes = Array.isArray(race.passes) ? race.passes : [];
-        const detail = passes.length > 1
-          ? "<small>" +
-              passes.map(function(pass) {
-                return html(String(pass.distance) + " m · " + fmtTime(pass.cumulativeMs));
-              }).join(" · ") +
-            "</small>"
-          : "";
-
-        return "<div class=\"race\">" +
-          "<span class=\"num\">" + (index + 1) + "</span>" +
-          "<div><b>" + html(String(race.distance || "?") + " m") + "</b>" +
-          "<strong>" + fmtTime(race.totalMs) + "</strong>" +
-          detail + "</div></div>";
+    const summaryHead =
+      distances.map(function(distance,index) {
+        return "<th>Course " + (index + 1) +
+          "<small>" + html(String(distance) + " m") + "</small></th>";
       }).join("");
-    };
 
-    const studentCards = scans.map(function(item) {
-      return "<article class=\"student-card\">" +
-        "<header><div><h3>" +
-          html(String(item.last || "").toUpperCase()) + " " +
-          html(item.first || "") +
-        "</h3><p>" +
-          html(item.classroom || "—") + " · " +
-          html(item.sex || "—") +
-        "</p></div><span class=\"badge\">" +
-          html(item.seriesLabel || "Chrono performance") +
-        "</span></header>" +
-        "<div class=\"races\">" +
-          (raceCards(item) || "<p>—</p>") +
-        "</div></article>";
-    }).join("");
+    const summaryRows =
+      scans.map(function(item) {
+        const races = Array.isArray(item.races) ? item.races : [];
+
+        return "<tr>" +
+          "<td class=\"student\"><b>" +
+            html(String(item.last || "").toUpperCase()) + " " +
+            html(item.first || "") +
+          "</b></td>" +
+          "<td>" + html(item.classroom || "—") + "</td>" +
+          "<td>" + html(item.sex || "—") + "</td>" +
+          distances.map(function(_,index) {
+            return "<td class=\"time\">" +
+              fmtTime(races[index]?.totalMs) +
+            "</td>";
+          }).join("") +
+        "</tr>";
+      }).join("");
+
+    const details =
+      scans.map(function(item) {
+        const races = Array.isArray(item.races) ? item.races : [];
+
+        const raceBlocks =
+          races.map(function(race,index) {
+            const passes = Array.isArray(race.passes) ? race.passes : [];
+
+            return "<section>" +
+              "<h4>Course " + (index + 1) + " · " +
+                html(String(race.distance || "?") + " m") +
+              "</h4>" +
+              "<strong>" + fmtTime(race.totalMs) + "</strong>" +
+              "<div class=\"splits\">" +
+                (
+                  passes.length > 1
+                    ? passes.map(function(pass) {
+                        return "<span>" +
+                          html(String(pass.distance) + " m · " + fmtTime(pass.cumulativeMs)) +
+                        "</span>";
+                      }).join("")
+                    : "<span>Aucun intermédiaire</span>"
+                ) +
+              "</div>" +
+            "</section>";
+          }).join("");
+
+        return "<details>" +
+          "<summary>" +
+            "<span><b>" +
+              html(String(item.last || "").toUpperCase()) + " " +
+              html(item.first || "") +
+            "</b><small>" +
+              html(item.classroom || "—") + " · " +
+              html(item.sex || "—") +
+            "</small></span>" +
+            "<span class=\"badge\">" +
+              html(item.seriesLabel || "Chrono performance") +
+            "</span>" +
+          "</summary>" +
+          "<div class=\"detail-grid\">" +
+            raceBlocks +
+          "</div>" +
+        "</details>";
+      }).join("");
 
     const dataJson = JSON.stringify(payload).replace(/</g, "\\u003c");
     const exportDate = new Date().toLocaleString("fr-FR");
@@ -514,33 +553,40 @@
       ".hero p{margin:4px 0;color:#dbeafe}",
       ".cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}",
       ".card{background:#fff;border-radius:16px;padding:16px;border:1px solid #d8e0ea}",
-      ".card b{display:block;font-size:26px;margin-top:5px}",
-      ".grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}",
-      ".student-card{background:#fff;border:1px solid #d8e0ea;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(31,61,120,.06)}",
-      ".student-card header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}",
-      ".student-card h3{margin:0;font-size:20px}",
-      ".student-card p{margin:4px 0;color:#64748b}",
+      ".card b{display:block;font-size:24px;margin-top:5px}",
+      ".table-wrap{overflow:auto;background:#fff;border:1px solid #d8e0ea;border-radius:16px}",
+      "table{width:100%;border-collapse:collapse;min-width:760px}",
+      "th,td{padding:11px 12px;border-bottom:1px solid #e8edf4;text-align:center;white-space:nowrap}",
+      "th{background:#f6f8fc;color:#475467;font-size:12px;text-transform:uppercase;letter-spacing:.04em}",
+      "th small{display:block;margin-top:2px;font-size:11px;text-transform:none;letter-spacing:0;color:#3157d5}",
+      "td.student{text-align:left}",
+      "td.time{font-weight:800}",
+      "h2{margin:26px 0 12px}",
+      "details{background:#fff;border:1px solid #d8e0ea;border-radius:14px;margin:10px 0;overflow:hidden}",
+      "summary{padding:14px 16px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}",
+      "summary small{display:block;margin-top:3px;color:#64748b;font-weight:500}",
       ".badge{padding:7px 10px;border-radius:999px;background:#eef3ff;color:#3157d5;font-size:12px;font-weight:800;white-space:nowrap}",
-      ".races{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}",
-      ".race{display:flex;gap:10px;padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #e4e9f2}",
-      ".num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#3157d5;color:#fff;font-size:12px;font-weight:800;flex:0 0 auto}",
-      ".race b{display:block;font-size:12px;color:#64748b}",
-      ".race strong{display:block;font-size:20px;margin-top:2px}",
-      ".race small{display:block;margin-top:6px;color:#64748b;line-height:1.35}",
+      ".detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:0 16px 16px}",
+      ".detail-grid section{background:#f8fafc;border:1px solid #e4e9f2;border-radius:12px;padding:12px}",
+      ".detail-grid h4{margin:0 0 6px;color:#475467}",
+      ".detail-grid strong{display:block;font-size:22px;margin-bottom:8px}",
+      ".splits{display:grid;gap:3px;color:#64748b;font-size:12px}",
       ".note{font-size:13px;color:#64748b;margin-top:16px}",
-      "@media(max-width:800px){body{padding:12px}.cards{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.hero h1{font-size:23px}}"
+      "@media(max-width:800px){body{padding:12px}.cards{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.hero h1{font-size:23px}}"
     ].join("");
 
     return "<!doctype html><html lang=\"fr\"><head>" +
       "<meta charset=\"utf-8\">" +
       "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
-      "<title>Archive Chrono — " + html(group.name) + "</title>" +
+      "<title>" + html(session.label || "Chrono performance") + " — " +
+        html(group.name) + "</title>" +
       "<style>" + style + "</style></head><body><main>" +
       "<section class=\"hero\">" +
-        "<h1>DemiFond Scan · Chrono performance</h1>" +
-        "<p><b>" + html(group.name) + "</b></p>" +
-        "<p>" + html(session.label || "") + " · " + html(statusLabel(session.status)) + "</p>" +
-        "<p>Archive créée le " + html(exportDate) + "</p>" +
+        "<h1>" + html(session.label || "Chrono performance") + "</h1>" +
+        "<p><b>Chrono performance</b></p>" +
+        "<p>Espace : " + html(group.name) + "</p>" +
+        "<p>" + html(statusLabel(session.status)) + " · archive créée le " +
+          html(exportDate) + "</p>" +
       "</section>" +
       "<section class=\"cards\">" +
         "<div class=\"card\">Élèves<b>" + scans.length + "</b></div>" +
@@ -551,10 +597,18 @@
           html(classes.join(" · ") || "—") +
         "</b></div>" +
       "</section>" +
-      "<h2>Résultats</h2>" +
-      (scans.length
-        ? "<section class=\"grid\">" + studentCards + "</section>"
-        : "<div class=\"card\">Aucun résultat enregistré.</div>") +
+      "<h2>Vue synthétique</h2>" +
+      (
+        scans.length
+          ? "<div class=\"table-wrap\"><table><thead><tr>" +
+              "<th>Élève</th><th>Classe</th><th>Sexe</th>" +
+              summaryHead +
+            "</tr></thead><tbody>" + summaryRows +
+            "</tbody></table></div>"
+          : "<div class=\"card\">Aucun résultat enregistré.</div>"
+      ) +
+      "<h2>Détail par élève</h2>" +
+      details +
       "<p class=\"note\">Ce fichier est à la fois une archive lisible et une sauvegarde réimportable dans DemiFond Scan CCF.</p>" +
       "<script id=\"demifond-archive-data\" type=\"application/json\">" +
         dataJson +
