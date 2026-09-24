@@ -680,6 +680,12 @@
 
   renderResults =
     function() {
+      if (
+        typeof activeSession === "function" &&
+        activeSession()?.type === "exam500"
+      ) {
+        return;
+      }
       ensureTools();
 
       const body =
@@ -1233,6 +1239,12 @@
 
   renderStudents =
     function() {
+      if (
+        typeof activeSession === "function" &&
+        activeSession()?.type === "exam500"
+      ) {
+        return;
+      }
       const body =
         $("students");
 
