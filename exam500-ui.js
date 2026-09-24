@@ -521,12 +521,42 @@
       }
 
       save();
+
+      const sessionAfter =
+        typeof activeSession === "function"
+          ? activeSession()
+          : null;
+
+      if (
+        sessionAfter &&
+        Array.isArray(sessionAfter.students) &&
+        sessionAfter.students.length !== studentCountBefore
+      ) {
+        console.error(
+          "3x500 safety: student count changed while editing barème/index"
+        );
+      }
+
       d.close();
-      if (typeof render === "function") render();
+
+      ensureBaremeButton();
+      render500TableIfNeeded();
+      render500ResultsIfNeeded();
+
       toast?.("Barème 3 × 500 réinitialisé");
     };
 
     d.querySelector("#b500Save").onclick = () => {
+      const sessionBefore =
+        typeof activeSession === "function"
+          ? activeSession()
+          : null;
+
+      const studentCountBefore =
+        Array.isArray(sessionBefore?.students)
+          ? sessionBefore.students.length
+          : 0;
+
       const next = {
         girls: parseRows(d.querySelector("#b500Girls").value, true),
         boys: parseRows(d.querySelector("#b500Boys").value, true),
@@ -561,9 +591,19 @@
           "Partenaire / starter";
       }
 
+      /*
+       * Important : modifier le mode d'indice ou le barème
+       * ne doit jamais repasser par le rendu CCF générique,
+       * qui peut momentanément masquer les données 3 × 500.
+       * On ne rafraîchit ici que les vues 3 × 500.
+       */
       save();
       d.close();
-      if (typeof render === "function") render();
+
+      ensureBaremeButton();
+      render500TableIfNeeded();
+      render500ResultsIfNeeded();
+
       toast?.("Barème 3 × 500 enregistré");
     };
 
