@@ -1613,6 +1613,19 @@ function init() {
 
             showPage(page);
             render();
+
+            /*
+             * Le rendu générique construit d'abord le tableau 2 × 800.
+             * Pour une évaluation 3 × 500, le module dédié doit reprendre
+             * immédiatement la vue au même clic, sans demander un 2e clic.
+             */
+            if (
+              page === 'results' &&
+              activeSession()?.type === 'exam500' &&
+              typeof window.renderExam500View === 'function'
+            ) {
+              window.renderExam500View();
+            }
           };
       }
     );
