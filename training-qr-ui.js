@@ -26,7 +26,29 @@
   }
 
   function resultLabel(data) {
-    if (data.tool === "simple" || data.tool === "chrono") {
+    if (data.tool === "simple") {
+      return formatTime(data.totalMs);
+    }
+
+    if (data.tool === "chrono") {
+      if (
+        Array.isArray(data.races) &&
+        data.races.length
+      ) {
+        return data.races
+          .map(
+            race =>
+              String(
+                race.distance || "?"
+              ) +
+              " m · " +
+              formatTime(
+                race.totalMs
+              )
+          )
+          .join(" · ");
+      }
+
       return formatTime(data.totalMs);
     }
 
@@ -66,8 +88,18 @@
         String(data.first || "").trim(),
       sex:
         String(data.sex || "").trim().toUpperCase(),
+      classroom:
+        String(data.classroom || "").trim().toUpperCase(),
       tool:
         data.tool || "unknown",
+      planMode:
+        data.planMode || null,
+      seriesLabel:
+        data.seriesLabel || null,
+      races:
+        Array.isArray(data.races)
+          ? data.races
+          : [],
       result:
         resultLabel(data),
       totalMs:
@@ -128,6 +160,7 @@
             <tr>
               <th>Nom</th>
               <th>Prénom</th>
+              <th>Classe</th>
               <th>Sexe</th>
               <th>Type</th>
               <th>Résultat</th>
@@ -141,6 +174,7 @@
                       <tr>
                         <td><b>${esc(String(item.last || "").toUpperCase())}</b></td>
                         <td>${esc(item.first || "")}</td>
+                        <td>${esc(item.classroom || "")}</td>
                         <td>${esc(item.sex || "")}</td>
                         <td>${esc(toolLabel(item.tool))}</td>
                         <td><b>${esc(item.result || "—")}</b></td>
@@ -149,7 +183,7 @@
                   ).join("")
                 : `
                   <tr>
-                    <td colspan="5">Aucun résultat hors CCF scanné.</td>
+                    <td colspan="6">Aucun résultat hors CCF scanné.</td>
                   </tr>
                 `
             }
