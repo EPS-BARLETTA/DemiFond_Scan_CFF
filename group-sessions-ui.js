@@ -669,7 +669,7 @@
             type="button"
             id="showArchives"
           >
-            Archives
+            Groupes archivés
           </button>
 
         </div>
@@ -748,7 +748,7 @@
             type="button"
             id="showArchives"
           >
-            Archives
+            Groupes archivés
           </button>
 
         </div>
@@ -1040,7 +1040,10 @@
       )
       .forEach(button => {
         button.onclick =
-          () => {
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+
             const panel =
               document.getElementById(
                 "groupArchivesPanel"
@@ -1050,11 +1053,30 @@
               return;
             }
 
-            panel.classList.toggle(
-              "hidden"
-            );
+            const willOpen =
+              panel.classList.contains(
+                "hidden"
+              );
 
-            renderArchives();
+            if (willOpen) {
+              renderArchives();
+              panel.classList.remove(
+                "hidden"
+              );
+
+              requestAnimationFrame(
+                () => {
+                  panel.scrollIntoView({
+                    behavior:"smooth",
+                    block:"start"
+                  });
+                }
+              );
+            } else {
+              panel.classList.add(
+                "hidden"
+              );
+            }
           };
       });
 
@@ -1282,7 +1304,10 @@
 
     if (close) {
       close.onclick =
-        () => {
+        event => {
+          event.preventDefault();
+          event.stopPropagation();
+
           panel.classList.add(
             "hidden"
           );
