@@ -321,6 +321,31 @@
       return true;
     }
 
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
+
+    if (!session) {
+      scanError(
+        "Ouvre d’abord une évaluation pour enregistrer ce résultat."
+      );
+      return true;
+    }
+
+    if (
+      session.type &&
+      session.type !== "training"
+    ) {
+      scanError(
+        "Cette évaluation contient déjà un protocole CCF. Crée une évaluation séparée pour la pyramide."
+      );
+      return true;
+    }
+
+    session.type =
+      "training";
+
     const item =
       normalizeTraining(data);
 
@@ -347,6 +372,12 @@
 
     save();
     beep();
+
+    if (
+      typeof render === "function"
+    ) {
+      render();
+    }
 
     const message =
       document.getElementById("scanMessage");
@@ -510,6 +541,10 @@
     window
       .handleTrainingResult =
         handleTraining;
+
+    window
+      .renderTrainingResults =
+        renderTrainingResults;
 
     renderTrainingResults();
 
