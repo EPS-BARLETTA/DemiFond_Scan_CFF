@@ -197,16 +197,52 @@
     return 0;
   }
 
+  function indexMode() {
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
+
+    return session?.exam500IndexMode === "three"
+      ? "three"
+      : "c1c2";
+  }
+
   function efficiencySeconds(student) {
-    const races = student.exam500?.races || [];
-    const c1 = races.find(r => Number(r.race) === 1);
-    const c2 = races.find(r => Number(r.race) === 2);
+    const races =
+      normalizedRaces(student);
+
+    const c1 = races[0];
+    const c2 = races[1];
+    const c3 = races[2];
 
     if (
       !c1?.total500Ms ||
       !c2?.total500Ms
     ) {
       return null;
+    }
+
+    if (
+      indexMode() === "three"
+    ) {
+      if (!c3?.total500Ms) {
+        return null;
+      }
+
+      const values = [
+        Number(c1.total500Ms),
+        Number(c2.total500Ms),
+        Number(c3.total500Ms)
+      ];
+
+      return Math.round(
+        (
+          Math.max(...values) -
+          Math.min(...values)
+        ) /
+        1000
+      );
     }
 
     return Math.round(
@@ -357,6 +393,19 @@
         <h2>Barème 3 × 500</h2>
         <p>Modifie les valeurs puis enregistre. Les calculs seront immédiatement recalculés.</p>
 
+        <div style="margin:14px 0;padding:12px;border:1px solid #d8e1f3;border-radius:12px">
+          <label>
+            <b>Calcul de l’indice efficacité /6</b>
+            <select id="b500IndexMode" style="display:block;width:100%;margin-top:8px">
+              <option value="c1c2" ${indexMode()==="c1c2" ? "selected" : ""}>C1 ↔ C2 uniquement</option>
+              <option value="three" ${indexMode()==="three" ? "selected" : ""}>Écart entre le meilleur et le moins bon des 3 × 500</option>
+            </select>
+          </label>
+          <p style="margin:8px 0 0;font-size:13px;color:#64748b">
+            Ce choix s’applique à toute l’évaluation.
+          </p>
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
           <label><b>Performance filles /6</b><textarea id="b500Girls" style="width:100%;min-height:280px">${rowsToText(b.girls)}</textarea></label>
           <label><b>Performance garçons /6</b><textarea id="b500Boys" style="width:100%;min-height:280px">${rowsToText(b.boys)}</textarea></label>
@@ -391,6 +440,16 @@
     d.querySelector("#b500Reset").onclick = () => {
       if (!confirm("Réinitialiser le barème 3 × 500 ?")) return;
       db.settings.exam500Bareme = clone(DEFAULT_BAREME);
+
+      const session =
+        typeof activeSession === "function"
+          ? activeSession()
+          : null;
+
+      if (session) {
+        session.exam500IndexMode = "c1c2";
+      }
+
       save();
       d.close();
       if (typeof render === "function") render();
@@ -411,6 +470,19 @@
       }
 
       db.settings.exam500Bareme = next;
+
+      const session =
+        typeof activeSession === "function"
+          ? activeSession()
+          : null;
+
+      if (session) {
+        session.exam500IndexMode =
+          d.querySelector("#b500IndexMode").value === "three"
+            ? "three"
+            : "c1c2";
+      }
+
       save();
       d.close();
       if (typeof render === "function") render();
@@ -1066,7 +1138,12 @@
     const title = document.querySelector("#results h2");
     if (title) {
       title.textContent =
-        "Fiche d’évaluation · Demi-fond 3 × 500";
+        "Fiche d’évaluation · Demi-fond 3 × 500 · Indice " +
+        (
+          indexMode() === "three"
+            ? "sur les 3 courses"
+            : "C1–C2"
+        );
     }
 
     const tabs =
