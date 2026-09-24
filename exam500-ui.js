@@ -676,6 +676,22 @@
     if (
       student?.exam500?.races?.length
     ) {
+      const sameQR =
+        data.resultId &&
+        student.exam500.resultId &&
+        String(data.resultId) ===
+          String(student.exam500.resultId);
+
+      if (sameQR) {
+        scanError(
+          String(student.last || "").toUpperCase() +
+          " " +
+          String(student.first || "") +
+          " · QR déjà scanné."
+        );
+        return true;
+      }
+
       const replace =
         confirm(
           String(student.last || "").toUpperCase() +
@@ -704,6 +720,7 @@
     );
 
     student.exam500 = {
+      resultId:data.resultId || "",
       projects: Array.isArray(data.projects) ? data.projects : [],
       races: data.races.map(r => ({
         race:Number(r.race),
