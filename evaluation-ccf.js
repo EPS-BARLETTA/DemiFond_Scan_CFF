@@ -678,6 +678,91 @@
     }
   }
 
+  function restore2x800ViewState() {
+    const session =
+      typeof activeSession === "function"
+        ? activeSession()
+        : null;
+
+    if (
+      !session ||
+      session.type === "exam500"
+    ) {
+      return;
+    }
+
+    const title =
+      document.querySelector(
+        "#results h2"
+      );
+
+    if (title) {
+      title.textContent =
+        "Résultats CCF demi-fond · 2 × 800";
+    }
+
+    const tabs =
+      document.getElementById(
+        "ccfViewTabs"
+      );
+
+    if (tabs) {
+      tabs.classList.remove(
+        "hidden"
+      );
+    }
+
+    const quick =
+      document.getElementById(
+        "ccfQuickView"
+      );
+
+    if (quick) {
+      quick.classList.remove(
+        "hidden"
+      );
+    }
+
+    /*
+     * Le bouton PDF peut avoir été redirigé vers le 3 × 500.
+     * On rétablit donc systématiquement les actions 2 × 800.
+     */
+    const csv =
+      document.getElementById(
+        "exportCsvCCF"
+      );
+
+    if (csv) {
+      csv.onclick = exportCSV;
+    }
+
+    const pdf =
+      document.getElementById(
+        "exportPdfCCF"
+      );
+
+    if (pdf) {
+      pdf.onclick = printPDF;
+    }
+
+    const studentHead =
+      document.querySelector(
+        ".student-list-card thead tr"
+      );
+
+    if (studentHead) {
+      studentHead.innerHTML =
+        "<th>Élève</th>" +
+        "<th>Classe</th>" +
+        "<th>Annonce C1</th>" +
+        "<th>C1</th>" +
+        "<th>Annonce C2</th>" +
+        "<th>C2</th>" +
+        "<th>AFL1</th>" +
+        "<th>Action</th>";
+    }
+  }
+
   renderResults =
     function() {
       if (
@@ -687,6 +772,7 @@
         return;
       }
       ensureTools();
+      restore2x800ViewState();
 
       const body =
         $("resultRows");
@@ -1245,6 +1331,8 @@
       ) {
         return;
       }
+      restore2x800ViewState();
+
       const body =
         $("students");
 
