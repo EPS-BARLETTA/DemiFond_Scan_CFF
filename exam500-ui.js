@@ -901,18 +901,38 @@
     window.handleQR = wrapped;
   }
 
-  function open500Editor(studentId) {
+  function open500Editor(studentId, visibleIndex = null) {
     const session = activeSession();
-    const student =
-      session?.students?.find(
-        s =>
-          String(s.id) ===
-            String(studentId) ||
-          String(s.externalId) ===
-            String(studentId)
-      );
 
-    if (!student) return;
+    let student = null;
+
+    if (
+      visibleIndex != null &&
+      Number.isInteger(
+        Number(visibleIndex)
+      )
+    ) {
+      student =
+        visibleStudents()[
+          Number(visibleIndex)
+        ] || null;
+    }
+
+    if (!student) {
+      student =
+        session?.students?.find(
+          s =>
+            String(s.id) ===
+              String(studentId) ||
+            String(s.externalId) ===
+              String(studentId)
+        ) || null;
+    }
+
+    if (!student) {
+      toast?.("Élève introuvable dans cette évaluation.");
+      return;
+    }
 
     let d =
       document.getElementById(
@@ -965,7 +985,7 @@
       <div style="min-width:min(900px,94vw);max-height:88vh;overflow:auto;padding:8px">
         <h2>Corriger — ${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")}</h2>
 
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;padding:12px;border-radius:14px;background:#f3f6fb">
           <label>Nom<input id="e500Last" value="${esc(student.last||"")}"></label>
           <label>Prénom<input id="e500First" value="${esc(student.first||"")}"></label>
           <label>Classe<input id="e500Class" value="${esc(student.classroom||"")}"></label>
@@ -979,7 +999,7 @@
 
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
           ${[c1,c2,c3].map((r,index)=>`
-            <section style="border:1px solid #d8e1f3;border-radius:14px;padding:12px">
+            <section style="border:1px solid #d8e1f3;border-radius:14px;padding:12px;background:${index===0 ? "#fff8dc" : index===1 ? "#eef9ef" : "#eef6ff"}">
               <h3>Course ${index+1}</h3>
 
               ${index < 2 ? `
@@ -1186,7 +1206,7 @@
 
     const rows = visibleStudents();
 
-    body.innerHTML = rows.map(student => {
+    body.innerHTML = rows.map((student,rowIndex) => {
       const sc = score500(student);
       const r = student.exam500?.races || [];
       const t = n => r.find(x=>x.race===n)?.total500Ms;
@@ -1202,7 +1222,7 @@
           <td>${timeLabel(t(3))}</td>
           <td><b>${sc ? fmtPts(sc.afl1)+"/12" : "—"}</b></td>
           <td>
-            <button type="button" class="student-edit" data-id="${esc(student.id)}">✏️ Corriger</button>
+            <button type="button" class="student-edit" data-id="${esc(student.id)}" data-visible-index="${rowIndex}">✏️ Corriger</button>
             <button type="button" class="student-delete-hold" data-student-id="${esc(student.id)}" title="Maintenir pour supprimer">Supprimer</button>
           </td>
         </tr>
@@ -1210,10 +1230,15 @@
     }).join("");
 
     body.querySelectorAll(".student-edit").forEach(button => {
-      button.onclick = () =>
+      button.onclick = event => {
+        event.preventDefault();
+        event.stopPropagation();
+
         open500Editor(
-          button.dataset.id
+          button.dataset.id,
+          button.dataset.visibleIndex
         );
+      };
     });
 
     const head = document.querySelector(".student-list-card thead tr");
