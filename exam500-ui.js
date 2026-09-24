@@ -1332,6 +1332,13 @@
     }
   }
 
+  window.renderExam500View =
+    function() {
+      ensureBaremeButton();
+      render500TableIfNeeded();
+      render500ResultsIfNeeded();
+    };
+
   function installRenderHooks() {
     if (typeof window.render !== "function" || window.render.__exam500View) return;
     const original = window.render;
