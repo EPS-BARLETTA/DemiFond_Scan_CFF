@@ -185,6 +185,12 @@
         race => Number(race.distance) || 0
       ) || [];
 
+    const showResultColumn =
+      rows.some(item =>
+        !Array.isArray(item.races) ||
+        item.races.length === 0
+      );
+
     const raceDetail =
       item =>
         (Array.isArray(item.races) ? item.races : [])
@@ -277,6 +283,11 @@
                 '<td>' +
                   esc(item.sex || '—') +
                 '</td>' +
+                (showResultColumn
+                  ? '<td class="training-time">' +
+                      esc(item.result || '—') +
+                    '</td>'
+                  : '') +
                 distances
                   .map(
                     (_,index) =>
@@ -326,7 +337,17 @@
                 '</span>' +
               '</summary>' +
               '<div class="training-detail-grid">' +
-                raceDetail(item) +
+                (Array.isArray(item.races) && item.races.length
+                  ? raceDetail(item)
+                  : '<section class="training-detail-race">' +
+                      '<h4>' + esc(toolLabel(item.tool)) + '</h4>' +
+                      '<strong>' + esc(item.result || '—') + '</strong>' +
+                      (item.durationMs && item.tool !== 'simple'
+                        ? '<div class="training-splits">Durée : ' +
+                            esc(formatTime(item.durationMs)) +
+                          '</div>'
+                        : '') +
+                    '</section>') +
               '</div>' +
             '</details>'
         )
@@ -335,7 +356,11 @@
     card.innerHTML =
       '<div class="training-results-head">' +
         '<div>' +
-          '<p class="eyebrow">CHRONO PERFORMANCE</p>' +
+          '<p class="eyebrow">' +
+            esc(rows.length && rows.every(item => item.tool === rows[0]?.tool)
+              ? toolLabel(rows[0]?.tool).toUpperCase()
+              : 'RÉSULTATS ENTRAÎNEMENT') +
+          '</p>' +
           '<h2>' +
             esc(
               session?.label ||
@@ -363,6 +388,7 @@
                   '<th>Élève</th>' +
                   '<th>Classe</th>' +
                   '<th>Sexe</th>' +
+                  (showResultColumn ? '<th>Temps / résultat</th>' : '') +
                   summaryHead +
                 '</tr></thead>' +
                 '<tbody>' +
