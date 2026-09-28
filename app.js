@@ -681,6 +681,34 @@ function findStudent(
    QR
 ========================= */
 
+let trainingModuleLoading = null;
+
+function loadTrainingModule() {
+  if (typeof window.handleTrainingResult === 'function') {
+    return Promise.resolve();
+  }
+
+  if (!trainingModuleLoading) {
+    trainingModuleLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = '/training-qr-ui.js?v=9';
+      script.onload = () => {
+        if (typeof window.handleTrainingResult === 'function') {
+          resolve();
+        } else {
+          reject(new Error('Module entraînement non initialisé'));
+        }
+      };
+      script.onerror = () => reject(new Error('Chargement du module impossible'));
+      document.head.appendChild(script);
+    }).finally(() => {
+      trainingModuleLoading = null;
+    });
+  }
+
+  return trainingModuleLoading;
+}
+
 function handleQR(raw) {
   let data;
 
@@ -717,9 +745,12 @@ function handleQR(raw) {
         );
     }
 
-    return scanError(
-      'Module résultats entraînement indisponible.'
-    );
+    // Le QR reste dans le champ de saisie pendant le rechargement.
+    return loadTrainingModule()
+      .then(() => window.handleTrainingResult(data))
+      .catch(() => scanError(
+        'Module entraînement non chargé. Reconnecte l’iPad, actualise DemiFond Scan, puis valide à nouveau ce QR.'
+      ));
   }
 
   if (
