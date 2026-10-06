@@ -51,23 +51,22 @@
   }
 
   function countStudents(space) {
-    const ids =
-      new Set();
-
-    (space.sessions || []).forEach(
-      session => {
-        (session.students || []).forEach(
-          student => {
-            ids.add(
-              student.externalId ||
-              student.id ||
-              `${student.last}-${student.first}`
-            );
-          }
-        );
-      }
-    );
-
+    const ids = new Set();
+    const sessions = Array.isArray(space.sessions) ? space.sessions : [];
+    const sessionIds = new Set(sessions.map(session => String(session.id)));
+    sessions.forEach(session => {
+      (session.students || []).forEach(student => {
+        const id = student.externalId || student.id ||
+          `${student.last || ""}-${student.first || ""}`;
+        if (id && id !== "-") ids.add(String(id));
+      });
+    });
+    // Training results are stored separately from CCF session.students.
+    (Array.isArray(db.trainingScans) ? db.trainingScans : []).forEach(scan => {
+      if (String(scan.groupId) !== String(space.id) ||
+          !sessionIds.has(String(scan.sessionId))) return;
+      if (scan.studentId) ids.add(String(scan.studentId));
+    });
     return ids.size;
   }
 
