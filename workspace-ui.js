@@ -75,7 +75,7 @@
   function refresh() {
     normalizeLessons();
     const status = $('scanNetworkStatus');
-    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v60';
+    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v61';
     const context = $('homeActiveContext');
     if (context) context.textContent = 'Les résultats restent enregistrés sur cet iPad. Le ✅ indique un fichier HTML téléchargé et à jour.';
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
@@ -193,7 +193,7 @@
     dialog.querySelector('input')?.focus();
   }
   function exerciseFields() {
-    return '<label>Nom de l’exercice<input name="exercise" value="Exercice 1" required maxlength="100"></label><label>Type<select name="type"><option value="training">Entraînement · chrono / minuteur / VMA</option><option value="ccf">2 × 800 m · AFL</option><option value="exam500">3 × 500 m · barème</option><option value="">Détecter au premier QR</option></select></label>';
+    return '<label>Nom de l’exercice<input name="exercise" value="Exercice 1" required maxlength="100"></label><p class="flow-note">Le type d’exercice est reconnu automatiquement au premier QR : entraînement, 2 × 800 ou 3 × 500.</p>';
   }
   function createClass() {
     dialogForm('Créer une classe','<label>Classe<input name="name" placeholder="Ex. 1E, 6B…" required maxlength="80"></label>',data=>{
@@ -209,7 +209,7 @@
     dialogForm('Séance du jour · '+group.name,'<label>Classe<input value="'+html(group.name)+'" readonly></label><label>Date<input type="date" name="date" value="'+today()+'" required></label><label>Nom de la séance<input name="lesson" placeholder="Ex. Demi-fond" maxlength="100"></label>'+exerciseFields(),data=>{
       if(!String(data.get('exercise')||'').trim()){toast('Donne un nom à l’exercice.');return false;}
       const date=String(data.get('date')||''); const label=String(data.get('lesson')||'').trim()||'Séance du '+dayLabel(date);
-      lessonId=uid(); const exercise={id:uid(),createdAt:Date.now(),lessonId,lessonDate:date,lessonLabel:label,label:String(data.get('exercise')).trim(),type:String(data.get('type')),status:'open',students:[]};
+      lessonId=uid(); const exercise={id:uid(),createdAt:Date.now(),lessonId,lessonDate:date,lessonLabel:label,label:String(data.get('exercise')).trim(),type:'',status:'open',students:[]};
       group.sessions.push(exercise); save(); view='exercises'; openScan(exercise.id);
     });
   }
@@ -218,7 +218,7 @@
     const group=chosenGroup(),lesson=chosenLesson(); if(!group||!lesson)return;
     dialogForm('Ajouter un exercice · '+dayLabel(lesson.date),exerciseFields().replace('value="Exercice 1"','value="Exercice '+(lesson.exercises.length+1)+'"'),data=>{
       if(!String(data.get('exercise')||'').trim()){toast('Donne un nom à l’exercice.');return false;}
-      const exercise={id:uid(),createdAt:Date.now(),lessonId:lesson.id,lessonDate:lesson.date,lessonLabel:lesson.label,label:String(data.get('exercise')).trim(),type:String(data.get('type')),status:'open',students:[]};
+      const exercise={id:uid(),createdAt:Date.now(),lessonId:lesson.id,lessonDate:lesson.date,lessonLabel:lesson.label,label:String(data.get('exercise')).trim(),type:'',status:'open',students:[]};
       group.sessions.push(exercise); save(); openScan(exercise.id);
     });
   }
@@ -320,10 +320,9 @@
   }
   function guardQR(raw) {
     if(!targetReady()) {scanError('Choisis explicitement la classe, la séance et l’exercice avant de scanner.');return false;}
-    let data;try{data=typeof raw==='string'?JSON.parse(raw):raw;}catch{return true;}
-    const classroom=String(data?.classroom||data?.cl||'').trim().toUpperCase();
-    const selected=String(activeGroup()?.classroom||'').trim().toUpperCase();
-    if(classroom&&selected&&classroom!==selected&&!confirm('Ce QR indique la classe '+classroom+' ; la destination choisie est '+activeGroup().name+'. Enregistrer malgré cette différence ?'))return false;
+    // The selected group is the destination. A pupil's class is descriptive:
+    // groups may mix classes, and equivalent class names need not match.
+    // Native confirmation dialogs also interrupt the camera on some iPads.
     return true;
   }
   function deleteLesson() {
