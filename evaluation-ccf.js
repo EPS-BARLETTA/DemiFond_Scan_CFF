@@ -763,6 +763,45 @@
     }
   }
 
+  function ccfMedicalRace(race) {
+    return (
+      race?.status === "medical_stop" ||
+      race?.statusLabel === "INAPTE_MEDICAL" ||
+      race?.statusLabel === "Inapte / arrêt médical"
+    );
+  }
+
+  function ccfMedicalStudent(student) {
+    return (
+      ccfMedicalRace(student?.races?.[1]) ||
+      ccfMedicalRace(student?.races?.[2])
+    );
+  }
+
+  function ccfMedicalMark() {
+    return '<span class="ccf-medical-mark" title="Inapte / arrêt médical">✚</span>';
+  }
+
+  function ccfRaceDisplay(student, raceNumber) {
+    const race =
+      student?.races?.[raceNumber];
+
+    if (race) {
+      const value =
+        fmtTime(race.totalMs);
+
+      return ccfMedicalRace(race)
+        ? value +
+          '<span class="ccf-medical-race">✚ arrêt</span>'
+        : value;
+    }
+
+    return ccfMedicalStudent(student)
+      ? ccfMedicalMark()
+      : "—";
+  }
+
+
   renderResults =
     function() {
       if (
@@ -772,6 +811,20 @@
         return;
       }
       ensureTools();
+
+      if (!document.getElementById("ccfMedicalStyles")) {
+        const style =
+          document.createElement("style");
+
+        style.id =
+          "ccfMedicalStyles";
+
+        style.textContent =
+          ".ccf-medical-mark{display:inline-flex;align-items:center;justify-content:center;color:#b42318;font-size:20px;font-weight:950;min-width:24px}.ccf-medical-race{display:block;margin-top:3px;color:#b42318;font-size:11px;font-weight:900;white-space:nowrap}";
+
+        document.head.appendChild(style);
+      }
+
       restore2x800ViewState();
 
       const body =
@@ -868,6 +921,16 @@
                     )
                   : null;
 
+              const medical =
+                ccfMedicalStudent(
+                  student
+                );
+
+              const medicalOrDash =
+                medical
+                  ? ccfMedicalMark()
+                  : "—";
+
               return `
                 <tr
                   data-id="${escAttr(
@@ -898,19 +961,17 @@
                   </td>
 
                   <td>
-                    ${esc(
-                      projectOf(
-                        student,
-                        1
-                      )
-                    )}
+                    ${
+                      projectOf(student,1)
+                        ? esc(projectOf(student,1))
+                        : medicalOrDash
+                    }
                   </td>
 
                   <td>
-                    ${fmtTime(
-                      student
-                        .races?.[1]
-                        ?.totalMs
+                    ${ccfRaceDisplay(
+                      student,
+                      1
                     )}
                   </td>
 
@@ -920,24 +981,22 @@
                         ? fmtSec(
                             pm.e1
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
                   <td>
-                    ${esc(
-                      projectOf(
-                        student,
-                        2
-                      )
-                    )}
+                    ${
+                      projectOf(student,2)
+                        ? esc(projectOf(student,2))
+                        : medicalOrDash
+                    }
                   </td>
 
                   <td>
-                    ${fmtTime(
-                      student
-                        .races?.[2]
-                        ?.totalMs
+                    ${ccfRaceDisplay(
+                      student,
+                      2
                     )}
                   </td>
 
@@ -947,7 +1006,7 @@
                         ? fmtSec(
                             pm.e2
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -957,7 +1016,7 @@
                         ? fmtSec(
                             pm.sum
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -966,7 +1025,7 @@
                       pm
                         ? "Niv. " +
                           pm.level
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -976,7 +1035,7 @@
                         ? fmtTime(
                             sc.best
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -986,7 +1045,7 @@
                         ? fmtPts(
                             sc.pp
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -996,7 +1055,7 @@
                         ? fmtSec(
                             sc.spread
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -1006,7 +1065,7 @@
                         ? fmtPts(
                             sc.rp
                           )
-                        : "—"
+                        : medicalOrDash
                     }
                   </td>
 
@@ -1017,7 +1076,7 @@
                           ? fmtPts(
                               sc.total
                             )
-                          : "—"
+                          : medicalOrDash
                       }
                     </b>
                   </td>
