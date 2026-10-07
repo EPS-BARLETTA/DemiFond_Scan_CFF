@@ -712,7 +712,9 @@
 
     const existing =
       store.findIndex(
-        x => String(x.id) === String(item.id)
+        x => String(x.id) === String(item.id) &&
+          String(x.groupId) === String(item.groupId) &&
+          String(x.sessionId) === String(item.sessionId)
       );
 
     if (existing >= 0) {
@@ -938,3 +940,4 @@
     install();
   }
 })();
+

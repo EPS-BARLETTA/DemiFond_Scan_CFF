@@ -1163,3 +1163,36 @@ button:focus-visible, .button:focus-within, summary:focus-visible { outline: 3px
   #groupFlowHeader { flex-direction: column; align-items: flex-start; gap: 16px; }
   .backup-actions { padding: 20px; }
 }
+/* Classes → lessons → exercises, with HTML export status. */
+.classes-home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.flow-heading { display: flex; align-items: center; gap: 20px; }
+.flow-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 18px; margin: 22px 0; }
+.flow-card { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; min-height: 180px; padding: 24px; border: 2px solid #bed1eb; border-left: 6px solid #3b75ba; border-radius: 22px; background: #edf4ff; color: #254f7d; text-align: left; white-space: normal; }
+.flow-card strong { font-size: 24px; line-height: 1.25; }
+.flow-card span { line-height: 1.5; color: #526276; }
+.flow-card small { font-size: 14px; font-weight: 700; }
+.flow-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.flow-actions button { min-height: 48px; }
+.flow-primary { background: #3b75ba; color: #fff; border-color: #3b75ba; }
+.exercise-card { background: #edf7f1; border-color: #bedaca; border-left-color: #438c70; color: #285e49; }
+.flow-note { color: #526276; line-height: 1.5; font-size: 14px; }
+.flow-form { display: grid; gap: 18px; width: min(540px, 82vw); padding: 24px; }
+.flow-form h2 { margin: 0; font-size: 25px; }
+.flow-form label { display: grid; gap: 8px; font-weight: 700; }
+.flow-form input, .flow-form select { width: 100%; min-height: 48px; padding: 12px; }
+#classFlowDialog { border: 1px solid #dbe3ee; border-radius: 24px; max-height: 90vh; padding: 0; }
+#classFlowDialog::backdrop { background: #0f172a66; }
+.backup-class { padding: 22px; margin: 18px 0; }
+.backup-class summary { cursor: pointer; padding: 8px 0 18px; font-size: 20px; }
+.backup-lesson { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 0; border-top: 1px solid #dbe3ee; margin-top: 16px; }
+.backup-lesson small { display: block; margin-top: 8px; font-size: 14px; }
+body[data-workspace-page="group"] #groupFlowHeader,
+body[data-workspace-page="group"] #group > .toolbar,
+body[data-workspace-page="group"] #spacesOverview,
+body[data-workspace-page="group"] #newEvaluation { display: none !important; }
+#scanDestination { border-left: 6px solid #438c70; background: #edf7f1; }
+#scanDestination .workspace-title { margin: 0; padding: 0; border: 0; background: transparent; }
+#examResultContext, #trainingResultContext { margin-bottom: 24px; }
+#examResultContext .workspace-title, #trainingResultContext .workspace-title { margin-bottom: 12px; }
+@media (max-width: 850px) { .classes-home-grid { grid-template-columns: 1fr; } .scan-home-card { min-height: 170px; } }
+@media (max-width: 620px) { .flow-heading, .backup-lesson { flex-direction: column; align-items: flex-start; } .flow-form { padding: 20px; } }

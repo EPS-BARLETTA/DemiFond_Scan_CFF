@@ -1130,6 +1130,8 @@
     }
   }
 
+  window.DFArchive = { buildReport, restoreEvaluationArchive };
+
   function install() {
     const button =
       document.getElementById(
@@ -1193,3 +1195,4 @@
     {once:true}
   );
 })();
+
