@@ -75,7 +75,7 @@
   function refresh() {
     normalizeLessons();
     const status = $('scanNetworkStatus');
-    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v59';
+    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v60';
     const context = $('homeActiveContext');
     if (context) context.textContent = 'Les résultats restent enregistrés sur cet iPad. Le ✅ indique un fichier HTML téléchargé et à jour.';
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
@@ -89,6 +89,7 @@
         const box=$(currentPage==='training-results'?'trainingResultContext':'examResultContext');
         if(box&&currentPage!=='group') { box.style.cssText=classStyle(group); box.innerHTML=header(group.name+' · '+dayLabel(exercise.lessonDate),exercise.label)+
           '<div class="flow-actions"><button type="button" data-action="return-lesson">← Séance et exercices</button><button type="button" data-action="edit-exercise">Corriger les résultats</button>'+
+          '<button type="button" class="flow-scan" data-action="scan-exercise" data-id="'+html(exercise.id)+'" '+(exercise.status==='locked'?'disabled':'')+'>📷 Scanner cet exercice</button>'+
           '<button type="button" class="flow-primary" data-action="save-current-lesson">💾 Sauvegarder la séance en HTML</button>'+
           (exercise.type==='exam500'?'<button type="button" data-action="bareme">⚙️ Barème 3 × 500</button>':'')+'</div>'; }
         if(currentPage==='group') {
@@ -121,6 +122,7 @@
     if (!group) { view='classes'; renderWorkflow(); return; }
     if (view === 'lessons') {
       box.innerHTML = header(group.name, mode === 'results' ? 'Choisis la séance dont tu veux consulter les résultats.' : 'Crée la séance du jour ou reprends une séance existante.', 'class-list') +
+        '<div class="flow-actions"><button type="button" class="flow-scan" data-action="quick-scan">📷 Scanner dans cette classe</button></div>'+
         (mode === 'classes' ? '<div class="flow-actions"><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button></div>' : '') +
         '<div class="flow-grid">'+lessons(group).map(l => '<button type="button" class="flow-card" data-action="open-lesson" data-id="'+html(l.id)+'"><strong>'+html(dayLabel(l.date))+'</strong><span>'+html(l.label)+'</span><span>'+l.exercises.length+' exercice(s)</span><small>'+badge(group,l)+'</small></button>').join('')+'</div>'+
         (!lessons(group).length ? '<div class="card empty">Aucune séance pour cette classe.</div>' : '');
@@ -132,8 +134,20 @@
       (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-exercise">+ Ajouter un exercice</button>' : '') +
       '<div class="flow-actions"><button type="button" class="flow-primary" data-action="save-current-lesson">💾 Sauvegarder la séance en HTML</button><button type="button" class="flow-danger" data-action="delete-lesson">Supprimer la séance</button></div>'+
       '<div class="flow-grid">'+lesson.exercises.map(e => '<div class="flow-card exercise-card"><strong>'+html(e.label)+'</strong><span>'+protocol(e.type)+'</span><div class="flow-actions">'+
-        (mode === 'classes' ? '<button type="button" data-action="scan-exercise" data-id="'+html(e.id)+'" '+(e.status==='locked'?'disabled':'')+'>Scanner ici</button>' : '') +
+        '<button type="button" class="flow-scan" data-action="scan-exercise" data-id="'+html(e.id)+'" '+(e.status==='locked'?'disabled':'')+'>📷 Scanner ici</button>' +
         '<button type="button" data-action="exercise-results" data-id="'+html(e.id)+'">Résultats</button></div>'+(e.status==='locked'?'<small>🔒 Épreuve verrouillée</small>':'')+'</div>').join('')+'</div>';
+  }
+  function quickScan() {
+    if(['results','training-results','group','scan'].includes(currentPage)) {
+      const {group,exercise}=activePair();
+      if(group&&exercise){classId=group.id;lessonId=exercise.lessonId;openScan(exercise.id);return;}
+    }
+    if(currentPage==='workflow'&&chosenGroup()&&view!=='classes') {
+      if(view==='exercises'&&chosenLesson()?.exercises.length===1){openScan(chosenLesson().exercises[0].id);return;}
+      mode='classes';showPage('workflow');
+      toast(view==='lessons'?'Choisis la séance à scanner ou crée celle du jour.':'Choisis l’exercice à scanner.');return;
+    }
+    goFlow('classes');toast('Choisis la classe, puis la séance à scanner.');
   }
   function selectExercise(id) {
     const group = chosenGroup();
@@ -327,7 +341,8 @@
   function action(event) {
     const button=event.target.closest?.('[data-action]');if(!button)return;
     const a=button.dataset.action;
-    if(a==='new-class')createClass();
+    if(a==='quick-scan')quickScan();
+    else if(a==='new-class')createClass();
     else if(a==='open-class'){classId=button.dataset.id;view='lessons';refresh();}
     else if(a==='open-lesson'){lessonId=button.dataset.id;view='exercises';refresh();}
     else if(a==='class-list'){view='classes';refresh();}
@@ -372,7 +387,7 @@
     $('backup').onclick=()=>exportHTML('all');
     $('restore').onchange=async event=>{const file=event.target.files?.[0];if(file)await importHTML(file);event.target.value='';};
     window.addEventListener('online',refresh);window.addEventListener('offline',refresh);
-    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,openScan,goFlow};
+    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,openScan,quickScan,goFlow};
     showPage('home');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
