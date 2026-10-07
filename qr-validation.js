@@ -174,6 +174,81 @@
   }
 
 
+  function isMedicalStop(
+    data
+  ) {
+    return (
+      data?.status ===
+        "medical_stop" ||
+      data?.statusLabel ===
+        "INAPTE_MEDICAL" ||
+      data?.statusLabel ===
+        "Inapte / arrêt médical"
+    );
+  }
+
+
+  function validateMedicalSplits(
+    splits
+  ) {
+
+    if (!Array.isArray(splits)) {
+      return {
+        ok: false,
+        message:
+          "temps intermédiaires absents."
+      };
+    }
+
+    if (splits.length > 4) {
+      return {
+        ok: false,
+        message:
+          "trop de passages dans le QR médical."
+      };
+    }
+
+    const values =
+      splits.map(Number);
+
+    if (
+      values.some(
+        value =>
+          !Number.isFinite(value) ||
+          value <= 0
+      )
+    ) {
+      return {
+        ok: false,
+        message:
+          "un des temps intermédiaires est invalide."
+      };
+    }
+
+    for (
+      let i = 1;
+      i < values.length;
+      i++
+    ) {
+      if (
+        values[i] <=
+        values[i - 1]
+      ) {
+        return {
+          ok: false,
+          message:
+            "les temps intermédiaires ne sont pas croissants."
+        };
+      }
+    }
+
+    return {
+      ok: true,
+      values
+    };
+  }
+
+
   function validatePayload(
     data
   ) {
@@ -322,7 +397,11 @@
     }
 
 
+    const medicalStop =
+      isMedicalStop(data);
+
     if (
+      !medicalStop &&
       !validNumber(
         data.totalMs
       )
@@ -337,16 +416,24 @@
 
 
     const totalMs =
-      Number(
-        data.totalMs
-      );
+      medicalStop
+        ? (
+            validNumber(data.totalMs)
+              ? Number(data.totalMs)
+              : null
+          )
+        : Number(data.totalMs);
 
 
     const splitCheck =
-      validateSplits(
-        data.splits,
-        totalMs
-      );
+      medicalStop
+        ? validateMedicalSplits(
+            data.splits
+          )
+        : validateSplits(
+            data.splits,
+            totalMs
+          );
 
 
     if (
