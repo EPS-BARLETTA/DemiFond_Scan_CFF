@@ -1,5 +1,5 @@
 const VERSION =
-  "df-ccf-67";
+  "df-ccf-68";
 
 
 const FILES = [
@@ -10,11 +10,11 @@ const FILES = [
 
   "/app.css",
 
-  "/modern-ui.css?v=9",
+  "/modern-ui.css?v=10",
 
-  "/app.js",
+  "/app.js?v=18",
 
-  "/qr-validation.js",
+  "/qr-validation.js?v=6",
 
   "/storage-safety.js",
 
@@ -22,25 +22,25 @@ const FILES = [
 
   "/archive-ui.js",
 
-  "/exam500-ui.js",
+  "/exam500-ui.js?v=17",
 
-  "/training-qr-ui.js",
+  "/training-qr-ui.js?v=13",
 
-  "/training-edit-ui.js",
+  "/training-edit-ui.js?v=2",
 
   "/hold-delete-ui.js",
 
   "/ccf-results-ui.js",
 
-  "/group-sessions-ui.js",
+  "/group-sessions-ui.js?v=11",
 
   "/spaces-ui.js",
 
   "/help-ui.js",
 
-  "/workspace-ui.js?v=7",
+  "/workspace-ui.js?v=8",
 
-  "/scanner-ios.js",
+  "/scanner-ios.js?v=2",
 
   "/groups.js",
 
@@ -252,7 +252,11 @@ self.addEventListener(
       event.respondWith(
 
         fetch(
-          request
+          request,
+          {
+            cache:
+              "no-store"
+          }
         )
 
           .then(
