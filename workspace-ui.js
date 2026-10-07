@@ -75,7 +75,7 @@
   function refresh() {
     normalizeLessons();
     const status = $('scanNetworkStatus');
-    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v68';
+    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v69';
     const context = $('homeActiveContext');
     if (context) context.textContent = 'Les résultats restent enregistrés sur cet iPad. Le ✅ indique un fichier HTML téléchargé et à jour.';
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
@@ -122,7 +122,6 @@
     if (!group) { view='classes'; renderWorkflow(); return; }
     if (view === 'lessons') {
       box.innerHTML = header(group.name, mode === 'results' ? 'Choisis la séance dont tu veux consulter les résultats.' : 'Crée la séance du jour ou reprends une séance existante.', 'class-list') +
-        '<div class="flow-actions"><button type="button" class="flow-scan" data-action="quick-scan">📷 Scanner dans cette classe</button></div>'+
         (mode === 'classes' ? '<div class="flow-actions"><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button></div>' : '') +
         '<div class="flow-grid">'+lessons(group).map(l => '<button type="button" class="flow-card" data-action="open-lesson" data-id="'+html(l.id)+'"><strong>'+html(dayLabel(l.date))+'</strong><span>'+html(l.label)+'</span><span>'+l.exercises.length+' exercice(s)</span><small>'+badge(group,l)+'</small></button>').join('')+'</div>'+
         (!lessons(group).length ? '<div class="card empty">Aucune séance pour cette classe.</div>' : '');
@@ -142,12 +141,32 @@
       const {group,exercise}=activePair();
       if(group&&exercise){classId=group.id;lessonId=exercise.lessonId;openScan(exercise.id);return;}
     }
+
     if(currentPage==='workflow'&&chosenGroup()&&view!=='classes') {
-      if(view==='exercises'&&chosenLesson()?.exercises.length===1){openScan(chosenLesson().exercises[0].id);return;}
-      mode='classes';showPage('workflow');
-      toast(view==='lessons'?'Choisis la séance à scanner ou crée celle du jour.':'Choisis l’exercice à scanner.');return;
+      const lesson=chosenLesson();
+
+      if(view==='exercises'&&lesson?.exercises.length===1){
+        openScan(lesson.exercises[0].id);
+        return;
+      }
+
+      if(view==='lessons'){
+        const classLessons=lessons(chosenGroup());
+        if(classLessons.length===1&&classLessons[0].exercises.length===1){
+          lessonId=classLessons[0].id;
+          openScan(classLessons[0].exercises[0].id);
+          return;
+        }
+        toast('Choisis la séance puis l’exercice à scanner.');
+        return;
+      }
+
+      toast('Choisis l’exercice à scanner.');
+      return;
     }
-    goFlow('classes');toast('Choisis la classe, puis la séance à scanner.');
+
+    goFlow('classes');
+    toast('Choisis la classe, puis la séance et l’exercice à scanner.');
   }
   function selectExercise(id) {
     const group = chosenGroup();
