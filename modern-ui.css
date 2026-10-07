@@ -1206,3 +1206,39 @@ body[data-workspace-page="group"] #newEvaluation { display: none !important; }
 #helpButton{color:#172033}
 
 #backups .backup-local{display:none}
+
+/* The class workflow follows the centred welcome page layout. */
+body[data-workspace-page] header.scan-app-header > div:first-child{display:none}
+body[data-workspace-page] header.scan-app-header{justify-content:flex-end;padding-top:16px;padding-bottom:16px}
+#workflowContent,#backups{max-width:1180px;margin-inline:auto}
+.workspace-title{text-align:center;padding:34px 28px}
+.workspace-title h2{font-size:clamp(1.65rem,3vw,2.2rem);line-height:1.2}
+.flow-heading{display:block;position:relative}
+.flow-heading>div{max-width:calc(100% - 220px);margin-inline:auto}
+.flow-heading>button{position:absolute;left:20px;top:24px}
+#workflowContent>.flow-primary{display:block;margin:20px auto}
+.flow-actions{justify-content:center}
+.flow-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:24px auto}
+.flow-grid>.flow-card{flex:0 1 calc((100% - 40px)/3);min-width:0;align-items:center;text-align:center;min-height:200px;box-shadow:0 8px 24px #0f172a06}
+.flow-card strong{overflow-wrap:anywhere}
+.flow-card .flow-actions{margin-bottom:0}
+#backupChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:24px;align-items:start}
+#backupChoices>.workspace-context{grid-column:1/-1;margin:0;text-align:center}
+.backup-class{margin:0;min-width:0;border-radius:22px}
+.backup-class summary{text-align:center;padding:12px 0;font-size:21px;overflow-wrap:anywhere}
+.backup-class>button{display:block;margin:18px auto}
+.backup-lesson{flex-wrap:wrap;justify-content:center;text-align:center}
+.backup-lesson>span{flex:1 1 100%}
+.backup-actions{grid-template-columns:repeat(2,minmax(0,1fr));text-align:center}
+.backup-actions>p{grid-column:1/-1;margin:0;line-height:1.6}
+.backup-actions>#backup{background:#edf7f1;color:#285e49;border-color:#bedaca}
+.backup-actions>label.button{background:#edf4ff;color:#254f7d;border-color:#bed1eb}
+@media(max-width:1000px){.flow-grid>.flow-card{flex-basis:calc((100% - 20px)/2)}}
+@media(max-width:620px){
+ .workspace-title{padding:26px 18px}
+ .flow-heading>div{max-width:100%}
+ .flow-heading>button{position:static;display:block;margin:0 auto 18px}
+ .flow-grid>.flow-card{flex-basis:100%;min-height:160px}
+ #backupChoices,.backup-actions{grid-template-columns:1fr}
+ .flow-actions>button{flex:1 1 200px;white-space:normal}
+}
