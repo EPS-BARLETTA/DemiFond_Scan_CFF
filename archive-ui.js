@@ -1154,7 +1154,7 @@
 
     if (restore) {
       restore.accept =
-        ".html,.json,text/html,application/json";
+        ".html,text/html";
 
       restore.onchange =
         async function(event) {
@@ -1162,7 +1162,7 @@
             event.target.files?.[0];
 
           if (file) {
-            await importFile(file);
+            await (window.DFClassFlow?.importHTML || importFile)(file);
           }
 
           event.target.value = "";

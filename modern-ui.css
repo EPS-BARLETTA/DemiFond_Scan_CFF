@@ -1196,3 +1196,13 @@ body[data-workspace-page="group"] #newEvaluation { display: none !important; }
 #examResultContext .workspace-title, #trainingResultContext .workspace-title { margin-bottom: 12px; }
 @media (max-width: 850px) { .classes-home-grid { grid-template-columns: 1fr; } .scan-home-card { min-height: 170px; } }
 @media (max-width: 620px) { .flow-heading, .backup-lesson { flex-direction: column; align-items: flex-start; } .flow-form { padding: 20px; } }
+
+/* One consistent colour per class, with plain HTML-only backup commands. */
+.flow-card,.backup-class,.flow-heading{border-left:6px solid var(--class-color,#2563eb)}
+.flow-card strong,.backup-class summary strong{color:var(--class-color,#2563eb)}
+.flow-card{background:color-mix(in srgb,var(--class-color,#2563eb) 7%,white)}
+.flow-danger{color:#b91c1c!important;border-color:#fca5a5!important;background:#fff7f7!important}
+#exportCsvCCF,#exportPdfCCF{display:none!important}
+#helpButton{color:#172033}
+
+#backups .backup-local{display:none}

@@ -27,7 +27,7 @@
 
   <link
     rel="stylesheet"
-    href="/modern-ui.css?v=6"
+    href="/modern-ui.css?v=7"
   >
 
   <title>
@@ -55,7 +55,7 @@
     <div class="scan-home-grid classes-home-grid">
       <button type="button" class="scan-home-card home-spaces" data-flow="classes"><span class="home-card-step">ORGANISER ET SCANNER</span><strong>Mes classes</strong><span>Choisir une classe, préparer la séance et scanner.</span><b>Ouvrir mes classes →</b></button>
       <button type="button" class="scan-home-card home-results" data-flow="results"><span class="home-card-step">CONSULTER ET ÉVALUER</span><strong>Résultats</strong><span>Retrouver les séances et les exercices d’une classe.</span><b>Voir les résultats →</b></button>
-      <button type="button" class="scan-home-card home-backups" data-flow="backups"><span class="home-card-step">TÉLÉCHARGER UN HTML</span><strong>Sauvegarder</strong><span>Toute l’application, une classe ou une séance.</span><b>Choisir une sauvegarde →</b></button>
+      <button type="button" class="scan-home-card home-backups" data-flow="backups"><span class="home-card-step">TÉLÉCHARGER UN HTML</span><strong>Sauvegarder</strong><span>Toutes les classes, une classe ou une séance.</span><b>Choisir une sauvegarde →</b></button>
     </div>
     <div id="homeActiveContext" class="workspace-context" aria-live="polite"></div>
   </section>
@@ -68,23 +68,24 @@
     </button>
 
     <button id="backup">
-      💾 Télécharger toute l’application en HTML
+      💾 Sauvegarder toutes les classes en HTML
     </button>
 
     <label class="button">
 
-      📥 Importer / restaurer
+      📥 Importer un fichier HTML
 
       <input
         id="restore"
         type="file"
-        accept=".html,.json,text/html,application/json"
+        accept=".html,text/html"
         hidden
       >
 
     </label>
 
 <details class="backup-local"><summary>Récupération d’une version locale de secours</summary><div id="localRecoverySlot"></div><p>Cette récupération sur l’iPad ne remplace pas le téléchargement d’un fichier HTML.</p></details>
+<p>Pour restaurer, choisis le fichier HTML téléchargé : toutes les classes, une classe ou une séance.</p>
 <p class="backup-hint">✅ HTML téléchargé · ⚠️ Pas de HTML à jour. L’enregistrement automatique sur l’iPad ne valide pas la sauvegarde.</p></div>
   </section>
 
@@ -398,7 +399,7 @@
 <script src="/evaluation-ccf.js?v=5"></script>
 
 <!-- Archive iPad lisible + réimportable -->
-<script src="/archive-ui.js?v=7"></script>
+<script src="/archive-ui.js?v=8"></script>
 
 <!-- Résultats -->
 <script src="/ccf-results-ui.js?v=1"></script>
@@ -423,7 +424,7 @@
 <script src="/help-ui.js?v=1"></script>
 
 <!-- Parcours professeur -->
-<script src="/workspace-ui.js?v=2"></script>
+<script src="/workspace-ui.js?v=3"></script>
 
 <!-- Scanner iPad -->
 <script src="/scanner-ios.js?v=1"></script>

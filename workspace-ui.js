@@ -7,12 +7,15 @@
   const dayOf = value => new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Luxembourg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(value || Date.now()));
   const dayLabel = value => value ? new Date(value + 'T12:00:00').toLocaleDateString('fr-FR') : 'Sans date';
   const protocol = type => ({training:'Entraînement', ccf:'2 × 800 · AFL', exam500:'3 × 500'}[type] || 'Protocole détecté au premier QR');
+  const palette = ['#2563eb','#15803d','#a16207','#7c3aed','#0f766e','#be185d','#c2410c','#475569'];
+  const classStyle = g => '--class-color:'+palette[(Number(g?.uiColor)||0)%palette.length]+';';
   let mode = 'classes', view = 'classes', classId = null, lessonId = null, currentPage = 'home', target = null;
 
   function normalizeLessons() {
     db.settings ||= {};
     db.settings.htmlExports ||= {};
-    for (const group of db.groups || []) {
+    for (const [index, group] of (db.groups || []).entries()) {
+      if (!Number.isInteger(group.uiColor) || group.uiColor < 0) group.uiColor=index%palette.length;
       for (const session of group.sessions || []) {
         // Existing evaluations remain separate lessons; their IDs and scores are preserved.
         session.lessonId ||= session.id;
@@ -72,7 +75,7 @@
   function refresh() {
     normalizeLessons();
     const status = $('scanNetworkStatus');
-    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v57';
+    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v58';
     const context = $('homeActiveContext');
     if (context) context.textContent = 'Les résultats restent enregistrés sur cet iPad. Le ✅ indique un fichier HTML téléchargé et à jour.';
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
@@ -84,9 +87,10 @@
       if(group&&exercise) {
         classId=group.id;lessonId=exercise.lessonId;
         const box=$(currentPage==='training-results'?'trainingResultContext':'examResultContext');
-        if(box&&currentPage!=='group')box.innerHTML=header(group.name+' · '+dayLabel(exercise.lessonDate),exercise.label)+
-          '<div class="flow-actions"><button type="button" data-action="return-lesson">← Séance et exercices</button><button type="button" data-action="edit-exercise">Élèves et réglages</button>'+
-          (exercise.type==='exam500'?'<button type="button" data-action="bareme">⚙️ Barème 3 × 500</button>':'')+'</div>';
+        if(box&&currentPage!=='group') { box.style.cssText=classStyle(group); box.innerHTML=header(group.name+' · '+dayLabel(exercise.lessonDate),exercise.label)+
+          '<div class="flow-actions"><button type="button" data-action="return-lesson">← Séance et exercices</button><button type="button" data-action="edit-exercise">Corriger les résultats</button>'+
+          '<button type="button" class="flow-primary" data-action="save-current-lesson">💾 Sauvegarder la séance en HTML</button>'+
+          (exercise.type==='exam500'?'<button type="button" data-action="bareme">⚙️ Barème 3 × 500</button>':'')+'</div>'; }
         if(currentPage==='group') {
           document.querySelector('#group .student-list-card')?.classList.remove('hidden');
           document.querySelectorAll('.session-row').forEach(row=>row.classList.toggle('hidden',String(row.dataset.sessionId)!==String(exercise.id)));
@@ -104,11 +108,12 @@
   function renderWorkflow() {
     const box = $('workflowContent');
     if (!box) return;
+    box.style.cssText = view==='classes' ? '' : classStyle(chosenGroup());
     if (view === 'classes') {
       const groups = db.groups || [];
       box.innerHTML = header(mode === 'results' ? 'Résultats · choisir une classe' : 'Mes classes', 'Une classe, ses séances, puis ses exercices.') +
         (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' : '') +
-        '<div class="flow-grid">' + groups.map(g => '<button type="button" class="flow-card" data-action="open-class" data-id="'+html(g.id)+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span><small>'+classBadge(g)+'</small></button>').join('') + '</div>' +
+        '<div class="flow-grid">' + groups.map(g => '<button type="button" class="flow-card" style="'+classStyle(g)+'" data-action="open-class" data-id="'+html(g.id)+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span><small>'+classBadge(g)+'</small></button>').join('') + '</div>' +
         (!groups.length ? '<div class="card empty">Aucune classe enregistrée. Crée ta première classe depuis « Mes classes ».</div>' : '');
       return;
     }
@@ -125,6 +130,7 @@
     if (!lesson) { view='lessons'; renderWorkflow(); return; }
     box.innerHTML = header(group.name+' · '+dayLabel(lesson.date), lesson.label+' · '+badge(group,lesson), 'lesson-list') +
       (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-exercise">+ Ajouter un exercice</button>' : '') +
+      '<div class="flow-actions"><button type="button" class="flow-primary" data-action="save-current-lesson">💾 Sauvegarder la séance en HTML</button><button type="button" class="flow-danger" data-action="delete-lesson">Supprimer la séance</button></div>'+
       '<div class="flow-grid">'+lesson.exercises.map(e => '<div class="flow-card exercise-card"><strong>'+html(e.label)+'</strong><span>'+protocol(e.type)+'</span><div class="flow-actions">'+
         (mode === 'classes' ? '<button type="button" data-action="scan-exercise" data-id="'+html(e.id)+'" '+(e.status==='locked'?'disabled':'')+'>Scanner ici</button>' : '') +
         '<button type="button" data-action="exercise-results" data-id="'+html(e.id)+'">Résultats</button></div>'+(e.status==='locked'?'<small>🔒 Épreuve verrouillée</small>':'')+'</div>').join('')+'</div>';
@@ -212,7 +218,7 @@
   }
   function renderBackups() {
     $('backupChoices').innerHTML='<p class="workspace-context">✅ Un HTML à jour a été téléchargé. ⚠️ Aucun HTML à jour pour cette séance.</p>'+
-      (db.groups||[]).map(group=>'<details class="card backup-class"><summary><strong>'+html(group.name)+'</strong> · '+classBadge(group)+'</summary><button type="button" data-action="export-class" data-id="'+html(group.id)+'">Télécharger cette classe en HTML</button>'+lessons(group).map(l=>'<div class="backup-lesson"><span>'+html(dayLabel(l.date)+' · '+l.label)+'<small>'+badge(group,l)+'</small></span><button type="button" data-action="export-lesson" data-group="'+html(group.id)+'" data-id="'+html(l.id)+'">Télécharger la séance</button></div>').join('')+'</details>').join('');
+      (db.groups||[]).map(group=>'<details class="card backup-class" style="'+classStyle(group)+'"><summary><strong>'+html(group.name)+'</strong> · '+classBadge(group)+'</summary><button type="button" data-action="export-class" data-id="'+html(group.id)+'">Télécharger cette classe en HTML</button>'+lessons(group).map(l=>'<div class="backup-lesson"><span>'+html(dayLabel(l.date)+' · '+l.label)+'<small>'+badge(group,l)+'</small></span><button type="button" data-action="export-lesson" data-group="'+html(group.id)+'" data-id="'+html(l.id)+'">Sauvegarder la séance en HTML</button></div>').join('')+'</details>').join('');
     $('archiveFile')?.classList.add('hidden');
   }
   function makeSelection(scope, gid, lid) {
@@ -223,16 +229,20 @@
     return {format:'demifond-class-backup',version:2,scope,exportedAt:new Date().toISOString(),groups,trainingScans:scans,history:scope==='all'?copy(db.history||[]):[],settings:copy(db.settings),activeGroupId:null,activeSessionId:null};
   }
   function buildBundle(payload) {
+    const reportStyles=new Set();
     const sections=payload.groups.map(group=>'<section><h2>'+html(group.name)+'</h2>'+lessons(group).map(lesson=>'<h3>'+html(dayLabel(lesson.date)+' · '+lesson.label)+'</h3>'+lesson.exercises.map(exercise=>{
       // The original grading reports use the active exercise's scale and AFL labels.
       const oldGroup=window.activeGroup,oldSession=window.activeSession;
       let report;
       try {window.activeGroup=()=>group;window.activeSession=()=>exercise;report=window.DFArchive.buildReport(group,exercise,{});}
       finally {window.activeGroup=oldGroup;window.activeSession=oldSession;}
-      return '<details><summary>'+html(exercise.label)+' · '+protocol(exercise.type)+'</summary><iframe title="'+html(exercise.label)+'" sandbox srcdoc="'+html(report)+'"></iframe></details>';
+      for(const match of report.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) reportStyles.add(match[1]);
+      const content=report.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1] || '<p>Aucun bilan disponible.</p>';
+      return '<article class="exercise-report"><h4>'+html(exercise.label)+' · '+protocol(exercise.type)+'</h4>'+content.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')+'</article>'; 
     }).join('')).join('')+'</section>').join('');
     const data=JSON.stringify(payload).replace(/</g,'\\u003c');
-    return '<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DemiFond · Sauvegarde</title><style>body{font:16px system-ui;background:#f3f6fb;color:#162033;margin:0}main{max-width:1200px;margin:auto;padding:24px}section,details{padding:20px;margin:16px 0;background:white;border:1px solid #dbe3ee;border-radius:16px}summary{cursor:pointer;font-weight:700}iframe{width:100%;height:700px;border:0;margin-top:16px}p{line-height:1.5}</style><main><h1>DemiFond · Sauvegarde HTML</h1><p>'+html(payload.groups.length)+' classe(s) · Export du '+html(new Date(payload.exportedAt).toLocaleString('fr-FR'))+'</p><p>Ouvre un exercice pour consulter le bilan et le détail des élèves. Ce fichier peut être réimporté dans DemiFond Scan.</p>'+sections+'<script id="demifond-archive-data" type="application/json">'+data+'</script></main></html>';
+    return '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DemiFond · Sauvegarde</title><style>'+[...reportStyles].join('\n')+'\nbody{font:16px system-ui;background:#f3f6fb;color:#162033;margin:0}.archive-main{max-width:1200px;margin:auto;padding:24px}.archive-main>section{padding:20px;margin:24px 0;background:white;border:1px solid #dbe3ee;border-radius:16px}.exercise-report{padding:16px 0;border-top:2px solid #dbe3ee;margin-top:20px}.exercise-report h4{font-size:1.2rem;color:#1d4ed8}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #dbe3ee;text-align:left}summary{cursor:pointer}p{line-height:1.5}@media(max-width:600px){.archive-main{padding:10px}.archive-main>section{padding:12px}}@media print{.archive-main{max-width:none;padding:0}}</style></head><body><main class="archive-main"><h1>DemiFond · Sauvegarde HTML</h1><p>'+html(payload.groups.length)+' classe(s) · Export du '+html(new Date(payload.exportedAt).toLocaleString('fr-FR'))+'</p><p>Les bilans sont visibles ci-dessous. Ouvre le nom d’un élève pour consulter son détail. Pour restaurer les résultats, sélectionne ce même fichier dans « Importer un fichier HTML » de DemiFond Scan.</p>'+sections+'<script id="demifond-archive-data" type="application/json">'+data+'</script></main></body></html>';
+
   }
   async function exportHTML(scope='all', gid=null, lid=null) {
     normalizeLessons();
@@ -302,6 +312,18 @@
     if(classroom&&selected&&classroom!==selected&&!confirm('Ce QR indique la classe '+classroom+' ; la destination choisie est '+activeGroup().name+'. Enregistrer malgré cette différence ?'))return false;
     return true;
   }
+  function deleteLesson() {
+    const group=chosenGroup(),lesson=chosenLesson();
+    if(!group||!lesson)return;
+    if(!confirm('Supprimer la séance « '+lesson.label+' » du '+dayLabel(lesson.date)+' pour '+group.name+' ?\nSes '+lesson.exercises.length+' exercice(s) et leurs résultats seront supprimés de cet iPad. Les fichiers HTML déjà téléchargés restent disponibles.'))return;
+    const ids=new Set(lesson.exercises.map(e=>String(e.id)));
+    if(target&&String(target.groupId)===String(group.id)&&ids.has(String(target.sessionId))){$('cameraStop')?.click();target=null;}
+    group.sessions=group.sessions.filter(e=>!ids.has(String(e.id)));
+    db.trainingScans=(db.trainingScans||[]).filter(r=>!(String(r.groupId)===String(group.id)&&ids.has(String(r.sessionId))));
+    delete db.settings.htmlExports[stampKey(group,lesson)];
+    if(String(db.activeGroupId)===String(group.id)&&ids.has(String(db.activeSessionId)))db.activeSessionId=null;
+    lessonId=null;view='lessons';save();render();showPage('workflow');toast('Séance supprimée.');
+  }
   function action(event) {
     const button=event.target.closest?.('[data-action]');if(!button)return;
     const a=button.dataset.action;
@@ -314,6 +336,8 @@
     else if(a==='new-exercise')addExercise();
     else if(a==='rename-class')renameClass();
     else if(a==='return-lesson'){mode='results';view='exercises';showPage('workflow');}
+    else if(a==='save-current-lesson')exportHTML('lesson',classId,lessonId);
+    else if(a==='delete-lesson')deleteLesson();
     else if(a==='edit-exercise'){showPage('group');render();}
     else if(a==='bareme')$('exam500BaremeBtn')?.click();
     else if(a==='scan-exercise')openScan(button.dataset.id);
@@ -348,7 +372,7 @@
     $('backup').onclick=()=>exportHTML('all');
     $('restore').onchange=async event=>{const file=event.target.files?.[0];if(file)await importHTML(file);event.target.value='';};
     window.addEventListener('online',refresh);window.addEventListener('offline',refresh);
-    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,guardQR,openScan,goFlow};
+    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,openScan,goFlow};
     showPage('home');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
