@@ -75,7 +75,7 @@
   function refresh() {
     normalizeLessons();
     const status = $('scanNetworkStatus');
-    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v62';
+    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v68';
     const context = $('homeActiveContext');
     if (context) context.textContent = 'Les résultats restent enregistrés sur cet iPad. Le ✅ indique un fichier HTML téléchargé et à jour.';
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
