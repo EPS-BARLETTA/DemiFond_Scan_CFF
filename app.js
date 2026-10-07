@@ -898,7 +898,16 @@ function handleQR(raw) {
       data.resultId || '',
 
     scannedAt:
-      Date.now()
+      Date.now(),
+
+    status:
+      data.status || null,
+
+    statusLabel:
+      data.statusLabel || null,
+
+    stoppedAt:
+      data.stoppedAt || null
   };
 
   if (
@@ -955,11 +964,21 @@ function handleQR(raw) {
         student.classroom
       )}` +
       ` · 800 n°${race}` +
-      ` · ${time(
-        Number(
-          data.totalMs
-        ) || 0
-      )}`;
+      (
+        data.status === "medical_stop"
+          ? `<br><strong>✚ INAPTE / ARRÊT MÉDICAL</strong>` +
+            (
+              Array.isArray(data.splits) &&
+              data.splits.length
+                ? ` · ${data.splits.length} passage${data.splits.length > 1 ? "s" : ""} enregistré${data.splits.length > 1 ? "s" : ""}`
+                : ` · aucun passage enregistré`
+            )
+          : ` · ${time(
+              Number(
+                data.totalMs
+              ) || 0
+            )}`
+      );
   }
 
   if (
