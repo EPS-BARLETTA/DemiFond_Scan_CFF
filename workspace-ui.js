@@ -75,7 +75,7 @@
   function refresh() {
     normalizeLessons();
     const status = $('scanNetworkStatus');
-    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v61';
+    if (status) status.textContent = (navigator.onLine ? 'En ligne' : 'Hors ligne') + ' · v62';
     const context = $('homeActiveContext');
     if (context) context.textContent = 'Les résultats restent enregistrés sur cet iPad. Le ✅ indique un fichier HTML téléchargé et à jour.';
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
@@ -325,6 +325,47 @@
     // Native confirmation dialogs also interrupt the camera on some iPads.
     return true;
   }
+  function hasResults(group,exercise) {
+    return !!(exercise.students?.length || (db.trainingScans||[]).some(r=>String(r.groupId)===String(group.id)&&String(r.sessionId)===String(exercise.id)));
+  }
+  function routeProtocol(raw,handler) {
+    let data;try{data=typeof raw==='string'?JSON.parse(raw):raw;}catch{return handler(raw);}
+    const type=data?.type==='DF_3X500_RESULT'?'exam500':data?.type==='DF_TRAINING_RESULT'?'training':data?.studentId&&[1,2].includes(Number(data.race))?'ccf':null;
+    const {group,exercise}=activePair();
+    if(!type||!group||!exercise)return handler(raw);
+    const previousType=exercise.type;
+    const effectiveType=exercise.type||(hasResults(group,exercise)?(exercise.students?.some(s=>s.exam500)?'exam500':exercise.students?.length?'ccf':'training'):'');
+    if(!effectiveType||effectiveType===type)return handler(raw);
+    const previousTarget=target,previousId=db.activeSessionId;
+    let destination=exercise,created=false;
+    if(!hasResults(group,exercise)) {
+      // Old empty exercises may still have the former default "training" type.
+      exercise.type='';
+    } else {
+      destination=group.sessions.find(e=>e.autoProtocol&&e.lessonId===exercise.lessonId&&e.type===type&&e.status!=='locked');
+      if(!destination) {
+        const base=({training:'Entraînement',ccf:'2 × 800',exam500:'3 × 500'})[type];
+        let label=base,n=2;while(group.sessions.some(e=>e.lessonId===exercise.lessonId&&e.label===label))label=base+' ('+(n++)+')';
+        destination={id:uid(),createdAt:Date.now(),lessonId:exercise.lessonId,lessonDate:exercise.lessonDate,lessonLabel:exercise.lessonLabel,label,type:'',status:'open',students:[],autoProtocol:true};
+        group.sessions.push(destination);created=true;
+      }
+      db.activeSessionId=destination.id;target={groupId:group.id,sessionId:destination.id};
+    }
+    const rollback=()=>{
+      if(created)group.sessions=group.sessions.filter(e=>e.id!==destination.id);
+      if(destination===exercise)exercise.type=previousType;
+      db.activeSessionId=previousId;target=previousTarget;save();render();
+    };
+    const finish=value=>{
+      if(!hasResults(group,destination))rollback();
+      else {save();refresh();if(created)toast(protocol(type)+' : exercice créé automatiquement dans cette séance.');}
+      return value;
+    };
+    try {
+      const value=handler(raw);
+      return value&&typeof value.then==='function'?value.then(finish,error=>{rollback();throw error;}):finish(value);
+    } catch(error){rollback();throw error;}
+  }
   function deleteLesson() {
     const group=chosenGroup(),lesson=chosenLesson();
     if(!group||!lesson)return;
@@ -373,7 +414,7 @@
     const originalRender=window.render;
     window.render=function(...args){const value=originalRender.apply(this,args);refresh();return value;};
     const originalQR=window.handleQR;
-    window.handleQR=function(raw){if(guardQR(raw))return originalQR(raw);};
+    window.handleQR=function(raw){if(guardQR(raw))return routeProtocol(raw,value=>originalQR(value));};
     // The camera uses this same button; intercept before the older direct training handler.
     $('readText').onclick=()=>window.handleQR($('qrText').value.trim());
     document.addEventListener('click',event=>{
@@ -386,7 +427,7 @@
     $('backup').onclick=()=>exportHTML('all');
     $('restore').onchange=async event=>{const file=event.target.files?.[0];if(file)await importHTML(file);event.target.value='';};
     window.addEventListener('online',refresh);window.addEventListener('offline',refresh);
-    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,openScan,quickScan,goFlow};
+    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,routeProtocol,openScan,quickScan,goFlow};
     showPage('home');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
