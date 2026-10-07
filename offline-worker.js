@@ -1,5 +1,5 @@
 const VERSION =
-  "df-ccf-55";
+  "df-ccf-56";
 
 
 const FILES = [
@@ -10,7 +10,7 @@ const FILES = [
 
   "/app.css",
 
-  "/modern-ui.css",
+  "/modern-ui.css?v=5",
 
   "/app.js",
 
@@ -35,6 +35,8 @@ const FILES = [
   "/spaces-ui.js",
 
   "/help-ui.js",
+
+  "/workspace-ui.js?v=1",
 
   "/scanner-ios.js",
 
@@ -387,3 +389,4 @@ self.addEventListener(
 
   }
 );
+

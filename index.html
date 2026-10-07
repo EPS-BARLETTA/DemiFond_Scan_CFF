@@ -27,7 +27,7 @@
 
   <link
     rel="stylesheet"
-    href="/modern-ui.css?v=4"
+    href="/modern-ui.css?v=5"
   >
 
   <title>
@@ -40,28 +40,46 @@
 <body>
 
 
-<header>
-
-  <div>
-
-    <small>
-      EPS · VAUBAN
-    </small>
-
-    <h1>
-      DemiFond Scan CCF
-    </h1>
-
-    <p>
-      Espaces · évaluations · collecte QR · notation CCF
-    </p>
-
-  </div>
+<header class="scan-app-header">
+  <div><small>EPS · VAUBAN · PROFESSEUR</small><h1>DemiFond Scan</h1><p>Collecter, consulter et évaluer.</p></div>
+  <div><span id="scanNetworkStatus" class="network-status">v56</span></div>
+</header>
 
 
-  <div>
+<nav aria-label="Navigation principale">
+  <button data-page="home" class="active">Accueil</button>
 
-    <button id="archiveFile">
+  <button
+    data-page="group"
+  >
+    Mes espaces
+  </button>
+
+  <button data-page="scan">
+    Scanner
+  </button>
+
+
+  <button data-page="results">Résultats</button>
+  <button data-page="backups">Sauvegardes</button>
+</nav>
+
+
+<main>
+  <section id="home" class="page">
+    <div class="scan-home-title"><h2 tabindex="-1">DemiFond Scan</h2><p>Le carnet du professeur</p></div>
+    <div class="scan-home-grid">
+      <button type="button" class="scan-home-card home-spaces" data-destination="group"><span class="home-card-step">01 · ORGANISER</span><strong>Mes espaces</strong><span>Choisir une classe et son évaluation.</span><b>Ouvrir les espaces →</b></button>
+      <button type="button" class="scan-home-card home-scan" data-destination="scan"><span class="home-card-step">02 · COLLECTER</span><strong>Scanner</strong><span>Recevoir les résultats des élèves par QR code.</span><b>Ouvrir le scanner →</b></button>
+      <button type="button" class="scan-home-card home-results" data-destination="results"><span class="home-card-step">03 · ÉVALUER</span><strong>Résultats</strong><span>Consulter les performances et compléter les notes.</span><b>Voir les résultats →</b></button>
+      <button type="button" class="scan-home-card home-backups" data-destination="backups"><span class="home-card-step">04 · CONSERVER</span><strong>Sauvegardes</strong><span>Exporter une évaluation ou restaurer un fichier.</span><b>Ouvrir les sauvegardes →</b></button>
+    </div>
+    <div id="homeActiveContext" class="workspace-context" aria-live="polite"></div>
+  </section>
+  <section id="backups" class="page hidden">
+    <div class="workspace-title"><h2>Sauvegardes et imports</h2><p>Choisis ce que tu souhaites conserver ou récupérer.</p></div>
+    <p id="backupActiveContext" class="workspace-context"></p>
+    <div class="card backup-actions">    <button id="archiveFile">
       📄 Sauvegarder cette évaluation
     </button>
 
@@ -82,36 +100,16 @@
 
     </label>
 
-  </div>
-
-</header>
-
-
-<nav>
-
-  <button
-    data-page="group"
-    class="active"
-  >
-    Mes espaces
-  </button>
-
-  <button data-page="scan">
-    Scanner
-  </button>
-
-
-</nav>
-
-
-<main>
+<p class="backup-hint">Une évaluation : ses élèves et ses résultats. Toute l’application : l’ensemble des espaces et des évaluations.</p></div>
+  </section>
 
 
   <section
     id="group"
-    class="page"
+    class="page hidden"
   >
 
+    <div id="groupFlowHeader" class="workspace-title"><button id="backToSpaces" type="button">← Mes espaces</button><div><h2 id="groupFlowTitle">Mes espaces</h2><p id="groupFlowHint">Choisis un espace pour afficher ses évaluations.</p></div></div>
     <div class="toolbar">
 
       <select
@@ -436,6 +434,9 @@
 <!-- Aide -->
 <script src="/help-ui.js?v=1"></script>
 
+<!-- Parcours professeur -->
+<script src="/workspace-ui.js?v=1"></script>
+
 <!-- Scanner iPad -->
 <script src="/scanner-ios.js?v=1"></script>
 
@@ -477,3 +478,4 @@
 </body>
 
 </html>
+
