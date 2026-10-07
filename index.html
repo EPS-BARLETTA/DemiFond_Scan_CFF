@@ -27,7 +27,7 @@
 
   <link
     rel="stylesheet"
-    href="/modern-ui.css?v=9"
+    href="/modern-ui.css?v=10"
   >
 
   <title>
@@ -42,7 +42,7 @@
 
 <header class="scan-app-header">
   <div><small>EPS · VAUBAN · PROFESSEUR</small><h1>DemiFond Scan</h1><p>Collecter, consulter et évaluer.</p></div>
-  <div><span id="scanNetworkStatus" class="network-status">v67</span></div>
+  <div><span id="scanNetworkStatus" class="network-status">v68</span></div>
 </header>
 
 
@@ -387,10 +387,10 @@
 <script src="/qr-ui.js"></script>
 
 <!-- Moteur principal -->
-<script src="/app.js?v=17"></script>
+<script src="/app.js?v=18"></script>
 
 <!-- Validation stricte des QR -->
-<script src="/qr-validation.js?v=5"></script>
+<script src="/qr-validation.js?v=6"></script>
 
 <!-- Sauvegarde locale sécurisée -->
 <script src="/storage-safety.js?v=1"></script>
@@ -405,18 +405,18 @@
 <script src="/ccf-results-ui.js?v=1"></script>
 
 <!-- Espaces / évaluations -->
-<script src="/group-sessions-ui.js?v=10"></script>
+<script src="/group-sessions-ui.js?v=11"></script>
 
 <!-- Cartes espaces -->
 <script src="/spaces-ui.js?v=1"></script>
 
 <!-- 3 x 500 + bareme modifiable -->
-<script src="/exam500-ui.js?v=16"></script>
+<script src="/exam500-ui.js?v=17"></script>
 
 
 <!-- Résultats Chrono Carnet hors CCF -->
-<script src="/training-qr-ui.js?v=12"></script>
-<script src="/training-edit-ui.js?v=1"></script>
+<script src="/training-qr-ui.js?v=13"></script>
+<script src="/training-edit-ui.js?v=2"></script>
 
 <!-- Suppression sécurisée par appui long -->
 <script src="/hold-delete-ui.js?v=1"></script>
@@ -425,10 +425,10 @@
 <script src="/help-ui.js?v=1"></script>
 
 <!-- Parcours professeur -->
-<script src="/workspace-ui.js?v=7"></script>
+<script src="/workspace-ui.js?v=8"></script>
 
 <!-- Scanner iPad -->
-<script src="/scanner-ios.js?v=1"></script>
+<script src="/scanner-ios.js?v=2"></script>
 
 
 <script>
@@ -439,23 +439,52 @@
 
     window.addEventListener(
       "load",
-      () => {
+      async () => {
+
+        let reloading =
+          false;
 
         navigator
           .serviceWorker
-          .register(
-            "/offline-worker.js"
-          )
-          .catch(
-            error => {
+          .addEventListener(
+            "controllerchange",
+            () => {
 
-              console.error(
-                "Service worker non enregistré :",
-                error
-              );
+              if (reloading) {
+                return;
+              }
+
+              reloading =
+                true;
+
+              window.location.reload();
 
             }
           );
+
+        try {
+
+          const registration =
+            await navigator
+              .serviceWorker
+              .register(
+                "/offline-worker.js?v=68",
+                {
+                  updateViaCache:
+                    "none"
+                }
+              );
+
+          await registration.update();
+
+        } catch (error) {
+
+          console.error(
+            "Service worker non enregistré :",
+            error
+          );
+
+        }
 
       }
     );
