@@ -1222,6 +1222,17 @@ function hasMedicalStop(student) {
   );
 }
 
+function ensureMedicalStyles() {
+  if (document.getElementById('medicalResultStyles')) return;
+
+  const style = document.createElement('style');
+  style.id = 'medicalResultStyles';
+  style.textContent = '.medical-only{color:#b42318;font-size:22px;font-weight:950;background:#fff7f7}.medical-stop-inline{display:inline-block;margin-top:5px;color:#b42318;font-weight:900;font-size:12px}.medical-split{display:block;line-height:1.45}';
+  document.head.appendChild(style);
+}
+
+ensureMedicalStyles();
+
 
 function renderStudents() {
   const body =
@@ -1392,11 +1403,15 @@ function renderResults() {
 
               ${
                 medical
-                  ? '<td colspan="7" class="medical-stop-cell">' +
-                    '<span class="medical-stop-cross">✚</span>' +
-                    '<strong>INAPTE / ARRÊT MÉDICAL</strong>' +
-                    '<small>Les temps réalisés avant l’arrêt sont conservés.</small>' +
-                    '</td>'
+                  ? `
+                    <td class="medical-only">✚</td>
+                    <td class="medical-only">✚</td>
+                    <td class="medical-only">✚</td>
+                    <td class="medical-only">✚</td>
+                    <td class="medical-only">✚</td>
+                    <td class="medical-only">✚</td>
+                    <td class="medical-only">✚</td>
+                  `
                   : `
                     <td>
                       ${
@@ -1426,9 +1441,8 @@ function renderResults() {
                       <b>
                         ${
                           sc
-                            ? sc.total
-                                .toFixed(2)
-                              : '—'
+                            ? sc.total.toFixed(2)
+                            : '—'
                         }
                       </b>
                     </td>
