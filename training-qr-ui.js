@@ -49,6 +49,13 @@
   }
 
   function resultLabel(data) {
+    if (
+      data.status === "medical_stop" ||
+      data.statusLabel === "Inapte / arrêt médical"
+    ) {
+      return "INAPTE / ARRÊT MÉDICAL";
+    }
+
     if (data.tool === "simple") {
       return formatTime(data.totalMs);
     }
@@ -143,6 +150,12 @@
         data.vma == null ? null : Number(data.vma),
       createdAt:
         data.createdAt || new Date().toISOString(),
+      status:
+        data.status || null,
+      statusLabel:
+        data.statusLabel || null,
+      stoppedAt:
+        data.stoppedAt || null,
       groupId:
         db.activeGroupId || null,
       sessionId:
@@ -329,10 +342,16 @@
                     esc(item.sex || '—') +
                   '</small>' +
                 '</span>' +
-                '<span class="training-summary-badge">' +
+                '<span class="training-summary-badge ' +
+                  (item.status === "medical_stop" ? "medical-stop-badge" : "") +
+                '">' +
                   esc(
-                    item.seriesLabel ||
-                    toolLabel(item.tool)
+                    item.status === "medical_stop"
+                      ? "✚ INAPTE / ARRÊT MÉDICAL"
+                      : (
+                          item.seriesLabel ||
+                          toolLabel(item.tool)
+                        )
                   ) +
                 '</span>' +
               '</summary>' +
@@ -530,6 +549,11 @@
           font-weight:800;
           white-space:nowrap;
         }
+        .training-summary-badge.medical-stop-badge{
+          background:#fff1f2;
+          color:#b42318;
+          border:1px solid #fda4af;
+        }
         .training-detail-grid{
           display:grid;
           grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
@@ -653,6 +677,9 @@
       classroom: data.c,
       sex: data.x,
       planMode: data.m,
+      status: data.status || null,
+      statusLabel: data.statusLabel || null,
+      stoppedAt: data.stoppedAt || null,
       seriesLabel:
         races
           .map(
