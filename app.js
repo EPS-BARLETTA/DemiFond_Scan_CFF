@@ -1174,6 +1174,55 @@ function visibleStudents() {
   );
 }
 
+function isMedicalRace(race) {
+  return (
+    race?.status === 'medical_stop' ||
+    race?.statusLabel === 'INAPTE_MEDICAL' ||
+    race?.statusLabel === 'Inapte / arrêt médical'
+  );
+}
+
+function medicalRaceDisplay(race) {
+  if (!race) {
+    return '—';
+  }
+
+  if (!isMedicalRace(race)) {
+    return time(race.totalMs);
+  }
+
+  const splits =
+    Array.isArray(race.splits)
+      ? race.splits
+      : [];
+
+  if (!splits.length) {
+    return '<span class="medical-stop-inline">✚ ARRÊT MÉDICAL</span>';
+  }
+
+  return (
+    splits
+      .map(
+        (value,index) =>
+          '<span class="medical-split">' +
+          ((index + 1) * 200) +
+          ' m&nbsp;: <b>' +
+          time(value) +
+          '</b></span>'
+      )
+      .join('<br>') +
+    '<span class="medical-stop-inline">✚ ARRÊT MÉDICAL</span>'
+  );
+}
+
+function hasMedicalStop(student) {
+  return (
+    isMedicalRace(student.races?.[1]) ||
+    isMedicalRace(student.races?.[2])
+  );
+}
+
+
 function renderStudents() {
   const body =
     $('students');
@@ -1226,29 +1275,31 @@ function renderStudents() {
               </td>
 
               <td>
-                ${time(
+                ${medicalRaceDisplay(
                   student.races?.[1]
-                    ?.totalMs
                 )}
               </td>
 
               <td>
-                ${time(
+                ${medicalRaceDisplay(
                   student.races?.[2]
-                    ?.totalMs
                 )}
               </td>
 
               <td>
-                <b>
-                  ${
-                    sc
-                      ? sc.total
-                          .toFixed(2)
-                        + '/12'
-                      : '—'
-                  }
-                </b>
+                ${
+                  hasMedicalStop(student)
+                    ? '<span class="medical-stop-badge">✚ ARRÊT MÉDICAL</span>'
+                    : '<b>' +
+                      (
+                        sc
+                          ? sc.total
+                              .toFixed(2)
+                            + '/12'
+                          : '—'
+                      ) +
+                      '</b>'
+                }
               </td>
 
               <td>
@@ -1303,6 +1354,9 @@ function renderResults() {
                 ).toFixed(2)
               : '—';
 
+          const medical =
+            hasMedicalStop(student);
+
           return `
             <tr>
 
@@ -1325,83 +1379,91 @@ function renderResults() {
               </td>
 
               <td>
-                ${time(
+                ${medicalRaceDisplay(
                   student.races?.[1]
-                    ?.totalMs
                 )}
               </td>
 
               <td>
-                ${time(
+                ${medicalRaceDisplay(
                   student.races?.[2]
-                    ?.totalMs
                 )}
               </td>
 
-              <td>
-                ${
-                  sc
-                    ? time(sc.best)
-                    : '—'
-                }
-              </td>
+              ${
+                medical
+                  ? '<td colspan="7" class="medical-stop-cell">' +
+                    '<span class="medical-stop-cross">✚</span>' +
+                    '<strong>INAPTE / ARRÊT MÉDICAL</strong>' +
+                    '<small>Les temps réalisés avant l’arrêt sont conservés.</small>' +
+                    '</td>'
+                  : `
+                    <td>
+                      ${
+                        sc
+                          ? time(sc.best)
+                          : '—'
+                      }
+                    </td>
 
-              <td>
-                ${
-                  sc
-                    ? sc.pp.toFixed(2)
-                    : '—'
-                }
-              </td>
+                    <td>
+                      ${
+                        sc
+                          ? sc.pp.toFixed(2)
+                          : '—'
+                      }
+                    </td>
 
-              <td>
-                ${
-                  sc
-                    ? sc.rp.toFixed(2)
-                    : '—'
-                }
-              </td>
+                    <td>
+                      ${
+                        sc
+                          ? sc.rp.toFixed(2)
+                          : '—'
+                      }
+                    </td>
 
-              <td>
-                <b>
-                  ${
-                    sc
-                      ? sc.total
-                          .toFixed(2)
-                      : '—'
-                  }
-                </b>
-              </td>
+                    <td>
+                      <b>
+                        ${
+                          sc
+                            ? sc.total
+                                .toFixed(2)
+                              : '—'
+                        }
+                      </b>
+                    </td>
 
-              <td>
-                <input
-                  class="points"
-                  data-id="${student.id}"
-                  data-key="afl2"
-                  type="number"
-                  step="0.25"
-                  value="${a2}"
-                  ${locked ? 'disabled' : ''}
-                >
-              </td>
+                    <td>
+                      <input
+                        class="points"
+                        data-id="${student.id}"
+                        data-key="afl2"
+                        type="number"
+                        step="0.25"
+                        value="${a2}"
+                        ${locked ? 'disabled' : ''}
+                      >
+                    </td>
 
-              <td>
-                <input
-                  class="points"
-                  data-id="${student.id}"
-                  data-key="afl3"
-                  type="number"
-                  step="0.25"
-                  value="${a3}"
-                  ${locked ? 'disabled' : ''}
-                >
-              </td>
+                    <td>
+                      <input
+                        class="points"
+                        data-id="${student.id}"
+                        data-key="afl3"
+                        type="number"
+                        step="0.25"
+                        value="${a3}"
+                        ${locked ? 'disabled' : ''}
+                      >
+                    </td>
 
-              <td>
-                <b>
-                  ${total}
-                </b>
-              </td>
+                    <td>
+                      <b>
+                        ${total}
+                      </b>
+                    </td>
+                  `
+              }
 
             </tr>
           `;
