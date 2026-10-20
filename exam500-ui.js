@@ -1388,10 +1388,15 @@
       const correctionLabel=correctionDetail.length
         ? '<button type="button" class="exam500-correction-detail" title="'+esc(correctionDetail.join("\n"))+'" style="background:#ffedd5;color:#9a3412;border:1px solid #fdba74;border-radius:6px;padding:3px 6px;cursor:pointer">✏️ '+correctionDetail.length+' corrigé(s)</button>'
         : student.exam500?.supervised ? '<span style="color:#15803d">✓ Validé</span>' : "—";
-      const reliability=student.exam500?.observerAudit;
-      const reliabilityLabel=reliability && reliability.total>0 ? esc(String(reliability.correct)+"/3") : "—";
+      // Validation du chrono du coureur, indépendamment de la note et de l'observateur.
+      const validations=audit.filter(v=>Array.isArray(v)&&[1,2,3].includes(Number(v[0])));
+      const accepted=validations.filter(v=>v[1]==="O").length;
+      const validationLabel=student.exam500?.supervised && validations.length
+        ? '<strong style="color:'+(accepted===3?'#15803d':'#9a3412')+'">'+accepted+'/3</strong>'
+        : "—";
       return `
         <tr>
+          <td>
             <b>
               ${esc(String(student.last||"").toUpperCase())}
               ${esc(student.first||"")}
@@ -1415,7 +1420,7 @@
             </select>
           </td>
           <td>${correctionLabel}</td>
-          <td>${reliabilityLabel}</td>
+          <td>${validationLabel}</td>
           <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
         </tr>
       `;
@@ -1441,7 +1446,7 @@
         "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
         "<th>" + esc(criterionLabels().afl3) + " /4</th>" +
         "<th>Validation professeur</th>" +
-        "<th>Fiabilité observateur</th>" +
+        "<th>Validation</th>" +
         "<th>Note /20</th>";
 
       body.querySelectorAll(".exam500-correction-detail").forEach(button=>{
