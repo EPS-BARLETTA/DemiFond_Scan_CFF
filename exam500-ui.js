@@ -385,7 +385,8 @@
 
     const total20 =
       afl2 == null ||
-      afl3 == null
+      afl3 == null ||
+      gapPts == null
         ? null
         : Math.min(
             20,
@@ -817,11 +818,10 @@
         race.project != null &&
         String(race.project).trim() !== ""
       ) {
-        return {
-          ok:false,
-          message:
-            "Le 500 n°3 doit rester libre, sans estimation."
-        };
+        const project = parseTime(race.project);
+        if (!project || project < 20000 || project > 600000) {
+          return { ok:false, message:"Estimation C3 invalide." };
+        }
       }
     }
 
