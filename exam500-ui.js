@@ -966,6 +966,9 @@
         split250Ms:Number(r.split250Ms||0),
         total500Ms:Number(r.total500Ms||0)
       })),
+      supervised:data.supervised===true,
+      validation:Array.isArray(data.validation)?data.validation:[],
+      observerAudit:data.observerAudit||null,
       scannedAt:Date.now()
     };
 
@@ -1376,9 +1379,19 @@
 
     body.innerHTML = visibleStudents().map(student => {
       const sc = score500(student);
+      const audit=student.exam500?.validation||[];
+      const correctionDetail=audit.filter(v=>Array.isArray(v)&&v[1]==="C").map(v=>{
+        const race=Number(v[0]),record=student.exam500?.races?.find(r=>r.race===race);
+        const raw=v[3]!=null?timeLabel(Number(v[3])):"non disponible";
+        return "500 m n°"+race+" : élève "+raw+" → professeur "+timeLabel(record?.total500Ms);
+      });
+      const correctionLabel=correctionDetail.length
+        ? '<button type="button" class="exam500-correction-detail" title="'+esc(correctionDetail.join("\n"))+'" style="background:#ffedd5;color:#9a3412;border:1px solid #fdba74;border-radius:6px;padding:3px 6px;cursor:pointer">✏️ '+correctionDetail.length+' corrigé(s)</button>'
+        : student.exam500?.supervised ? '<span style="color:#15803d">✓ Validé</span>' : "—";
+      const reliability=student.exam500?.observerAudit;
+      const reliabilityLabel=reliability && reliability.total>0 ? esc(String(reliability.correct)+"/3") : "—";
       return `
         <tr>
-          <td>
             <b>
               ${esc(String(student.last||"").toUpperCase())}
               ${esc(student.first||"")}
@@ -1401,6 +1414,8 @@
               ${scoreOptions(4, student.exam500Afl3)}
             </select>
           </td>
+          <td>${correctionLabel}</td>
+          <td>${reliabilityLabel}</td>
           <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
         </tr>
       `;
@@ -1425,8 +1440,13 @@
         "<th>Note écart /2</th>" +
         "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
         "<th>" + esc(criterionLabels().afl3) + " /4</th>" +
+        "<th>Validation professeur</th>" +
+        "<th>Fiabilité observateur</th>" +
         "<th>Note /20</th>";
 
+      body.querySelectorAll(".exam500-correction-detail").forEach(button=>{
+        button.onclick=()=>window.alert(button.title);
+      });
       body.querySelectorAll(".exam500-inline-score").forEach(select => {
         select.onchange = () => {
           const currentSession =
