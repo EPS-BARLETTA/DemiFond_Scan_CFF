@@ -21,7 +21,11 @@
     120;
 
   const MAX_WIDTH =
-    900;
+    1600;
+
+  let detector = null;
+  let decoding = false;
+  let frames = 0;
 
 
   function msg(text) {
@@ -58,6 +62,17 @@
 
   }
 
+
+  function acceptCode(value) {
+    if (!value || value===last) return;
+    last=value;
+    const textarea=$("qrText");
+    if (textarea) textarea.value=value;
+    const button=$("readText");
+    if (button) button.click();
+    msg("QR détecté. Traitement du résultat…");
+    setTimeout(()=>{last="";},1400);
+  }
 
   async function start() {
 
@@ -106,6 +121,17 @@
 
 
       await video.play();
+
+      if (typeof BarcodeDetector !== "undefined") {
+        try { detector = new BarcodeDetector({formats:["qr_code"]}); }
+        catch (_) { detector = null; }
+      }
+      if (!detector && typeof window.jsQR !== "function") {
+        msg("Lecteur QR non chargé. Actualise la page puis réessaie.");
+        stop();
+        return;
+      }
+      msg("Caméra active : place le QR dans le cadre. Recherche en cours…");
 
 
       const canvas =
@@ -178,8 +204,7 @@
         if (
           video.readyState >= 2 &&
           video.videoWidth &&
-          video.videoHeight &&
-          window.jsQR
+          video.videoHeight
         ) {
 
           const scale =
@@ -222,59 +247,30 @@
             );
 
 
-          const code =
-            jsQR(
-              image.data,
-              image.width,
-              image.height,
-              {
-                inversionAttempts:
-                  "dontInvert"
-              }
-            );
-
-
-          if (
-            code &&
-            code.data &&
-            code.data !==
-              last
-          ) {
-
-            last =
-              code.data;
-
-
-            const textarea =
-              $("qrText");
-
-
-            if (textarea) {
-              textarea.value =
-                code.data;
+          let code = null;
+          if (typeof window.jsQR === "function") {
+            try {
+              code = window.jsQR(image.data,image.width,image.height,
+                {inversionAttempts:"attemptBoth"});
+            } catch (error) {
+              console.error("Décodage QR",error);
+              msg("Erreur de lecture QR : "+error.message);
             }
-
-
-            const button =
-              $("readText");
-
-
-            if (button) {
-              button.click();
-            }
-
-
-            setTimeout(
-              () => {
-
-                last =
-                  "";
-
-              },
-              1400
-            );
-
           }
+          frames++;
+          if (frames % 25 === 0 && !code) {
+            msg("Caméra active, QR non reconnu. Centre le code et évite les reflets.");
+          }
+          if (!code && detector && !decoding) {
+            decoding=true;
+            detector.detect(video).then(codes=>{
+              const value=codes?.[0]?.rawValue;
+              if (value) acceptCode(value);
+            }).catch(error=>console.warn("BarcodeDetector",error))
+              .finally(()=>{decoding=false;});
+          }
+
+          if (code && code.data) acceptCode(code.data);
 
         }
 
@@ -338,7 +334,9 @@
 
     stream =
       null;
-
+    detector = null;
+    decoding = false;
+    frames = 0;
 
     const video =
       $("video");
