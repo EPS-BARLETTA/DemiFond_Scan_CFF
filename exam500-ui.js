@@ -1498,6 +1498,36 @@
       `;
     }).join("");
 
+    // Vue synthétique accessible sans défilement horizontal du tableau détaillé.
+    const resultsCard = body.closest(".card");
+    if (resultsCard) {
+      let summary = document.getElementById("exam500Summary");
+      if (!summary) {
+        summary = document.createElement("section");
+        summary.id = "exam500Summary";
+        summary.style.cssText = "margin:16px 0;max-width:100%;";
+        const tableWrap = body.closest(".table");
+        if (tableWrap) tableWrap.before(summary);
+      }
+      summary.innerHTML = '<h3 style="margin:0 0 10px">Synthèse des notes · /20</h3>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:12px">' +
+        visibleStudents().map(student => {
+          const sc = score500(student);
+          const cell = (label,value,max) =>
+            '<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #e2e8f0;padding:5px 0"><span>'+label+'</span><b>' +
+            (value == null ? "—" : fmtPts(value))+'/'+max+'</b></div>';
+          return '<article style="border:1px solid #cbd5e1;border-radius:12px;background:#fff;padding:14px">' +
+            '<strong>'+esc(String(student.last||"").toUpperCase())+' '+esc(student.first||"")+'</strong>' +
+            cell("Performance",sc?.perf,6)+cell("Régularité",sc?.effPts,6)+
+            cell("Estimation",sc?.gapPts,3)+
+            (premiereMode()
+              ? cell("Échauffement",sc?.warmup,2)+cell("Carnet / investissement",sc?.carnet,2)+cell("Observation",sc?.observation,1)
+              : cell(criterionLabels().afl2,sc?.afl2,2)+cell(criterionLabels().afl3,sc?.afl3,4))+
+            '<div style="margin-top:10px;font-size:20px;font-weight:800">Total : '+(sc?.total20 == null ? "—" : fmtPts(sc.total20))+' /20</div>'+
+            '</article>';
+        }).join("")+'</div>';
+    }
+
     const head = document.querySelector("#results .table thead tr");
     if (head) {
       head.innerHTML =
@@ -1560,12 +1590,8 @@
     const title = document.querySelector("#results h2");
     if (title) {
       title.textContent =
-        "Fiche d’évaluation · Demi-fond 3 × 500 · Indice " +
-        (
-          indexMode() === "three"
-            ? "sur les 3 courses"
-            : "C1–C2"
-        );
+        "Fiche d’évaluation · Demi-fond 3 × 500 · Régularité sur " +
+        (indexMode() === "three" ? "6" : "4") + " portions de 250 m";
     }
 
     const tabs =
