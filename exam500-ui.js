@@ -305,7 +305,7 @@
 
   function estimationCount() {
     const session = typeof activeSession === "function" ? activeSession() : null;
-    return session?.exam500EstimationCount === 3 ? 3 : 2;
+    return premiereMode() && session?.exam500EstimationCount === 3 ? 3 : 2;
   }
 
   // 0–3 s : totalité ; >3–6 s : moitié ; >6 s : zéro.
@@ -379,7 +379,7 @@
     const perf = performancePoints(student);
     const gap = gapSeconds(student);
     const eff = efficiencySeconds(student);
-    const gapPts = estimationMetrics(student).points;
+    const gapPts = premiereMode() ? estimationMetrics(student).points : tableScore(settings().gap, gap);
     const effPts = tableScore(settings().efficiency, eff);
 
     const afl2 =
