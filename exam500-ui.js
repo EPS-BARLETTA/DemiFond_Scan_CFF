@@ -935,7 +935,12 @@
         session.exam500EvaluationLevel = level;
         session.exam500IndexMode = index;
         session.exam500EstimationCount = count;
-        if (!session.exam500Bareme) {
+        // Une nouvelle évaluation adopte le référentiel du niveau scanné.
+        // Une évaluation déjà renseignée garde son barème et ses corrections.
+        const hasScannedResults = (session.students || []).some(
+          student => Array.isArray(student?.exam500?.races) && student.exam500.races.length > 0
+        );
+        if (!hasScannedResults && !session.exam500BaremeCustomized) {
           session.exam500Bareme = performancePreset500(level,
             db.settings?.exam500Bareme || DEFAULT_BAREME);
         }
