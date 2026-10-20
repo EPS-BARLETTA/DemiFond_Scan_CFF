@@ -341,50 +341,18 @@
       : "c1c2";
   }
 
+  // Première : chaque 500 m fournit deux portions de 250 m.
+  // On compare la plus rapide et la plus lente de toutes les portions retenues.
   function efficiencySeconds(student) {
-    const races =
-      normalizedRaces(student);
-
-    const c1 = races[0];
-    const c2 = races[1];
-    const c3 = races[2];
-
-    if (
-      !c1?.total500Ms ||
-      !c2?.total500Ms
-    ) {
-      return null;
-    }
-
-    if (
-      indexMode() === "three"
-    ) {
-      if (!c3?.total500Ms) {
-        return null;
-      }
-
-      const values = [
-        Number(c1.total500Ms),
-        Number(c2.total500Ms),
-        Number(c3.total500Ms)
-      ];
-
-      return Math.round(
-        (
-          Math.max(...values) -
-          Math.min(...values)
-        ) /
-        1000
-      );
-    }
-
-    return Math.round(
-      Math.abs(
-        Number(c1.total500Ms) -
-        Number(c2.total500Ms)
-      ) /
-      1000
-    );
+    const races = normalizedRaces(student);
+    const selected = indexMode() === "three" ? races : races.slice(0, 2);
+    if (selected.some(r => !r || !(Number(r.split250Ms) > 0) ||
+      !(Number(r.total500Ms) > Number(r.split250Ms)))) return null;
+    const segments = selected.flatMap(r => [
+      Number(r.split250Ms),
+      Number(r.total500Ms) - Number(r.split250Ms)
+    ]);
+    return Math.round((Math.max(...segments) - Math.min(...segments)) / 1000);
   }
 
   function score500(student) {
@@ -554,10 +522,10 @@
 
         <div style="margin:14px 0;padding:12px;border:1px solid #d8e1f3;border-radius:12px">
           <label>
-            <b>Calcul de l’indice efficacité /6</b>
+            <b>Calcul de la régularité /6 · portions de 250 m</b>
             <select id="b500IndexMode" style="display:block;width:100%;margin-top:8px">
-              <option value="c1c2" ${indexMode()==="c1c2" ? "selected" : ""}>C1 ↔ C2 uniquement</option>
-              <option value="three" ${indexMode()==="three" ? "selected" : ""}>Écart entre le meilleur et le moins bon des 3 × 500</option>
+              <option value="c1c2" ${indexMode()==="c1c2" ? "selected" : ""}>4 segments de 250 m · C1 et C2</option>
+              <option value="three" ${indexMode()==="three" ? "selected" : ""}>6 segments de 250 m · C1, C2 et C3</option>
             </select>
           </label>
           <p style="margin:8px 0 0;font-size:13px;color:#64748b">
@@ -1436,11 +1404,11 @@
         "<th>" +
         (
           indexMode() === "three"
-            ? "Écart sur les 3 courses"
-            : "Écart C1–C2"
+            ? "Écart max–min des 6 × 250 m"
+            : "Écart max–min des 4 × 250 m"
         ) +
         "</th>" +
-        "<th>Note efficacité /6</th>" +
+        "<th>Régularité /6</th>" +
         "<th>Écart annonces</th>" +
         "<th>Note écart /2</th>" +
         "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
