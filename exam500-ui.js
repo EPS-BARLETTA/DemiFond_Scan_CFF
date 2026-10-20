@@ -292,33 +292,39 @@
     return points;
   }
 
+  function estimationCount() {
+    const session = typeof activeSession === "function" ? activeSession() : null;
+    return session?.exam500EstimationCount === 3 ? 3 : 2;
+  }
+
+  // 0–3 s : totalité ; >3–6 s : moitié ; >6 s : zéro.
+  // Comparaison sans arrondi intermédiaire, pour respecter les seuils.
+  function estimationMetrics(student) {
+    const races = normalizedRaces(student).slice(0, estimationCount());
+    const weight = 3 / estimationCount();
+    const details = races.map((race, i) => {
+      const announced = Number(race?.projectMs);
+      const actual = Number(race?.total500Ms);
+      if (!race || !Number.isFinite(announced) || announced <= 0 ||
+          !Number.isFinite(actual) || actual <= 0) {
+        return { race:i+1, errorMs:null, points:null };
+      }
+      const errorMs = Math.abs(actual-announced);
+      return { race:i+1, errorMs,
+        points:errorMs <= 3000 ? weight : errorMs <= 6000 ? weight/2 : 0 };
+    });
+    return {
+      details,
+      points:details.every(x => x.points !== null)
+        ? Math.round(details.reduce((sum,x)=>sum+x.points,0)*100)/100 : null,
+      errorMs:details.every(x => x.errorMs !== null)
+        ? details.reduce((sum,x)=>sum+x.errorMs,0) : null
+    };
+  }
+
   function gapSeconds(student) {
-    const [c1,c2] =
-      normalizedRaces(student);
-
-    if (
-      !c1 ||
-      !c2 ||
-      !Number.isFinite(Number(c1.projectMs)) ||
-      Number(c1.projectMs) <= 0 ||
-      !Number.isFinite(Number(c2.projectMs)) ||
-      Number(c2.projectMs) <= 0
-    ) {
-      return null;
-    }
-
-    return Math.round(
-      (
-        Math.abs(
-          Number(c1.total500Ms) -
-          Number(c1.projectMs)
-        ) +
-        Math.abs(
-          Number(c2.total500Ms) -
-          Number(c2.projectMs)
-        )
-      ) / 1000
-    );
+    const ms = estimationMetrics(student).errorMs;
+    return ms == null ? null : ms / 1000;
   }
 
   function tableScore(rows, seconds) {
@@ -362,7 +368,7 @@
     const perf = performancePoints(student);
     const gap = gapSeconds(student);
     const eff = efficiencySeconds(student);
-    const gapPts = tableScore(settings().gap, gap);
+    const gapPts = estimationMetrics(student).points;
     const effPts = tableScore(settings().efficiency, eff);
 
     const afl2 =
@@ -394,6 +400,7 @@
       perf,
       gap,
       gapPts,
+      estimationDetails: estimationMetrics(student).details,
       eff,
       effPts,
       afl1: perf + effPts,
@@ -534,6 +541,13 @@
         </div>
 
         <div style="margin:14px 0;padding:12px;border:1px solid #d8e1f3;border-radius:12px">
+          <label><b>Estimation /3 · nombre d'annonces</b>
+            <select id="b500EstimationCount" style="display:block;width:100%;margin-top:8px">
+              <option value="2" ${estimationCount()===2?"selected":""}>2 annonces · C1 et C2 · 1,5 point chacune</option>
+              <option value="3" ${estimationCount()===3?"selected":""}>3 annonces · C1, C2 et C3 · 1 point chacune</option>
+            </select>
+          </label>
+          <p style="font-size:13px">0 à 3 s d'écart : 100 % ; plus de 3 à 6 s : 50 % ; plus de 6 s : 0.</p>
           <b>Intitulés des critères complémentaires</b>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px">
             <label>Critère /2
@@ -558,7 +572,7 @@
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
           <label><b>Performance filles /6</b><textarea id="b500Girls" style="width:100%;min-height:280px">${rowsToText(b.girls)}</textarea></label>
           <label><b>Performance garçons /6</b><textarea id="b500Boys" style="width:100%;min-height:280px">${rowsToText(b.boys)}</textarea></label>
-          <label><b>Écart annonce /2</b><textarea id="b500Gap" style="width:100%;min-height:280px">${rowsToText(b.gap)}</textarea></label>
+          <p><b>Estimation /3</b><br>Barème fixe par annonce, défini ci-dessus.</p>
           <label><b>Indice efficacité /6</b><textarea id="b500Eff" style="width:100%;min-height:280px">${rowsToText(b.efficiency)}</textarea></label>
         </div>
 
@@ -613,6 +627,7 @@
           clone(DEFAULT_BAREME);
 
         session.exam500IndexMode = "c1c2";
+        session.exam500EstimationCount = 2;
         session.exam500Afl2Label =
           "Carnet / échauffement";
         session.exam500Afl3Label =
@@ -644,7 +659,7 @@
       const next = {
         girls: parseRows(d.querySelector("#b500Girls").value, true),
         boys: parseRows(d.querySelector("#b500Boys").value, true),
-        gap: parseRows(d.querySelector("#b500Gap").value, false),
+        gap: clone(b.gap),
         efficiency: parseRows(d.querySelector("#b500Eff").value, false)
       };
 
@@ -669,6 +684,7 @@
             ? "three"
             : "c1c2";
 
+        session.exam500EstimationCount = Number(d.querySelector("#b500EstimationCount").value) === 3 ? 3 : 2;
         session.exam500Afl2Label =
           d.querySelector("#b500Afl2Label").value.trim() ||
           "Carnet / échauffement";
@@ -1092,7 +1108,7 @@
             <section style="border:1px solid #d8e1f3;border-radius:14px;padding:12px;background:${index===0 ? "#fff8dc" : index===1 ? "#eef9ef" : "#eef6ff"}">
               <h3>Course ${index+1}</h3>
 
-              ${index < 2 ? `
+              ${index < 2 || estimationCount() === 3 ? `
                 <label>Annonce
                   <input id="e500Project${index+1}" value="${esc(r.project||"")}" placeholder="2:00">
                 </label>
@@ -1190,7 +1206,7 @@
           }
 
           if (
-            i < 2 &&
+            i < estimationCount() &&
             (
               !race.projectMs ||
               race.projectMs < 20000 ||
@@ -1198,7 +1214,7 @@
             )
           ) {
             alert(
-              "Une estimation valide est obligatoire pour les courses 1 et 2."
+              "Une estimation valide est obligatoire pour les courses retenues."
             );
             return;
           }
@@ -1309,7 +1325,7 @@
           <td>${timeLabel(t(1))}</td>
           <td>${esc(p(2)||"—")}</td>
           <td>${timeLabel(t(2))}</td>
-          <td>${timeLabel(t(3))}</td>
+          <td>${estimationCount()===3 ? esc(p(3)||"—")+" / "+timeLabel(t(3)) : timeLabel(t(3))}</td>
           <td><b>${sc ? fmtPts(sc.afl1)+"/12" : "—"}</b></td>
           <td>
             <button type="button" class="student-edit" data-id="${esc(student.id)}" data-visible-index="${rowIndex}">✏️ Corriger</button>
@@ -1334,7 +1350,7 @@
     const head = document.querySelector(".student-list-card thead tr");
     if (head) {
       head.innerHTML =
-        "<th>Élève</th><th>Classe</th><th>Annonce C1</th><th>C1</th><th>Annonce C2</th><th>C2</th><th>C3 libre</th><th>AFL1</th><th>Action</th>";
+        "<th>Élève</th><th>Classe</th><th>Annonce C1</th><th>C1</th><th>Annonce C2</th><th>C2</th><th>"+(estimationCount()===3?"Annonce C3":"C3 libre")+"</th><th>AFL1</th><th>Action</th>";
     }
   }
 
@@ -1375,7 +1391,7 @@
           <td><b>${sc ? fmtPts(sc.perf) : "—"}</b></td>
           <td>${sc?.eff == null ? "—" : sc.eff+" s"}</td>
           <td><b>${sc ? fmtPts(sc.effPts) : "—"}</b></td>
-          <td>${sc?.gap == null ? "—" : sc.gap+" s"}</td>
+          <td>${sc?.gap == null ? "—" : fmtPts(sc.gap)+" s"}</td>
           <td><b>${sc ? fmtPts(sc.gapPts) : "—"}</b></td>
           <td>
             <select class="exam500-inline-score" data-student-id="${esc(student.id)}" data-field="exam500Afl2" aria-label="${esc(criterionLabels().afl2)} sur 2">
@@ -1409,8 +1425,8 @@
         ) +
         "</th>" +
         "<th>Régularité /6</th>" +
-        "<th>Écart annonces</th>" +
-        "<th>Note écart /2</th>" +
+        "<th>Écart cumulé des annonces</th>" +
+        "<th>Estimation /3</th>" +
         "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
         "<th>" + esc(criterionLabels().afl3) + " /4</th>" +
         "<th>Validation professeur</th>" +
