@@ -1498,34 +1498,50 @@
       `;
     }).join("");
 
-    // Vue synthétique accessible sans défilement horizontal du tableau détaillé.
+    // Liste alphabétique compacte : un élève ouvert à la fois.
     const resultsCard = body.closest(".card");
     if (resultsCard) {
       let summary = document.getElementById("exam500Summary");
       if (!summary) {
         summary = document.createElement("section");
         summary.id = "exam500Summary";
-        summary.style.cssText = "margin:16px 0;max-width:100%;";
-        const tableWrap = body.closest(".table");
-        if (tableWrap) tableWrap.before(summary);
+        summary.style.cssText = "margin:16px 0;max-width:100%";
+        body.closest(".table")?.before(summary);
       }
-      summary.innerHTML = '<h3 style="margin:0 0 10px">Synthèse des notes · /20</h3>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:12px">' +
-        visibleStudents().map(student => {
-          const sc = score500(student);
-          const cell = (label,value,max) =>
-            '<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #e2e8f0;padding:5px 0"><span>'+label+'</span><b>' +
-            (value == null ? "—" : fmtPts(value))+'/'+max+'</b></div>';
-          return '<article style="border:1px solid #cbd5e1;border-radius:12px;background:#fff;padding:14px">' +
-            '<strong>'+esc(String(student.last||"").toUpperCase())+' '+esc(student.first||"")+'</strong>' +
-            cell("Performance",sc?.perf,6)+cell("Régularité",sc?.effPts,6)+
-            cell("Estimation",sc?.gapPts,3)+
-            (premiereMode()
-              ? cell("Échauffement",sc?.warmup,2)+cell("Carnet / investissement",sc?.carnet,2)+cell("Observation",sc?.observation,1)
-              : cell(criterionLabels().afl2,sc?.afl2,2)+cell(criterionLabels().afl3,sc?.afl3,4))+
-            '<div style="margin-top:10px;font-size:20px;font-weight:800">Total : '+(sc?.total20 == null ? "—" : fmtPts(sc.total20))+' /20</div>'+
-            '</article>';
-        }).join("")+'</div>';
+      const sorted = visibleStudents().slice().sort((a,b)=>
+        (String(a.last||"")+" "+String(a.first||"")).localeCompare(
+          String(b.last||"")+" "+String(b.first||""),"fr",{sensitivity:"base"}));
+      const opened = summary.querySelector("details[open]")?.dataset.studentId || "";
+      const fields = premiereMode()
+        ? [["exam500Warmup","Échauffement",2],["exam500Carnet","Carnet / investissement",2],["exam500Observation","Observation",1]]
+        : [["exam500Afl2",criterionLabels().afl2,2],["exam500Afl3",criterionLabels().afl3,4]];
+      summary.innerHTML = '<h3 style="margin:0 0 10px">Élèves · synthèse des notes /20</h3>'+
+        sorted.map(student=>{
+          const sc=score500(student), id=String(student.id);
+          const line=(label,value,max)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #e2e8f0"><span>'+esc(label)+'</span><b>'+(value==null?"—":fmtPts(value))+'/'+max+'</b></div>';
+          return '<details class="exam500-summary-student" data-student-id="'+escAttr(id)+'" '+(opened===id?'open':'')+' style="border:1px solid #cbd5e1;border-radius:11px;margin:7px 0;background:white">'+
+            '<summary style="cursor:pointer;padding:13px;font-weight:750;display:flex;justify-content:space-between;gap:12px;align-items:center"><span>'+esc(String(student.last||"").toUpperCase()+' '+(student.first||""))+'</span><b>'+(sc?.total20==null?"—":fmtPts(sc.total20))+'/20</b></summary>'+
+            '<div style="padding:0 13px 13px">'+line("Performance",sc?.perf,6)+line("Régularité",sc?.effPts,6)+line("Estimation",sc?.gapPts,3)+
+            fields.map(([field,label,max])=>'<label style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0"><span>'+esc(label)+' /'+max+'</span><select class="exam500-summary-score" data-id="'+escAttr(id)+'" data-field="'+field+'" style="min-width:90px;padding:7px">'+scoreOptions(max,student[field])+'</select></label>').join("")+
+            '<button type="button" class="exam500-summary-edit" data-id="'+escAttr(id)+'" style="margin-top:10px;padding:10px;border:1px solid #2563eb;border-radius:9px;color:#1d4ed8;background:#eff6ff;font-weight:700">✏️ Corriger chronos et annonces</button></div></details>';
+        }).join("");
+      summary.querySelectorAll("details").forEach(detail=>{
+        detail.addEventListener("toggle",()=>{
+          if(detail.open) summary.querySelectorAll("details").forEach(other=>{if(other!==detail)other.open=false;});
+        });
+      });
+      summary.querySelectorAll(".exam500-summary-score").forEach(select=>{
+        select.onchange=()=>{
+          const student=activeSession()?.students?.find(x=>String(x.id)===select.dataset.id);
+          if(!student)return;
+          student[select.dataset.field]=select.value===""?"":Number(select.value);
+          save();
+          render500ResultsIfNeeded();
+        };
+      });
+      summary.querySelectorAll(".exam500-summary-edit").forEach(button=>{
+        button.onclick=()=>open500Editor(button.dataset.id);
+      });
     }
 
     const head = document.querySelector("#results .table thead tr");
