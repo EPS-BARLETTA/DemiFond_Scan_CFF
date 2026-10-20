@@ -913,6 +913,35 @@
       return true;
     }
 
+    // Les réglages du QR pilotent la nouvelle évaluation sans écraser
+    // les modifications manuelles d'un barème déjà personnalisé.
+    const cfg = data.evaluationConfig;
+    if (cfg && typeof cfg === "object") {
+      const level = cfg.level === "seconde" ? "seconde" :
+        cfg.level === "premiere" ? "premiere" : null;
+      const index = cfg.regularityMode === "three" ? "three" :
+        cfg.regularityMode === "c1c2" ? "c1c2" : null;
+      const count = Number(cfg.estimationCount);
+      if (!level || !index || ![2,3].includes(count)) {
+        scanError("Paramètres d'évaluation QR incorrects."); return true;
+      }
+      if (session.exam500QrConfig) {
+        const old = session.exam500QrConfig;
+        if (old.level !== level || old.index !== index || old.count !== count) {
+          scanError("QR incompatible avec les réglages de cette évaluation."); return true;
+        }
+      } else {
+        session.exam500QrConfig = {level,index,count};
+        session.exam500EvaluationLevel = level;
+        session.exam500IndexMode = index;
+        session.exam500EstimationCount = count;
+        if (!session.exam500Bareme) {
+          session.exam500Bareme = performancePreset500(level,
+            db.settings?.exam500Bareme || DEFAULT_BAREME);
+        }
+      }
+    }
+
     session.type = "exam500";
 
     let student =
