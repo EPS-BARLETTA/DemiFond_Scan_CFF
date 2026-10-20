@@ -1516,6 +1516,7 @@
         ? [["exam500Warmup","Échauffement",2],["exam500Carnet","Carnet / investissement",2],["exam500Observation","Observation",1]]
         : [["exam500Afl2",criterionLabels().afl2,2],["exam500Afl3",criterionLabels().afl3,4]];
       summary.innerHTML = '<h3 style="margin:0 0 10px">Élèves · synthèse des notes /20</h3>'+
+        '<div class="exam500-student-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:10px;align-items:start">'+
         sorted.map(student=>{
           const sc=score500(student), id=String(student.id);
           const line=(label,value,max)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #e2e8f0"><span>'+esc(label)+'</span><b>'+(value==null?"—":fmtPts(value))+'/'+max+'</b></div>';
@@ -1524,7 +1525,7 @@
             '<div style="padding:0 13px 13px">'+line("Performance",sc?.perf,6)+line("Régularité",sc?.effPts,6)+line("Estimation",sc?.gapPts,3)+
             fields.map(([field,label,max])=>'<label style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0"><span>'+esc(label)+' /'+max+'</span><select class="exam500-summary-score" data-id="'+esc(id)+'" data-field="'+field+'" style="min-width:90px;padding:7px">'+scoreOptions(max,student[field])+'</select></label>').join("")+
             '<button type="button" class="exam500-summary-edit" data-id="'+esc(id)+'" style="margin-top:10px;padding:10px;border:1px solid #2563eb;border-radius:9px;color:#1d4ed8;background:#eff6ff;font-weight:700">✏️ Corriger chronos et annonces</button></div></details>';
-        }).join("");
+        }).join("")+'</div>';
       summary.querySelectorAll("details").forEach(detail=>{
         detail.addEventListener("toggle",()=>{
           if(detail.open) summary.querySelectorAll("details").forEach(other=>{if(other!==detail)other.open=false;});
