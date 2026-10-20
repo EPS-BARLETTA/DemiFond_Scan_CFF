@@ -156,6 +156,17 @@
     };
   }
 
+  function premiereMode() {
+    return activeSession()?.exam500EvaluationLevel === "premiere";
+  }
+
+  function extraScore(student, field, max) {
+    const v = student[field];
+    if (v === "" || v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 && n <= max ? n : null;
+  }
+
   function scoreOptions(max, current) {
     let html =
       '<option value="">—</option>';
@@ -383,7 +394,15 @@
         ? null
         : Number(student.exam500Afl3);
 
+    const warmup = extraScore(student, "exam500Warmup", 2);
+    const carnet = extraScore(student, "exam500Carnet", 2);
+    const observation = extraScore(student, "exam500Observation", 1);
+    const totalPremiere = warmup == null || carnet == null ||
+      observation == null || gapPts == null ? null :
+      Math.min(20, perf + effPts + gapPts + warmup + carnet + observation);
+
     const total20 =
+      premiereMode() ? totalPremiere :
       afl2 == null ||
       afl3 == null ||
       gapPts == null
@@ -407,6 +426,9 @@
       afl1: perf + effPts,
       afl2,
       afl3,
+      warmup,
+      carnet,
+      observation,
       total20,
       totalRaceMs:
         normalizedRaces(student)
@@ -549,7 +571,7 @@
             </select>
           </label>
           <p style="font-size:13px">0 à 3 s d'écart : 100 % ; plus de 3 à 6 s : 50 % ; plus de 6 s : 0.</p>
-          <b>Intitulés des critères complémentaires</b>
+          <b>Intitulés des critères complémentaires (hors Première)</b>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px">
             <label>Critère /2
               <input id="b500Afl2Label" style="width:100%" value="${esc(criterionLabels().afl2)}">
@@ -605,6 +627,7 @@
     ]) {
       d.querySelector("#" + id).onclick = () => {
         const preset = performancePreset500(level,b);
+        d.dataset.selectedLevel = level;
         d.querySelector("#b500Girls").value = rowsToText(preset.girls);
         d.querySelector("#b500Boys").value = rowsToText(preset.boys);
         d.querySelector("#b500SelectedLevel").textContent =
@@ -627,6 +650,7 @@
         session.exam500Bareme =
           clone(DEFAULT_BAREME);
 
+        session.exam500EvaluationLevel = "seconde";
         session.exam500IndexMode = "c1c2";
         session.exam500EstimationCount = 2;
         session.exam500Afl2Label =
@@ -680,6 +704,9 @@
       if (session) {
         session.exam500Bareme =
           clone(next);
+        if (d.dataset.selectedLevel) {
+          session.exam500EvaluationLevel = d.dataset.selectedLevel;
+        }
         session.exam500IndexMode =
           d.querySelector("#b500IndexMode").value === "three"
             ? "three"
@@ -1125,6 +1152,13 @@
           `).join("")}
         </div>
 
+        ${premiereMode() ? `
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px">
+          <label>Échauffement /2<input id="e500Warmup" type="number" min="0" max="2" step="0.25" value="${student.exam500Warmup ?? ""}"></label>
+          <label>Carnet / investissement /2<input id="e500Carnet" type="number" min="0" max="2" step="0.25" value="${student.exam500Carnet ?? ""}"></label>
+          <label>Observation /1<input id="e500Observation" type="number" min="0" max="1" step="0.25" value="${student.exam500Observation ?? ""}"></label>
+        </div>
+        ` : `
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px">
           <label>AFL2 · Carnet / échauffement /2
             <input id="e500Afl2" type="number" min="0" max="2" step="0.25" value="${student.exam500Afl2 ?? ""}">
@@ -1135,6 +1169,7 @@
           </label>
         </div>
 
+        `}
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
           <button id="e500Cancel" type="button">Annuler</button>
           <button id="e500Save" type="button">Enregistrer et recalculer</button>
@@ -1220,11 +1255,25 @@
           }
         }
 
+        if (premiereMode()) {
+          const items = [["exam500Warmup","e500Warmup",2],
+            ["exam500Carnet","e500Carnet",2],
+            ["exam500Observation","e500Observation",1]];
+          for (const [field,id,max] of items) {
+            const raw = d.querySelector("#"+id).value;
+            const n = raw === "" ? "" : Number(raw);
+            if (n !== "" && (!Number.isFinite(n) || n < 0 || n > max)) {
+              alert("Note invalide : "+id+" (0 à "+max+").");
+              return;
+            }
+            student[field] = n;
+          }
+        }
         const afl2Raw =
-          d.querySelector("#e500Afl2").value;
+          d.querySelector("#e500Afl2")?.value ?? "";
 
         const afl3Raw =
-          d.querySelector("#e500Afl3").value;
+          d.querySelector("#e500Afl3")?.value ?? "";
 
         const afl2 =
           afl2Raw === ""
@@ -1279,10 +1328,10 @@
         student.exam500.races =
           previewRaces;
 
-        student.exam500Afl2 =
+        if (!premiereMode()) student.exam500Afl2 =
           afl2;
 
-        student.exam500Afl3 =
+        if (!premiereMode()) student.exam500Afl3 =
           afl3;
 
         save();
@@ -1393,6 +1442,10 @@
           <td><b>${sc ? fmtPts(sc.effPts) : "—"}</b></td>
           <td>${sc?.gap == null ? "—" : fmtPts(sc.gap)+" s"}</td>
           <td><b>${sc ? fmtPts(sc.gapPts) : "—"}</b></td>
+          ${premiereMode() ? `
+          ${[["exam500Warmup",2],["exam500Carnet",2],["exam500Observation",1]]
+            .map(([field,max])=>`<td><select class="exam500-inline-score" data-student-id="${esc(student.id)}" data-field="${field}" aria-label="${field} / ${max}">${scoreOptions(max,student[field])}</select></td>`).join("")}
+          ` : `
           <td>
             <select class="exam500-inline-score" data-student-id="${esc(student.id)}" data-field="exam500Afl2" aria-label="${esc(criterionLabels().afl2)} sur 2">
               ${scoreOptions(2, student.exam500Afl2)}
@@ -1403,6 +1456,7 @@
               ${scoreOptions(4, student.exam500Afl3)}
             </select>
           </td>
+          `}
           <td>${correctionLabel}</td>
           <td>${validationLabel}</td>
           <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
@@ -1427,8 +1481,10 @@
         "<th>Régularité /6</th>" +
         "<th>Écart cumulé des annonces</th>" +
         "<th>Estimation /3</th>" +
-        "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
-        "<th>" + esc(criterionLabels().afl3) + " /4</th>" +
+        (premiereMode()
+          ? "<th>Échauffement /2</th><th>Carnet /2</th><th>Observation /1</th>"
+          : "<th>" + esc(criterionLabels().afl2) + " /2</th>" +
+            "<th>" + esc(criterionLabels().afl3) + " /4</th>") +
         "<th>Validation professeur</th>" +
         "<th>Validation</th>" +
         "<th>Note /20</th>";
@@ -1543,8 +1599,12 @@
           <td>${sc ? fmtPts(sc.effPts) : "—"}</td>
           <td>${sc?.gap == null ? "—" : sc.gap+" s"}</td>
           <td>${sc ? fmtPts(sc.gapPts) : "—"}</td>
-          <td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)}</td>
-          <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)}</td>
+          ${premiereMode()
+            ? `<td>${sc?.warmup == null ? "—" : fmtPts(sc.warmup)}</td>
+                 <td>${sc?.carnet == null ? "—" : fmtPts(sc.carnet)}</td>
+                 <td>${sc?.observation == null ? "—" : fmtPts(sc.observation)}</td>`
+            : `<td>${sc?.afl2 == null ? "—" : fmtPts(sc.afl2)}</td>
+                 <td>${sc?.afl3 == null ? "—" : fmtPts(sc.afl3)}</td>`}
           <td><b>${sc?.total20 == null ? "—" : fmtPts(sc.total20)}</b></td>
         </tr>`;
     }).join("");
@@ -1592,8 +1652,8 @@
   <th colspan="3" class="c2">Course 2</th>
   <th colspan="2" class="c3">Course 3 libre</th>
   <th colspan="6" class="score">Évaluation</th>
-  <th rowspan="2">${esc(labels.afl2)}<br>/2</th>
-  <th rowspan="2">${esc(labels.afl3)}<br>/4</th>
+  ${premiereMode() ? '<th rowspan="2">Échauffement<br>/2</th><th rowspan="2">Carnet<br>/2</th><th rowspan="2">Observation<br>/1</th>' :
+    `<th rowspan="2">${esc(labels.afl2)}<br>/2</th><th rowspan="2">${esc(labels.afl3)}<br>/4</th>`}
   <th rowspan="2" class="note">Note<br>/20</th>
 </tr>
 <tr>
