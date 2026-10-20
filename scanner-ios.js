@@ -28,21 +28,15 @@
   let frames = 0;
 
 
-  function msg(text) {
-
-    const element =
-      $("scanMessage");
-
-    if (!element) {
-      return;
-    }
-
-    element.className =
-      "scan-bad";
-
-    element.textContent =
-      text;
-
+  function msg(text,kind="info") {
+    const element=$("scanMessage");
+    if (!element) return;
+    // Ne jamais écraser un résultat confirmé ni une erreur d'import
+    // avec le message périodique de recherche caméra.
+    if (kind==="info" && (element.classList.contains("scan-ok") ||
+                          element.dataset.scanOutcome==="error")) return;
+    element.className=kind==="error"?"scan-bad":"scan-info";
+    element.textContent=text;
   }
 
 
@@ -70,7 +64,14 @@
     if (textarea) textarea.value=value;
     const button=$("readText");
     if (button) button.click();
-    msg("QR détecté. Traitement du résultat…");
+    // handleQR / handle500 écrit déjà le nom de l'élève (scan-ok)
+    // ou la cause du rejet (scan-bad). Ne pas effacer ce retour.
+    const feedback=$("scanMessage");
+    if (feedback?.classList.contains("scan-bad")) {
+      feedback.dataset.scanOutcome="error";
+    } else if (feedback?.classList.contains("scan-ok")) {
+      delete feedback.dataset.scanOutcome;
+    }
     setTimeout(()=>{last="";},1400);
   }
 
@@ -127,7 +128,7 @@
         catch (_) { detector = null; }
       }
       if (!detector && typeof window.jsQR !== "function") {
-        msg("Lecteur QR non chargé. Actualise la page puis réessaie.");
+        msg("Lecteur QR non chargé. Actualise la page puis réessaie.","error");
         stop();
         return;
       }
@@ -254,12 +255,16 @@
                 {inversionAttempts:"attemptBoth"});
             } catch (error) {
               console.error("Décodage QR",error);
-              msg("Erreur de lecture QR : "+error.message);
+              msg("Erreur de lecture QR : "+error.message,"error");
             }
           }
           frames++;
           if (frames % 25 === 0 && !code) {
-            msg("Caméra active, QR non reconnu. Centre le code et évite les reflets.");
+            const feedback=$("scanMessage");
+            if (feedback && !feedback.classList.contains("scan-ok") &&
+                feedback.dataset.scanOutcome!=="error") {
+              msg("Recherche QR en cours… Centre le code dans le cadre.");
+            }
           }
           if (!code && detector && !decoding) {
             decoding=true;
@@ -297,7 +302,7 @@
 
 
       msg(
-        "Accès caméra refusé ou indisponible. Vérifie l’autorisation Caméra dans Safari."
+        "Accès caméra refusé ou indisponible. Vérifie l’autorisation Caméra dans Safari.","error"
       );
 
     }
