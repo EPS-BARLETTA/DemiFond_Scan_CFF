@@ -1517,10 +1517,10 @@
         : [["exam500Afl2",criterionLabels().afl2,2],["exam500Afl3",criterionLabels().afl3,4]];
       summary.innerHTML = '<h3 style="margin:0 0 10px">Élèves · synthèse des notes /20</h3>'+
         '<div class="exam500-student-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:10px;align-items:start">'+
-        sorted.map(student=>{
+        sorted.map((student,index)=>{
           const sc=score500(student), id=String(student.id);
           const line=(label,value,max)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #e2e8f0"><span>'+esc(label)+'</span><b>'+(value==null?"—":fmtPts(value))+'/'+max+'</b></div>';
-          return '<details class="exam500-summary-student" data-student-id="'+esc(id)+'" '+(opened===id?'open':'')+' style="border:1px solid #cbd5e1;border-radius:11px;margin:7px 0;background:white">'+
+          return '<details class="exam500-summary-student" data-student-id="'+esc(id)+'" '+(opened===id?'open':'')+' style="border:2px solid '+(opened===id?'#2563eb':'#cbd5e1')+';border-radius:11px;margin:0;background:'+(index%2===0?'#eff6ff':'#f1f5f9')+'">'+
             '<summary style="cursor:pointer;padding:13px;font-weight:750;display:flex;justify-content:space-between;gap:12px;align-items:center"><span>'+esc(String(student.last||"").toUpperCase()+' '+(student.first||""))+'</span><b>'+(sc?.total20==null?"—":fmtPts(sc.total20))+'/20</b></summary>'+
             '<div style="padding:0 13px 13px">'+line("Performance",sc?.perf,6)+line("Régularité",sc?.effPts,6)+line("Estimation",sc?.gapPts,3)+
             fields.map(([field,label,max])=>'<label style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0"><span>'+esc(label)+' /'+max+'</span><select class="exam500-summary-score" data-id="'+esc(id)+'" data-field="'+field+'" style="min-width:90px;padding:7px">'+scoreOptions(max,student[field])+'</select></label>').join("")+
