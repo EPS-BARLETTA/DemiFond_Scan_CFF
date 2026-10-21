@@ -81,6 +81,7 @@
     $('homeReturn')?.classList.toggle('hidden', currentPage === 'home');
     if (currentPage === 'workflow') renderWorkflow();
     if (currentPage === 'backups') renderBackups();
+    if (currentPage === 'results') renderResultsOverview();
     if (currentPage === 'scan') renderDestination();
     if (['results','training-results','group'].includes(currentPage)) {
       const {group,exercise}=activePair();
@@ -191,6 +192,50 @@
     render();
     if (exercise.type === 'training') window.renderTrainingResults?.();
     if (exercise.type === 'exam500') window.renderExam500View?.();
+    renderResultsOverview();
+  }
+  // Compact, read-only overview above the existing results table.
+  function renderResultsOverview() {
+    if (currentPage !== 'results') return;
+    const page = $('results');
+    if (!page) return;
+    let panel = $('sessionResultsOverview');
+    if (!panel) {
+      panel = document.createElement('section');
+      panel.id = 'sessionResultsOverview';
+      panel.className = 'card';
+      const tableCard = page.querySelector('.card');
+      page.insertBefore(panel, tableCard || null);
+    }
+    const {group,exercise} = activePair();
+    if (!group || !exercise) { panel.innerHTML=''; return; }
+    const roster = Array.isArray(group.students) ? group.students : [];
+    const students = Array.isArray(exercise.students) ? exercise.students : [];
+    const fullName = s => [s.last || s.lastName || s.nom || '',s.first || s.firstName || s.prenom || ''].join(' ').trim() || s.name || '';
+    const key = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim().toLowerCase();
+    const counts = new Map();
+    students.forEach(s=>{const name=key(fullName(s));if(name)counts.set(name,(counts.get(name)||0)+1);});
+    const warnings = [];
+    for(const [name,n] of counts) if(n>1) warnings.push('Nom en double : '+name);
+    const missing = roster.filter(s=>!students.some(x=>(s.externalId||s.id) && String(x.externalId||x.id)===String(s.externalId||s.id) || (key(fullName(s)) && key(fullName(s))===key(fullName(x)))));
+    if(missing.length) warnings.push(missing.length+' élève(s) de la classe sans résultat');
+    if(exercise.type==='exam500') {
+      const incomplete=students.filter(s=>s.exam500 && Array.isArray(s.exam500.races) && s.exam500.races.length<3);
+      if(incomplete.length) warnings.push(incomplete.length+' résultat(s) 3 × 500 incomplet(s)');
+    }
+    const sorted=[...students].sort((a,b)=>fullName(a).localeCompare(fullName(b),'fr'));
+    panel.innerHTML='<h2>Tableau de bord · '+html(exercise.label)+'</h2>'+
+      '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">'+
+      [['Élèves de la classe',roster.length||students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value])=>'<div class="flow-card"><strong>'+value+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
+      '<details style="margin:12px 0"><summary>Contrôles ('+warnings.length+' alerte(s))</summary>'+
+      (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée par ces contrôles.</p>')+'</details>'+
+      '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un nom pour déplier les données. Pour modifier une note ou un temps, utilisez « Corriger les résultats ».</p>'+
+      '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+
+      sorted.map((student,i)=>{const name=fullName(student)||'Élève '+(i+1);const data=exercise.type==='exam500'?student.exam500:student;
+        const values=data&&typeof data==='object'?Object.entries(data).filter(([k,v])=>v!=null&&typeof v!=='object'&&k!=='id').slice(0,8):[];
+        return '<details class="flow-card" style="margin:0;background:'+(i%2?'#edf3fb':'#f8fafc')+'"><summary><strong>'+html(name)+'</strong></summary><div style="padding-top:8px;font-size:.9em">'+
+        (values.map(([k,v])=>'<div>'+html(k)+' : '+html(v)+'</div>').join('')||'Détails et corrections dans le tableau ci-dessous.')+'</div></details>';
+      }).join('')+'</div>';
   }
   function renderDestination() {
     const {group, exercise} = activePair();
