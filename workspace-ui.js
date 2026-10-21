@@ -300,8 +300,9 @@
     });
   }
   function renderBackups() {
-    $('backupChoices').innerHTML='<p class="workspace-context"><strong>Sauvegarder / Restaurer</strong> · Exporter toutes les classes ou une sélection. Pour sauvegarder une séance pendant le travail, utilise son bouton « Sauvegarder » dans Mes classes. ✅ HTML à jour · ⚠️ Modifications non exportées.</p>'+
-      (db.groups||[]).map(group=>'<details class="card backup-class" style="'+classStyle(group)+'"><summary><strong>'+html(group.name)+'</strong> · '+classBadge(group)+'</summary><button type="button" data-action="export-class" data-id="'+html(group.id)+'">Télécharger cette classe en HTML</button>'+lessons(group).map(l=>'<div class="backup-lesson"><span>'+html(dayLabel(l.date)+' · '+l.label)+'<small>'+badge(group,l)+'</small></span><button type="button" data-action="export-lesson" data-group="'+html(group.id)+'" data-id="'+html(l.id)+'">Sauvegarder la séance en HTML</button></div>').join('')+'</details>').join('');
+    const groups=db.groups||[];
+    const pending=groups.reduce((total,group)=>total+lessons(group).filter(lesson=>!backedUp(group,lesson)).length,0);
+    $('backupChoices').innerHTML='<div class="card" style="padding:16px;margin-bottom:14px"><strong>'+groups.length+' classe(s) · '+pending+' séance(s) à exporter</strong><p style="margin:8px 0 0">Les données restent enregistrées sur cet iPad. Télécharge un HTML pour en conserver une copie extérieure. Pour exporter une seule classe ou séance, passe par « Mes classes ».</p></div>';
     $('archiveFile')?.classList.add('hidden');
   }
   function makeSelection(scope, gid, lid) {
