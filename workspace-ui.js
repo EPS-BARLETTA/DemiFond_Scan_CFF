@@ -113,10 +113,15 @@
     box.style.cssText = view==='classes' ? '' : classStyle(chosenGroup());
     if (view === 'classes') {
       const groups = db.groups || [];
-      box.innerHTML = header(mode === 'results' ? 'Résultats · choisir une classe' : 'Mes classes', 'Une classe, ses séances, puis ses exercices.') +
-        (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' : '') +
-        '<div class="flow-grid">' + groups.map(g => '<button type="button" class="flow-card" style="'+classStyle(g)+'" data-action="open-class" data-id="'+html(g.id)+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span><small>'+classBadge(g)+'</small></button>').join('') + '</div>' +
+      box.innerHTML = header(mode === 'results' ? 'Résultats · mes classes' : 'Mes classes', mode === 'results' ? 'Retrouve une évaluation par classe, séance et exercice.' : 'Choisis une classe pour travailler sur ses séances et ses résultats.') +
+        '<div class="flow-actions" style="align-items:center;flex-wrap:wrap">' +
+        (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' : '<button type="button" data-action="switch-to-classes">Gérer mes classes</button>') +
+        '<input id="flowClassSearch" type="search" aria-label="Rechercher une classe" placeholder="Rechercher une classe…" style="flex:1;min-width:170px;max-width:360px;padding:11px;border:1px solid #cbd5e1;border-radius:10px"></div>' +
+        '<div class="flow-grid" id="flowClassGrid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px">' +
+        groups.map(g => '<button type="button" class="flow-card" style="'+classStyle(g)+';min-height:112px;padding:15px 12px;gap:6px" data-action="open-class" data-id="'+html(g.id)+'" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span><small>'+classBadge(g)+'</small></button>').join('') + '</div>' +
         (!groups.length ? '<div class="card empty">Aucune classe enregistrée. Crée ta première classe depuis « Mes classes ».</div>' : '');
+      const search=$('flowClassSearch');
+      if(search) search.oninput=()=>{const query=search.value.trim().toLocaleLowerCase();box.querySelectorAll('[data-class-name]').forEach(card=>{card.hidden=!card.dataset.className.includes(query);});};
       return;
     }
     const group = chosenGroup();
@@ -295,7 +300,7 @@
     });
   }
   function renderBackups() {
-    $('backupChoices').innerHTML='<p class="workspace-context">✅ Un HTML à jour a été téléchargé. ⚠️ Aucun HTML à jour pour cette séance.</p>'+
+    $('backupChoices').innerHTML='<p class="workspace-context"><strong>Sauvegarder / Restaurer</strong> · Exporter toutes les classes ou une sélection. Pour sauvegarder une séance pendant le travail, utilise son bouton « Sauvegarder » dans Mes classes. ✅ HTML à jour · ⚠️ Modifications non exportées.</p>'+
       (db.groups||[]).map(group=>'<details class="card backup-class" style="'+classStyle(group)+'"><summary><strong>'+html(group.name)+'</strong> · '+classBadge(group)+'</summary><button type="button" data-action="export-class" data-id="'+html(group.id)+'">Télécharger cette classe en HTML</button>'+lessons(group).map(l=>'<div class="backup-lesson"><span>'+html(dayLabel(l.date)+' · '+l.label)+'<small>'+badge(group,l)+'</small></span><button type="button" data-action="export-lesson" data-group="'+html(group.id)+'" data-id="'+html(l.id)+'">Sauvegarder la séance en HTML</button></div>').join('')+'</details>').join('');
     $('archiveFile')?.classList.add('hidden');
   }
@@ -447,6 +452,7 @@
     const a=button.dataset.action;
     if(a==='quick-scan')quickScan();
     else if(a==='new-class')createClass();
+    else if(a==='switch-to-classes')goFlow('classes');
     else if(a==='open-class'){classId=button.dataset.id;view='lessons';refresh();}
     else if(a==='open-lesson'){lessonId=button.dataset.id;view='exercises';refresh();}
     else if(a==='class-list'){view='classes';refresh();}
