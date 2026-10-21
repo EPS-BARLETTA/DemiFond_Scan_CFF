@@ -77,6 +77,27 @@
     };
   }
 
+  // The performance table stores the SUM of three 500 m races, not one lap.
+  // Keep the official per-500 anchors as the single source of truth.
+  const LEGACY_PERFORMANCE_500 = {
+    girls: clone(DEFAULT_BAREME.girls),
+    boys: clone(DEFAULT_BAREME.boys)
+  };
+  const officialSeconde500 = performancePreset500("seconde", DEFAULT_BAREME);
+  DEFAULT_BAREME.girls = officialSeconde500.girls;
+  DEFAULT_BAREME.boys = officialSeconde500.boys;
+
+  function upgradeLegacyPerformance500(bareme, level) {
+    if (!bareme || !Array.isArray(bareme.girls) || !Array.isArray(bareme.boys)) return bareme;
+    // Upgrade only the untouched legacy performance values; never erase custom scales.
+    if (JSON.stringify(bareme.girls) !== JSON.stringify(LEGACY_PERFORMANCE_500.girls) ||
+        JSON.stringify(bareme.boys) !== JSON.stringify(LEGACY_PERFORMANCE_500.boys)) return bareme;
+    const preset = performancePreset500(level === "premiere" ? "premiere" : "seconde", bareme);
+    bareme.girls = preset.girls;
+    bareme.boys = preset.boys;
+    return bareme;
+  }
+
   function parseTime(text) {
     const raw = String(text || "").trim().replace(",", ".");
     if (!raw) return null;
@@ -105,7 +126,7 @@
   function settings() {
     db.settings = db.settings || {};
     db.settings.exam500Bareme =
-      db.settings.exam500Bareme || clone(DEFAULT_BAREME);
+      upgradeLegacyPerformance500(db.settings.exam500Bareme || clone(DEFAULT_BAREME), "seconde");
 
     const session =
       typeof activeSession === "function"
@@ -128,7 +149,7 @@
           );
       }
 
-      return session.exam500Bareme;
+      return upgradeLegacyPerformance500(session.exam500Bareme, session.exam500EvaluationLevel);
     }
 
     return db.settings.exam500Bareme;
