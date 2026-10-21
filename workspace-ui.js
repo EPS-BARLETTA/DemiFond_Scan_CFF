@@ -113,9 +113,9 @@
     box.style.cssText = view==='classes' ? '' : classStyle(chosenGroup());
     if (view === 'classes') {
       const groups = db.groups || [];
-      box.innerHTML = header(mode === 'results' ? 'Résultats · mes classes' : 'Mes classes', mode === 'results' ? 'Retrouve une évaluation par classe, séance et exercice.' : 'Choisis une classe pour travailler sur ses séances et ses résultats.') +
+      box.innerHTML = header('Mes classes', 'Une seule navigation pour les séances, les résultats et les sauvegardes.') +
         '<div class="flow-actions" style="align-items:center;flex-wrap:wrap">' +
-        (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' : '<button type="button" data-action="switch-to-classes">Gérer mes classes</button>') +
+        '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' +
         '<input id="flowClassSearch" type="search" aria-label="Rechercher une classe" placeholder="Rechercher une classe…" style="flex:1;min-width:170px;max-width:360px;padding:11px;border:1px solid #cbd5e1;border-radius:10px"></div>' +
         '<div class="flow-grid" id="flowClassGrid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px">' +
         groups.map(g => '<button type="button" class="flow-card" style="'+classStyle(g)+';min-height:112px;padding:15px 12px;gap:6px" data-action="open-class" data-id="'+html(g.id)+'" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span><small>'+classBadge(g)+'</small></button>').join('') + '</div>' +
@@ -127,8 +127,8 @@
     const group = chosenGroup();
     if (!group) { view='classes'; renderWorkflow(); return; }
     if (view === 'lessons') {
-      box.innerHTML = header(group.name, mode === 'results' ? 'Choisis la séance dont tu veux consulter les résultats.' : 'Crée la séance du jour ou reprends une séance existante.', 'class-list') +
-        (mode === 'classes' ? '<div class="flow-actions"><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button></div>' : '') +
+      box.innerHTML = header(group.name, 'Séances · scanner, consulter ou sauvegarder au même endroit.', 'class-list') +
+        '<div class="flow-actions"><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button><button type="button" data-action="export-class" data-id="'+html(group.id)+'">💾 Sauvegarder la classe</button></div>' +
         '<div class="flow-grid">'+lessons(group).map(l => '<button type="button" class="flow-card" data-action="open-lesson" data-id="'+html(l.id)+'"><strong>'+html(dayLabel(l.date))+'</strong><span>'+html(l.label)+'</span><span>'+l.exercises.length+' exercice(s)</span><small>'+badge(group,l)+'</small></button>').join('')+'</div>'+
         (!lessons(group).length ? '<div class="card empty">Aucune séance pour cette classe.</div>' : '');
       return;
@@ -136,8 +136,8 @@
     const lesson = chosenLesson();
     if (!lesson) { view='lessons'; renderWorkflow(); return; }
     box.innerHTML = header(group.name+' · '+dayLabel(lesson.date), lesson.label+' · '+badge(group,lesson), 'lesson-list') +
-      (mode === 'classes' ? '<button type="button" class="flow-primary" data-action="new-exercise">+ Ajouter un exercice</button>' : '') +
-      '<div class="flow-actions"><button type="button" class="flow-primary" data-action="save-current-lesson">💾 Sauvegarder la séance en HTML</button><button type="button" class="flow-danger" data-action="delete-lesson">Supprimer la séance</button></div>'+
+      '<button type="button" class="flow-primary" data-action="new-exercise">+ Ajouter un exercice</button>' +
+      '<div class="flow-actions"><button type="button" class="flow-primary" data-action="save-current-lesson">💾 Sauvegarder la séance</button><button type="button" class="flow-danger" data-action="delete-lesson">Supprimer la séance</button></div>'+
       '<div class="flow-grid">'+lesson.exercises.map(e => '<div class="flow-card exercise-card"><strong>'+html(e.label)+'</strong><span>'+protocol(e.type)+'</span><div class="flow-actions">'+
         '<button type="button" class="flow-scan" data-action="scan-exercise" data-id="'+html(e.id)+'" '+(e.status==='locked'?'disabled':'')+'>📷 Scanner ici</button>' +
         '<button type="button" data-action="exercise-results" data-id="'+html(e.id)+'">Résultats</button></div>'+(e.status==='locked'?'<small>🔒 Épreuve verrouillée</small>':'')+'</div>').join('')+'</div>';
@@ -460,7 +460,7 @@
     else if(a==='new-lesson')createLesson();
     else if(a==='new-exercise')addExercise();
     else if(a==='rename-class')renameClass();
-    else if(a==='return-lesson'){mode='results';view='exercises';showPage('workflow');}
+    else if(a==='return-lesson'){mode='classes';view='exercises';showPage('workflow');}
     else if(a==='save-current-lesson')exportHTML('lesson',classId,lessonId);
     else if(a==='delete-lesson')deleteLesson();
     else if(a==='edit-exercise'){showPage('group');render();}
@@ -491,7 +491,7 @@
       if(event.target.closest?.('#camera')&&!targetReady()){event.preventDefault();event.stopImmediatePropagation();goFlow('classes');}
     },true);
     document.addEventListener('click',action);
-    document.querySelectorAll('[data-flow]').forEach(button=>button.onclick=()=>goFlow(button.dataset.flow));
+    document.querySelectorAll('[data-flow]').forEach(button=>button.onclick=()=>goFlow(button.dataset.flow==='results'?'classes':button.dataset.flow));
     $('homeReturn').onclick=()=>{target=null;showPage('home');};
     if($('recoveryBackup'))$('localRecoverySlot')?.appendChild($('recoveryBackup'));
     $('backup').onclick=()=>exportHTML('all');
