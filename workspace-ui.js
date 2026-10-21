@@ -118,7 +118,7 @@
         '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' +
         '<input id="flowClassSearch" type="search" aria-label="Rechercher une classe" placeholder="Rechercher une classe…" style="flex:1;min-width:170px;max-width:360px;padding:11px;border:1px solid #cbd5e1;border-radius:10px"></div>' +
         '<div class="flow-grid" id="flowClassGrid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px">' +
-        groups.map(g => '<button type="button" class="flow-card" style="'+classStyle(g)+';min-height:112px;padding:15px 12px;gap:6px" data-action="open-class" data-id="'+html(g.id)+'" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span><small>'+classBadge(g)+'</small></button>').join('') + '</div>' +
+        groups.map(g => '<div class="flow-card" style="'+classStyle(g)+';min-height:112px;padding:12px;gap:8px" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><button type="button" data-action="open-class" data-id="'+html(g.id)+'" style="border:0;background:transparent;color:inherit;width:100%;cursor:pointer"><strong>'+html(g.name)+'</strong><span style="display:block">'+lessons(g).length+' séance(s)</span></button><div class="flow-actions" style="justify-content:center"><button type="button" data-action="class-results" data-id="'+html(g.id)+'">Résultats →</button></div></div>').join('') + '</div>' +
         (!groups.length ? '<div class="card empty">Aucune classe enregistrée. Crée ta première classe depuis « Mes classes ».</div>' : '');
       const search=$('flowClassSearch');
       if(search) search.oninput=()=>{const query=search.value.trim().toLocaleLowerCase();box.querySelectorAll('[data-class-name]').forEach(card=>{card.hidden=!card.dataset.className.includes(query);});};
@@ -129,7 +129,7 @@
     if (view === 'lessons') {
       box.innerHTML = header(group.name, 'Séances · scanner, consulter ou sauvegarder au même endroit.', 'class-list') +
         '<div class="flow-actions"><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button><button type="button" data-action="export-class" data-id="'+html(group.id)+'">💾 Sauvegarder la classe</button></div>' +
-        '<div class="flow-grid">'+lessons(group).map(l => '<button type="button" class="flow-card" data-action="open-lesson" data-id="'+html(l.id)+'"><strong>'+html(dayLabel(l.date))+'</strong><span>'+html(l.label)+'</span><span>'+l.exercises.length+' exercice(s)</span><small>'+badge(group,l)+'</small></button>').join('')+'</div>'+
+        '<div class="flow-grid">'+lessons(group).map(l => '<div class="flow-card"><button type="button" data-action="open-lesson" data-id="'+html(l.id)+'" style="border:0;background:transparent;color:inherit;cursor:pointer"><strong>'+html(dayLabel(l.date))+'</strong><span style="display:block">'+html(l.label)+'</span><span style="display:block">'+l.exercises.length+' exercice(s)</span></button><div class="flow-actions" style="justify-content:center"><button type="button" data-action="lesson-results" data-id="'+html(l.id)+'">Résultats →</button></div></div>').join('')+'</div>'+
         (!lessons(group).length ? '<div class="card empty">Aucune séance pour cette classe.</div>' : '');
       return;
     }
@@ -455,7 +455,9 @@
     else if(a==='new-class')createClass();
     else if(a==='switch-to-classes')goFlow('classes');
     else if(a==='open-class'){classId=button.dataset.id;view='lessons';refresh();}
+    else if(a==='class-results'){classId=button.dataset.id;view='lessons';refresh();}
     else if(a==='open-lesson'){lessonId=button.dataset.id;view='exercises';refresh();}
+    else if(a==='lesson-results'){lessonId=button.dataset.id;const lesson=chosenLesson();if(lesson?.exercises.length===1)openResults(lesson.exercises[0].id);else {view='exercises';refresh();}}
     else if(a==='class-list'){view='classes';refresh();}
     else if(a==='lesson-list'){view='lessons';refresh();}
     else if(a==='new-lesson')createLesson();
