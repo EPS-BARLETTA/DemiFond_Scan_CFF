@@ -52,17 +52,16 @@
 <main>
   <section id="home" class="page">
     <div class="scan-home-title"><h2 tabindex="-1">DemiFond Scan</h2><p>Le carnet du professeur</p></div>
-    <div class="scan-home-grid classes-home-grid">
-      <button type="button" class="scan-home-card home-spaces" data-flow="classes"><span class="home-card-step">ORGANISER ET SCANNER</span><strong>Mes classes</strong><span>Choisir une classe, préparer la séance et scanner.</span><b>Ouvrir mes classes →</b></button>
-      <button type="button" class="scan-home-card home-results" data-flow="results"><span class="home-card-step">CONSULTER ET ÉVALUER</span><strong>Résultats</strong><span>Retrouver les séances et les exercices d’une classe.</span><b>Voir les résultats →</b></button>
-      <button type="button" class="scan-home-card home-backups" data-flow="backups"><span class="home-card-step">TÉLÉCHARGER UN HTML</span><strong>Sauvegarder</strong><span>Toutes les classes, une classe ou une séance.</span><b>Choisir une sauvegarde →</b></button>
+    <div class="scan-home-grid classes-home-grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr))">
+      <button type="button" class="scan-home-card home-spaces" data-flow="classes"><span class="home-card-step">ESPACE DE TRAVAIL</span><strong>📚 Mes classes</strong><span>Séances, exercices, scan et résultats au même endroit.</span><b>Accéder à mes classes →</b></button>
+      <button type="button" class="scan-home-card home-backups" data-flow="backups"><span class="home-card-step">PROTÉGER MES DONNÉES</span><strong>💾 Sauvegarder / Restaurer</strong><span>Exporter toutes les données ou importer un fichier HTML.</span><b>Gérer mes sauvegardes →</b></button>
     </div>
     <div class="card" style="margin-top:16px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap"><div><strong>📷 Scanner les résultats de Chrono Carnet EPS</strong><p style="margin:6px 0 0">DemiFond Scan fonctionne avec Chrono Carnet EPS : réalisez vos courses dans Chrono Carnet, puis scannez ici les QR codes des résultats.</p></div><a href="https://chrono-carnet-eps.vercel.app/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;border-radius:12px;background:#172554;color:#fff;font-weight:700;text-decoration:none">Ouvrir Chrono Carnet EPS ↗</a></div>
     <div id="homeActiveContext" class="workspace-context" aria-live="polite"></div>
   </section>
   <section id="workflow" class="page hidden"><div id="workflowContent"></div></section>
   <section id="backups" class="page hidden">
-    <div class="workspace-title"><h2>Sauvegardes et imports</h2><p>Choisis ce que tu souhaites conserver ou récupérer.</p></div>
+    <div class="workspace-title"><h2>Sauvegarder / Restaurer</h2><p>Une sauvegarde globale pour protéger les données de cet iPad. Les sauvegardes par classe ou séance sont dans « Mes classes ».</p></div>
     <div id="backupChoices"></div>
     <div class="card backup-actions">    <button id="archiveFile">
       📄 Sauvegarder la séance active
@@ -426,7 +425,7 @@
 <script src="/help-ui.js?v=1"></script>
 
 <!-- Parcours professeur -->
-<script src="/workspace-ui.js?v=12"></script>
+<script src="/workspace-ui.js?v=13"></script>
 
 <!-- Scanner iPad -->
 <script src="/scanner-ios.js?v=4"></script>
@@ -469,7 +468,7 @@
             await navigator
               .serviceWorker
               .register(
-                "/offline-worker.js?v=77",
+                "/offline-worker.js?v=78",
                 {
                   updateViaCache:
                     "none"
