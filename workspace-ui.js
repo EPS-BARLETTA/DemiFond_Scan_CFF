@@ -114,11 +114,12 @@
     if (view === 'classes') {
       const groups = db.groups || [];
       box.innerHTML = header('Mes classes', 'Retrouve rapidement tes séances et tes évaluations.') +
+        '<div class="eps-classes-intro"><span class="eps-classes-intro-icon">🏃‍♂️</span><div><strong>Votre espace EPS</strong><span>Organisez vos classes, suivez les séances et retrouvez les performances en un clin d’œil.</span></div><span class="eps-classes-count">'+groups.length+' classe'+(groups.length>1?'s':'')+'</span></div>' +
         '<div class="flow-actions" style="align-items:center;flex-wrap:wrap">' +
         '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' +
         '<input id="flowClassSearch" type="search" aria-label="Rechercher une classe" placeholder="Rechercher une classe…" style="flex:1;min-width:170px;max-width:360px;padding:11px;border:1px solid #cbd5e1;border-radius:10px"></div>' +
         '<div class="flow-grid" id="flowClassGrid">' +
-        groups.map(g => '<div class="flow-card class-tile" style="'+classStyle(g)+'" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><button type="button" class="class-tile-main" data-action="open-class" data-id="'+html(g.id)+'"><strong>'+html(g.name)+'</strong><span>'+lessons(g).length+' séance(s)</span></button><button type="button" class="class-tile-results" data-action="class-results" data-id="'+html(g.id)+'">Résultats <span aria-hidden="true">→</span></button></div>').join('') + '</div>' +
+        groups.map(g => '<div class="flow-card class-tile" style="'+classStyle(g)+'" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><button type="button" class="class-tile-main" data-action="open-class" data-id="'+html(g.id)+'"><span class="eps-class-kicker">CLASSE · EPS</span><strong>'+html(g.name)+'</strong><span class="eps-class-session-count"><b>'+lessons(g).length+'</b> séance'+(lessons(g).length>1?'s':'')+'</span></button><button type="button" class="class-tile-results" data-action="class-results" data-id="'+html(g.id)+'">Résultats <span aria-hidden="true">→</span></button></div>').join('') + '</div>' +
         (!groups.length ? '<div class="card empty">Aucune classe enregistrée. Crée ta première classe depuis « Mes classes ».</div>' : '');
       const search=$('flowClassSearch');
       if(search) search.oninput=()=>{const query=search.value.trim().toLocaleLowerCase();box.querySelectorAll('[data-class-name]').forEach(card=>{card.hidden=!card.dataset.className.includes(query);});};
