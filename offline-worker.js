@@ -27,6 +27,7 @@ const FILES = [
   "/training-qr-ui.js?v=15",
 
   "/training-edit-ui.js?v=5",
+  "/student-followup-ui.js?v=1",
 
   "/hold-delete-ui.js",
 
