@@ -1502,3 +1502,8 @@ nav{gap:12px}
 #results #ccfQuickView .ccf-quick-header{background:linear-gradient(90deg,#d9f8e9,#fff 80%)!important;border-left:6px solid #00a77e!important}
 #results #resultFilters{background:#edf2ff!important;border-color:#d5dffc!important}
 #results #resultFilters button.active,#results #resultFilters button[aria-pressed="true"]{background:#405ee0!important;color:#fff!important}
+
+/* AFL quick-entry table gets its own independent collapsible header */
+#results .eps-table-toggle-afl{background:linear-gradient(90deg,#d7f8e9,#f3fdf8)!important;border-color:#b3e5d0!important;border-left:6px solid #009b77!important;color:#08735b!important}
+#results .eps-table-toggle-afl .eps-table-toggle-icon{background:#c2eedc!important;color:#08735b!important}
+#results #ccfQuickView .ccf-quick-table-container[hidden]{display:none!important}
