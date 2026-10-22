@@ -555,10 +555,10 @@
     if(!group)return;
     const sessionIds=new Set((group.sessions||[]).map(e=>String(e.id)));
     const count=lessons(group).length;
-    const answer=prompt('SUPPRESSION DÉFINITIVE\\n\\nClasse : '+group.name+'\\n'+count+' séance(s) et tous les résultats associés seront supprimés de cet appareil.\\n\\nSaisissez exactement le nom de la classe pour confirmer :');
+    const answer=prompt('SUPPRESSION DÉFINITIVE\n\nClasse : '+group.name+'\n'+count+' séance(s) et tous les résultats associés seront supprimés de cet appareil.\n\nSaisissez exactement le nom de la classe pour confirmer :');
     if(answer===null)return;
     if(answer!==group.name){alert('Suppression annulée : le nom saisi ne correspond pas.');return;}
-    if(!confirm('Dernière confirmation : supprimer définitivement « '+group.name+' » et toutes ses données locales ?\\nCette opération est irréversible sans sauvegarde préalable.'))return;
+    if(!confirm('Dernière confirmation : supprimer définitivement « '+group.name+' » et toutes ses données locales ?\nCette opération est irréversible sans sauvegarde préalable.'))return;
     if(target&&String(target.groupId)===String(group.id)){$('cameraStop')?.click();target=null;}
     db.groups=(db.groups||[]).filter(g=>String(g.id)!==String(group.id));
     db.trainingScans=(db.trainingScans||[]).filter(r=>String(r.groupId)!==String(group.id)&&!sessionIds.has(String(r.sessionId)));
@@ -592,10 +592,7 @@
       }
     },true);
     root.addEventListener('contextmenu',event=>{
-      const card=event.target.closest?.('#flowClassGrid .class-tile');
-      if(!card)return;
-      event.preventDefault();clear();held=true;card.dataset.longPressed='yes';
-      deleteClass(card.querySelector('.class-tile-main')?.dataset.id);
+      if(event.target.closest?.('#flowClassGrid .class-tile'))event.preventDefault();
     });
   }
   function action(event) {
