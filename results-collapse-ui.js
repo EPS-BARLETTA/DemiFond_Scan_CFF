@@ -10,16 +10,18 @@
     containers.forEach((table,index)=>{
       if(table.dataset.epsCollapsible==='yes')return;
       const card=table.closest('.card');
-      if(!card || card.id==='sessionResultsOverview' || table.closest('#ccfQuickView'))return;
+      if(!card || card.id==='sessionResultsOverview')return;
+      const quick=table.classList.contains('ccf-quick-table-container');
       const key=keyFor(table)+':'+(table.id||index);
       const isOpen=states.has(key)?states.get(key):false;
       const button=document.createElement('button');
       button.type='button';
       button.className='eps-table-toggle';
       button.setAttribute('aria-expanded',String(isOpen));
-      button.innerHTML='<span class="eps-table-toggle-icon">▸</span><span class="eps-table-toggle-title">Tableau détaillé des résultats</span><span class="eps-table-toggle-hint">'+(isOpen?'Masquer':'Afficher')+'</span>';
+      button.innerHTML='<span class="eps-table-toggle-icon">▸</span><span class="eps-table-toggle-title">'+(quick?'Tableau des évaluations AFL 2 / AFL 3':'Tableau détaillé des résultats')+'</span><span class="eps-table-toggle-hint">'+(isOpen?'Masquer':'Afficher')+'</span>';
       table.parentNode.insertBefore(button,table);
       table.dataset.epsCollapsible='yes';
+      if(quick)button.classList.add('eps-table-toggle-afl');
       table.hidden=!isOpen;
       button.addEventListener('click',()=>{
         const next=table.hidden;
