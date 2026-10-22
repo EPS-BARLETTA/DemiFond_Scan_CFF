@@ -250,19 +250,62 @@
         collect(student);
         return '<details class="student-result-card '+(i%2?'student-result-alt':'')+'"><summary><strong>'+html(name)+'</strong><span>'+html(entries.length)+' donnée(s) disponibles</span></summary><div class="student-result-fields">'+
           (entries.length?entries.map(([label,value])=>'<div class="student-result-field"><span>'+html(label)+'</span><strong>'+html(value)+'</strong></div>').join(''):'<p>Aucune donnée individuelle supplémentaire. Consulte le tableau détaillé ci-dessous.</p>')+
-          (exercise.type==='exam500' ? '<button type="button" class="student-result-edit" data-student-id="'+html(student.id||student.externalId)+'" '+(exercise.status==='locked'?'disabled title="Évaluation verrouillée"':'')+'>✏️ Modifier les temps et notes</button>' : '<button type="button" class="student-result-edit" data-action="edit-exercise">✏️ Corriger les résultats</button>')+
+          (exercise.type==='exam500' ? '<button type="button" class="student-result-edit" data-student-id="'+html(student.id||student.externalId)+'" '+(exercise.status==='locked'?'disabled title="Évaluation verrouillée"':'')+'>✏️ Modifier les temps et notes</button>' : '<button type="button" class="student-result-edit" data-student-id="'+html(student.id||student.externalId)+'" '+(exercise.status==='locked'?'disabled title="Évaluation verrouillée"':'')+'>✏️ Modifier les résultats</button>')+
           '</div></details>';
       }).join('')+'</div>';
     panel.querySelectorAll('.student-result-edit[data-student-id]').forEach(button=>{
       button.onclick=()=>{
         if(exercise.status==='locked')return toast('Cette évaluation est verrouillée.');
-        if(typeof window.openExam500StudentEditor==='function')window.openExam500StudentEditor(button.dataset.studentId);
-        else toast('Éditeur indisponible : ouvre « Corriger les résultats ».');
+        const id=button.dataset.studentId;
+        if(exercise.type==='exam500') {
+          if(typeof window.openExam500StudentEditor==='function')window.openExam500StudentEditor(id);
+          else toast('Éditeur indisponible.');
+        } else openCcfStudentEditor(id);
       };
     });
-    panel.querySelectorAll('.student-result-edit[data-action="edit-exercise"]').forEach(button=>{
-      button.onclick=()=>{showPage('group');render();};
-    });
+
+  }
+  function openCcfStudentEditor(id) {
+    const {exercise}=activePair();
+    const student=exercise?.students?.find(s=>String(s.id||s.externalId)===String(id));
+    if(!student)return toast('Élève introuvable.');
+    if(exercise.status==='locked')return toast('Évaluation verrouillée.');
+    let dialog=$('ccfPersonalEditor');
+    if(!dialog){dialog=document.createElement('dialog');dialog.id='ccfPersonalEditor';document.body.appendChild(dialog);}
+    const fmt=ms=>Number.isFinite(Number(ms))&&Number(ms)>0?(Number(ms)/1000).toFixed(2):'';
+    const races=[1,2].map(n=>{
+      const race=student.races?.[n],splits=race?.splits||[];
+      return '<fieldset style="margin:10px 0;padding:12px;border:1px solid #cbd5e1;border-radius:10px"><legend>800 m · course '+n+'</legend>'+
+        (race?'<label>Temps total (secondes)<input type="number" min="1" step=".01" data-race="'+n+'" data-field="total" value="'+fmt(race.totalMs)+'" required></label>'+
+        splits.map((v,i)=>'<label>Passage '+(i+1)+' (secondes cumulées)<input type="number" min="0" step=".01" data-race="'+n+'" data-split="'+i+'" value="'+fmt(v)+'" required></label>').join('')+
+        '<label>Estimation<input data-race="'+n+'" data-field="project" value="'+html(race.project||'')+'"></label>':'<p>Course non scannée.</p>')+'</fieldset>';
+    }).join('');
+    dialog.innerHTML='<form method="dialog" style="min-width:min(82vw,440px);max-height:80vh;overflow:auto;padding:18px"><h3>Corriger · '+html([student.last,student.first].filter(Boolean).join(' '))+'</h3>'+
+      races+'<label>AFL 2<input type="number" step=".25" data-score="afl2" value="'+html(student.afl2??'')+'"></label><label>AFL 3<input type="number" step=".25" data-score="afl3" value="'+html(student.afl3??'')+'"></label>'+
+      '<div class="flow-actions"><button type="button" id="ccfPersonalSave" class="flow-primary">Enregistrer</button><button type="button" id="ccfPersonalCancel">Annuler</button></div></form>';
+    dialog.querySelectorAll('label').forEach(label=>{label.style.cssText='display:flex;flex-direction:column;gap:5px;margin:9px 0';});
+    dialog.querySelectorAll('input').forEach(input=>{input.style.cssText='padding:9px;border:1px solid #cbd5e1;border-radius:7px';});
+    dialog.querySelector('#ccfPersonalCancel').onclick=()=>dialog.close();
+    dialog.querySelector('#ccfPersonalSave').onclick=()=>{
+      const edits={};
+      for(const n of [1,2]){
+        const race=student.races?.[n];if(!race)continue;
+        const total=dialog.querySelector('[data-race="'+n+'"][data-field="total"]');
+        const splitInputs=[...dialog.querySelectorAll('[data-race="'+n+'"][data-split]')];
+        const values=splitInputs.map(input=>Math.round(Number(input.value)*1000));
+        const totalMs=Math.round(Number(total.value)*1000);
+        if(!Number.isFinite(totalMs)||totalMs<=0||values.some((v,i)=>!Number.isFinite(v)||v<=0||(i>0&&v<=values[i-1]))||(values.length&&values[values.length-1]>totalMs)){
+          alert('Vérifie les temps cumulés de la course '+n+'.');return;
+        }
+        edits[n]={totalMs,splits:values,project:dialog.querySelector('[data-race="'+n+'"][data-field="project"]').value};
+      }
+      const scores={};
+      for(const field of ['afl2','afl3']){const input=dialog.querySelector('[data-score="'+field+'"]');const v=input.value.trim();if(v!==''&&!Number.isFinite(Number(v))){alert('Note invalide.');return;}scores[field]=v===''?'':Number(v);}
+      for(const n of [1,2])if(edits[n])Object.assign(student.races[n],edits[n]);
+      Object.assign(student,scores);
+      save();dialog.close();render();renderResultsOverview();toast('Résultats corrigés et enregistrés.');
+    };
+    dialog.showModal();
   }
   function renderDestination() {
     const {group, exercise} = activePair();
