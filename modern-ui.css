@@ -1317,3 +1317,22 @@ nav{gap:12px}
 }
 #ccfPersonalEditor::backdrop{background:#1018279c}
 #ccfPersonalEditor input{box-sizing:border-box;max-width:100%;width:100%;font-size:16px}
+
+/* Consistent wide editors for 3x500 and all Chrono Perf modes */
+@media(min-width:700px){
+ #exam500EditDialog{width:88vw!important;max-width:1150px!important;max-height:90dvh!important;padding:0!important;border:0;border-radius:16px}
+ #exam500EditDialog>div{box-sizing:border-box;min-width:0!important;width:100%!important;max-height:88dvh!important;padding:22px!important}
+ #trainingEditDialog{width:88vw!important;max-width:1150px!important;max-height:90dvh!important}
+ #trainingEditDialog .training-edit-dialog{max-height:88dvh!important;padding:22px!important}
+ #trainingEditDialog .training-edit-times{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #trainingEditDialog .training-edit-actions{position:sticky;bottom:-22px;background:#fff;padding:14px 0;z-index:2}
+ #exam500EditDialog #e500Save,#exam500EditDialog #e500Cancel{min-height:42px}
+}
+#exam500EditDialog input,#exam500EditDialog select,#trainingEditDialog input,#trainingEditDialog select{box-sizing:border-box;max-width:100%;font-size:16px}
+@media(max-width:699px){
+ #exam500EditDialog{width:95vw;max-width:95vw;padding:0}
+ #exam500EditDialog>div{min-width:0!important;width:100%;box-sizing:border-box}
+ #exam500EditDialog>div>div{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #trainingEditDialog{width:95vw!important}
+ #trainingEditDialog .training-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
