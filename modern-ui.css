@@ -1622,3 +1622,8 @@ nav{gap:12px}
 @media(max-width:900px){#workflowContent .eps-lessons-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:580px){#workflowContent .eps-lessons-grid{grid-template-columns:1fr!important}.eps-lessons-intro-icon{display:none}.eps-lessons-intro{padding:12px}.eps-lessons-intro>div>span{font-size:12px}#workflowContent .eps-lesson-tile{min-height:165px!important}}
 @media(prefers-reduced-motion:reduce){#workflowContent .eps-lesson-tile{transition:none}}
+
+/* Class long-press affordance, safe on iPad touch screens */
+.eps-class-delete-hint{max-width:1050px;margin:8px auto 0;color:#667b95;font-size:12px;font-weight:600}
+#flowClassGrid .class-tile{touch-action:pan-y;-webkit-touch-callout:none}
+#flowClassGrid .class-tile:active{filter:saturate(1.12)}
