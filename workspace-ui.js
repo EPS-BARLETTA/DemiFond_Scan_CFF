@@ -283,8 +283,9 @@
     if(!content)content='<p>Aucun résultat individuel disponible.</p>';
     dialog.innerHTML='<div class="student-sheet"><div class="student-sheet-head"><div><small>FICHE ÉLÈVE</small><h2>'+html(fullName)+'</h2><p>'+html(exercise.label||'Résultats')+'</p></div><button type="button" class="student-sheet-close" aria-label="Fermer">✕</button></div>'+
       '<div class="student-sheet-content">'+content+'</div><div class="student-sheet-actions"><button type="button" class="student-sheet-close">Fermer</button>'+
-      (exercise.status==='locked'?'': '<button type="button" class="student-sheet-edit">✏️ Modifier les résultats</button>')+'</div></div>';
+      '<button type="button" class="student-sheet-annotation">📝 Annotations et suivi</button>'+ (exercise.status==='locked'?'': '<button type="button" class="student-sheet-edit">✏️ Modifier les résultats</button>')+'</div></div>';
     dialog.querySelectorAll('.student-sheet-close').forEach(button=>button.onclick=()=>dialog.close());
+    dialog.querySelector('.student-sheet-annotation').onclick=()=>window.DFStudentFollowup?.open(student,()=>{dialog.close();openStudentResultSheet(student);},exercise.status==='locked');
     const edit=dialog.querySelector('.student-sheet-edit');
     if(edit)edit.onclick=()=>{
       dialog.close();
