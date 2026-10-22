@@ -1820,6 +1820,8 @@
     wrapped();
   }
 
+  window.openExam500StudentEditor = studentId => open500Editor(studentId);
+
   function install() {
     settings();
     installBridge();
