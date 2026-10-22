@@ -1383,3 +1383,31 @@ nav{gap:12px}
 #ccfPersonalEditor fieldset{background:#f8f9fd;border-color:#dce3ee!important}
 #ccfPersonalEditor fieldset:nth-of-type(even){background:#f3f9f8}
 #ccfPersonalEditor .flow-primary{background:var(--eps-indigo)}
+
+/* Student sheet refresh: athletic, light, and focused on performance */
+#studentResultSheet{border-radius:20px;background:#fff}
+#studentResultSheet .student-sheet{color:#17253a}
+#studentResultSheet .student-sheet-head{background:#fff;border-bottom:1px solid #e6eaf1;padding-top:24px;padding-bottom:20px}
+#studentResultSheet .student-sheet-head small{color:#697b93;font-size:11px;letter-spacing:.14em}
+#studentResultSheet .student-sheet-head h2{color:#17253a;font-weight:800;letter-spacing:-.025em;font-size:27px}
+#studentResultSheet .student-sheet-content{background:#fff;gap:14px;padding-top:20px;padding-bottom:20px}
+#studentResultSheet .student-sheet-race{background:#fff!important;border:1px solid #e2e7ef!important;border-top:4px solid #314b77!important;border-radius:13px;padding:17px 18px;box-shadow:0 3px 13px #1a2c470a}
+#studentResultSheet .student-sheet-race:nth-of-type(even){border-top-color:#147f86!important}
+#studentResultSheet .student-sheet-race h4{font-size:15px;font-weight:800;color:#293950;margin:0 0 14px}
+#studentResultSheet .student-sheet-field{font-size:14px;padding:9px 0;border-bottom:1px solid #eef1f5}
+#studentResultSheet .student-sheet-field span{color:#728096}
+#studentResultSheet .student-sheet-field strong{color:#283a53;font-size:15px;font-weight:750}
+#studentResultSheet .student-sheet-race .student-sheet-final{padding:10px 12px;margin:0 0 8px;background:#f1f5fa;border-radius:9px;border:0;align-items:center}
+#studentResultSheet .student-sheet-race:nth-of-type(even) .student-sheet-final{background:#edf7f7}
+#studentResultSheet .student-sheet-final span{color:#334d6b;font-weight:750}
+#studentResultSheet .student-sheet-final strong{font-size:27px;letter-spacing:-.03em;font-weight:850;color:#1e365a}
+#studentResultSheet .student-sheet-race:nth-of-type(even) .student-sheet-final strong{color:#0e7178}
+#studentResultSheet .student-sheet-evaluation{grid-column:1/-1;border:1px solid #e1e7ef;border-radius:12px;padding:12px 17px;background:#fafbfd;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+#studentResultSheet .student-sheet-evaluation h4{grid-column:1/-1;margin:0 0 6px;color:#283b58;font-size:14px;font-weight:800}
+#studentResultSheet .student-sheet-evaluation .student-sheet-field{border:0}
+#studentResultSheet .student-sheet-evaluation .student-sheet-field strong{font-size:18px}
+#studentResultSheet .student-sheet-actions{background:#fff;border-top:1px solid #e8edf3}
+#studentResultSheet .student-sheet-edit{background:#304d7e;border-color:#304d7e}
+#studentResultSheet .student-sheet-annotation{background:#fff;color:#14747a;border-color:#a9d0d1}
+#studentResultSheet .student-sheet-close{color:#475569}
+@media(max-width:650px){#studentResultSheet .student-sheet-evaluation{grid-template-columns:1fr}#studentResultSheet .student-sheet-final strong{font-size:23px}#studentResultSheet .student-sheet-actions{flex-wrap:wrap}}
