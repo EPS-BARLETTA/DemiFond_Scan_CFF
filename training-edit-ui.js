@@ -124,7 +124,12 @@
         esc(String(race.distance || "?")) + ' m' +
         '<input data-race-index="' + index + '" value="' +
           esc(inputTime(race.totalMs)) + '" placeholder="1:45.30">' +
-      '</label>'
+      '</label>' +
+      (Array.isArray(race.passes) ? race.passes.map((pass, passIndex) =>
+        '<label>Passage ' + (passIndex + 1) + ' · ' + esc(String(pass.distance || '?')) + ' m' +
+        '<input data-race-pass="' + index + '" data-pass-index="' + passIndex + '" value="' +
+        esc(inputTime(pass.cumulativeMs)) + '" placeholder="1:45.30"></label>'
+      ).join('') : '')
     ).join("");
 
     const extraField =
@@ -215,18 +220,31 @@
           return;
         }
 
-        corrected.forEach(row => {
-          row.race.totalMs = row.value;
-
-          if (Array.isArray(row.race.passes) && row.race.passes.length) {
-            const lastPass = row.race.passes[row.race.passes.length - 1];
-            const previous =
-              row.race.passes.length > 1
-                ? Number(row.race.passes[row.race.passes.length - 2].cumulativeMs) || 0
-                : 0;
-
-            lastPass.cumulativeMs = row.value;
-            lastPass.lapMs = Math.max(0, row.value - previous);
+        const passEdits=[];
+        for(const row of corrected){
+          const inputs=[...dialog.querySelectorAll('[data-race-pass="'+row.index+'"]')];
+          const values=inputs.map(input=>parseTime(input.value));
+          if(values.some((v,i)=>!v||(i>0&&v<=values[i-1]))||(values.length&&values[values.length-1]>row.value)){
+            alert('Vérifie les passages cumulés de la course '+(row.index+1)+'.');return;
+          }
+          passEdits.push({row,values});
+        }
+        passEdits.forEach(({row,values})=>{
+          row.race.totalMs=row.value;
+          if(Array.isArray(row.race.passes)){
+            row.race.passes.forEach((pass,i)=>{
+              if(i<values.length){
+                pass.cumulativeMs=values[i];
+                pass.lapMs=values[i]-(i?values[i-1]:0);
+              }
+            });
+            if(row.race.passes.length){
+              const last=row.race.passes[row.race.passes.length-1];
+              if(Number(last.distance)===Number(row.race.distance)){
+                last.cumulativeMs=row.value;
+                last.lapMs=row.value-(row.race.passes.length>1?Number(row.race.passes[row.race.passes.length-2].cumulativeMs)||0:0);
+              }
+            }
           }
         });
       } else if (item.tool === "timer" || item.tool === "vma") {
