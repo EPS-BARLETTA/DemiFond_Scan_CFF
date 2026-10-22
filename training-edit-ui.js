@@ -414,6 +414,13 @@
 
   function install() {
     document.addEventListener('click',event=>{
+      const followup=event.target.closest?.('.training-personal-followup');
+      if(followup){
+        event.preventDefault();
+        const item=findItem(followup.dataset.followupId);
+        if(item&&window.DFStudentFollowup)window.DFStudentFollowup.open(item,null,typeof activeSession==='function'&&activeSession()?.status==='locked');
+        return;
+      }
       const button=event.target.closest?.('.training-personal-edit');
       if(!button)return;
       event.preventDefault();
