@@ -1554,3 +1554,8 @@ nav{gap:12px}
 #home #homeActiveContext{margin-top:15px}
 @media(max-width:760px){.eps-home-hero{min-height:0;padding:30px 25px}.eps-home-track{display:none}#home .eps-home-actions{grid-template-columns:1fr!important}#home .eps-home-actions .scan-home-card{min-height:180px}.eps-home-chrono{flex-wrap:wrap}.eps-home-chrono>a{width:100%}}
 @media(prefers-reduced-motion:reduce){#home .eps-home-actions .scan-home-card{transition:none}}
+
+/* App identity in the athletics track, not a fictitious 500m track */
+.eps-home-track-inner>span{display:flex;align-items:baseline;gap:2px;font-size:25px;letter-spacing:-.045em;white-space:nowrap}
+.eps-home-track-inner .eps-home-unit{font-size:17px;font-weight:850;color:#78f0c6}
+.eps-home-track-inner small{font-size:7px;letter-spacing:.04em}
