@@ -236,10 +236,21 @@
       (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée par ces contrôles.</p>')+'</details>'+
       '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un nom pour déplier les données. Pour modifier une note ou un temps, utilisez « Corriger les résultats ».</p>'+
       '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+
-      sorted.map((student,i)=>{const name=fullName(student)||'Élève '+(i+1);const data=exercise.type==='exam500'?student.exam500:student;
-        const values=data&&typeof data==='object'?Object.entries(data).filter(([k,v])=>v!=null&&typeof v!=='object'&&k!=='id').slice(0,8):[];
-        return '<details class="flow-card" style="margin:0;background:'+(i%2?'#edf3fb':'#f8fafc')+'"><summary><strong>'+html(name)+'</strong></summary><div style="padding-top:8px;font-size:.9em">'+
-        (values.map(([k,v])=>'<div>'+html(k)+' : '+html(v)+'</div>').join('')||'Détails et corrections dans le tableau ci-dessous.')+'</div></details>';
+      sorted.map((student,i)=>{
+        const name=fullName(student)||'Élève '+(i+1);
+        const skip=new Set(['id','externalId','externalid','last','lastName','nom','first','firstName','prenom','name','classroom','sex','gender','createdAt','updatedAt','groupId','sessionId']);
+        const labels={project1:'Estimation course 1',project2:'Estimation course 2',project3:'Estimation course 3',afl2:'AFL 2',afl3:'AFL 3',exam500Afl2:'AFL 2',exam500Afl3:'AFL 3',score:'Note',total:'Total',time:'Temps',duration:'Durée',performance:'Performance',regularity:'Régularité',races:'Courses',laps:'Passages',estimated:'Estimation',actual:'Réalisé',result:'Résultat'};
+        const entries=[];
+        const collect=(obj,prefix='',depth=0)=>{
+          if(obj==null||depth>4)return;
+          if(Array.isArray(obj)){obj.forEach((item,j)=>collect(item,prefix+' '+(j+1),depth+1));return;}
+          if(typeof obj==='object'){Object.entries(obj).forEach(([k,v])=>{if(skip.has(k)||k.startsWith('_')||v==null||v==='')return;collect(v,prefix?(prefix+' · '+(labels[k]||k)):(labels[k]||k),depth+1);});return;}
+          entries.push([prefix,obj]);
+        };
+        collect(student);
+        return '<details class="student-result-card '+(i%2?'student-result-alt':'')+'"><summary><strong>'+html(name)+'</strong><span>'+html(entries.length)+' donnée(s) disponibles</span></summary><div class="student-result-fields">'+
+          (entries.length?entries.map(([label,value])=>'<div class="student-result-field"><span>'+html(label)+'</span><strong>'+html(value)+'</strong></div>').join(''):'<p>Aucune donnée individuelle supplémentaire. Consulte le tableau détaillé ci-dessous.</p>')+
+          '</div></details>';
       }).join('')+'</div>';
   }
   function renderDestination() {
