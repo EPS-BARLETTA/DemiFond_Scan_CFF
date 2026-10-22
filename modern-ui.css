@@ -1420,3 +1420,23 @@ nav{gap:12px}
 #studentResultSheet .student-sheet-race .student-sheet-field:not(.student-sheet-final) strong{color:#233955}
 #studentResultSheet .student-sheet-evaluation .student-sheet-field:nth-of-type(even){background:#edf3f9;border-radius:7px;padding:10px 12px}
 #studentResultSheet .student-sheet-evaluation .student-sheet-field:nth-of-type(odd){background:#eaf5f3;border-radius:7px;padding:10px 12px}
+
+/* Compact EPS dashboard: three legible KPIs instead of oversized boxes */
+#sessionResultsOverview .eps-dashboard-metrics{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;margin:14px 0 12px!important}
+#sessionResultsOverview .eps-dashboard-metrics>.eps-metric{box-sizing:border-box;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:13px!important;min-height:0!important;height:auto!important;padding:14px 17px!important;border:1px solid #d9e4f3!important;border-left:4px solid #3566c6!important;border-radius:13px!important;background:#f2f6ff!important;box-shadow:none!important;text-align:left!important}
+#sessionResultsOverview .eps-metric .eps-metric-symbol{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:#dfe9fc;color:#3158a7;font-size:23px;font-weight:800}
+#sessionResultsOverview .eps-metric .eps-metric-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+#sessionResultsOverview .eps-metric .eps-metric-copy strong{font-size:25px;line-height:1.05;color:#1f427b;font-weight:850}
+#sessionResultsOverview .eps-metric .eps-metric-copy>span{font-size:13px;color:#52637b;font-weight:600}
+#sessionResultsOverview .eps-dashboard-metrics>.eps-metric-1{background:#edf8f4!important;border-color:#d4e9e1!important;border-left-color:#1d9874!important}
+#sessionResultsOverview .eps-metric-1 .eps-metric-symbol{background:#d9f1e7;color:#167655}
+#sessionResultsOverview .eps-metric-1 .eps-metric-copy strong{color:#147555}
+#sessionResultsOverview .eps-dashboard-metrics>.eps-metric-2{background:#fff8ec!important;border-color:#f0e3cc!important;border-left-color:#d79a38!important}
+#sessionResultsOverview .eps-metric-2 .eps-metric-symbol{background:#f9ebce;color:#a16b1e}
+#sessionResultsOverview .eps-metric-2 .eps-metric-copy strong{color:#99661e}
+#sessionResultsOverview .eps-student-heading{background:#f5f8fc;border:1px solid #e4ebf4;border-left:4px solid #466db6;border-radius:11px;padding:11px 14px;margin:15px 0 12px}
+#sessionResultsOverview .eps-student-heading h3{margin:0 0 4px;color:#263b5b}
+#sessionResultsOverview .eps-student-heading .flow-note{margin:0;color:#64748b}
+#sessionResultsOverview>.student-picker-grid{padding:3px 0 8px}
+#sessionResultsOverview>.student-picker-grid .student-picker{border-radius:10px;min-height:66px}
+@media(max-width:700px){#sessionResultsOverview .eps-dashboard-metrics{gap:7px!important}#sessionResultsOverview .eps-dashboard-metrics>.eps-metric{padding:10px!important;gap:8px!important}#sessionResultsOverview .eps-metric .eps-metric-symbol{display:none}#sessionResultsOverview .eps-metric .eps-metric-copy strong{font-size:22px}#sessionResultsOverview .eps-metric .eps-metric-copy>span{font-size:11px}}
