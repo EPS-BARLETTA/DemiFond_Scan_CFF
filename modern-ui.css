@@ -1277,3 +1277,29 @@ nav{gap:12px}
 .student-result-field strong{font-weight:700;color:#172554;text-align:right;overflow-wrap:anywhere}
 @media(max-width:900px){#sessionResultsOverview>.flow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){#sessionResultsOverview>.flow-grid{grid-template-columns:1fr}}
+
+/* Compact student picker and individual result sheet */
+.student-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:9px;align-items:stretch}
+.student-picker{display:flex;flex-direction:column;justify-content:space-between;text-align:left;gap:8px;min-height:72px;padding:12px;border:1px solid #d6deed;border-left:4px solid #6553d7;border-radius:12px;background:#fff;color:#302d61;cursor:pointer}
+.student-picker-alt{background:#f2f4fa}
+.student-picker strong{font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.student-picker span{font-size:11px;color:#676f85}
+.student-picker:focus-visible{outline:3px solid #6553d7;outline-offset:2px}
+#studentResultSheet{width:min(92vw,650px);max-width:650px;max-height:86dvh;padding:0;border:0;border-radius:18px;box-shadow:0 22px 65px #121b3659}
+#studentResultSheet::backdrop{background:#1018279c}
+.student-sheet{display:flex;flex-direction:column;max-height:86dvh;color:#1d2840}
+.student-sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 24px 15px;border-bottom:1px solid #e1e7f1}
+.student-sheet-head small{font-weight:750;letter-spacing:.08em;color:#6d61b3}
+.student-sheet-head h2{margin:5px 0;font-size:23px}
+.student-sheet-head p{margin:0;color:#687387}
+.student-sheet-close{border:1px solid #d8deea;background:#fff;border-radius:9px;padding:9px 13px;cursor:pointer}
+.student-sheet-content{padding:16px 24px;overflow:auto;display:grid;gap:10px}
+.student-sheet-race{padding:13px;border:1px solid #dbe3ef;border-radius:12px;background:#f8faff}
+.student-sheet-race h4{margin:0 0 8px}
+.student-sheet-field{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:7px 0;border-bottom:1px solid #e5eaf2}
+.student-sheet-field:last-child{border-bottom:0}
+.student-sheet-field span{color:#59677c}
+.student-sheet-field strong{font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
+.student-sheet-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid #e1e7f1}
+.student-sheet-edit{padding:11px 15px;background:#5146bd;color:#fff;border:0;border-radius:9px;font-weight:750;cursor:pointer}
+@media(max-width:600px){.student-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.student-sheet-head,.student-sheet-content,.student-sheet-actions{padding-left:14px;padding-right:14px}}
