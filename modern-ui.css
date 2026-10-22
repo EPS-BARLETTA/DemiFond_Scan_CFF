@@ -1449,3 +1449,30 @@ nav{gap:12px}
 .eps-table-toggle-hint{font-size:12px;font-weight:650;color:#547198}
 .eps-table-toggle:hover{background:#e9f2fd;border-color:#aac5e7}
 #results .table[hidden],#trainingResultsCard .training-table-wrap[hidden]{display:none!important}
+
+/* October visual refresh: colorful but functional classroom dashboard */
+#sessionResultsOverview{border:1px solid #dce5ef!important;background:#fff!important}
+#sessionResultsOverview .eps-student-heading{background:linear-gradient(100deg,#eaf2ff 0%,#f7faff 68%)!important;border:1px solid #d8e5f8!important;border-left:5px solid #3777d6!important}
+#sessionResultsOverview .student-picker-grid{gap:10px}
+#sessionResultsOverview .student-picker{background:#f0f5ff!important;border:1px solid #d8e4fb!important;border-left:4px solid #4878d1!important;box-shadow:0 2px 5px #223d5c0b}
+#sessionResultsOverview .student-picker-alt{background:#eaf8f4!important;border-color:#d2eee5!important;border-left-color:#139681!important}
+#sessionResultsOverview .student-picker:hover,#sessionResultsOverview .student-picker:focus-visible{background:#dceaff!important;box-shadow:0 3px 12px #3a6dc028}
+#sessionResultsOverview .student-picker-alt:hover,#sessionResultsOverview .student-picker-alt:focus-visible{background:#d7f2e9!important;box-shadow:0 3px 12px #138c7b20}
+#sessionResultsOverview .student-picker strong{color:#233f65}
+#sessionResultsOverview .student-picker-alt strong{color:#175e59}
+#sessionResultsOverview .student-picker span{color:#577da7;font-weight:650}
+#sessionResultsOverview .student-picker-alt span{color:#34877b}
+#results .ccf-results-card{border:1px solid #dce5ef!important;box-shadow:0 8px 28px #26476b0b}
+#results .ccf-results-card>h2{border-left:5px solid #346dd0;background:linear-gradient(90deg,#eaf1ff,#fff 75%);padding:12px 16px;border-radius:8px;color:#213f6d}
+#results #ccfViewTabs{background:#f1f5fb;border:1px solid #dce5f1;border-radius:12px;padding:5px;width:max-content;max-width:100%;gap:5px}
+#results #ccfViewTabs button{border-radius:9px}
+#results #ccfViewTabs button.active{background:#2e67cb!important;color:white!important;box-shadow:0 2px 8px #2e67cb30}
+#results #resultFilters{background:#f5f9ff;border:1px solid #e0e9f7;border-radius:12px;padding:8px 10px}
+#results .eps-table-toggle{background:linear-gradient(90deg,#e7f0ff,#f3f8ff)!important;border:1px solid #c8daf4!important;border-left:5px solid #3979d5!important;color:#234c85!important;box-shadow:0 2px 7px #356db010}
+#results .eps-table-toggle-icon{background:#cfe1fb;color:#255ba8}
+#results .eps-table-toggle[aria-expanded="true"]{background:#e4f4f1!important;border-color:#b6ded5!important;border-left-color:#198d7c!important;color:#146e63!important}
+#results .eps-table-toggle[aria-expanded="true"] .eps-table-toggle-icon{background:#c6e9df;color:#147566}
+#results #ccfQuickView .ccf-quick-header{border-left:5px solid #16967c;background:linear-gradient(90deg,#e8f8f2,#fff 80%);padding:12px 16px;border-radius:10px}
+#results #ccfQuickView .ccf-quick-header h3{color:#176e61}
+#results #ccfQuickView .ccf-quick-header p{color:#52786f}
+@media(prefers-reduced-motion:no-preference){#sessionResultsOverview .student-picker,#results .eps-table-toggle{transition:background .18s,box-shadow .18s,border-color .18s}}
