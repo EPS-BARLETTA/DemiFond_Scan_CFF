@@ -1586,3 +1586,39 @@ nav{gap:12px}
 #flowClassGrid .class-tile-results:hover{background:color-mix(in srgb,var(--class-color,#4569db) 9%,white)!important}
 @media(max-width:650px){.eps-classes-intro{gap:10px;padding:13px}.eps-classes-intro-icon{display:none}.eps-classes-intro>div>span{font-size:12px}.eps-classes-count{padding:7px 10px}#flowClassGrid.flow-grid>.class-tile{min-height:160px!important}#flowClassGrid .class-tile-main strong{font-size:19px}}
 @media(prefers-reduced-motion:reduce){#flowClassGrid.flow-grid>.class-tile{transition:none}}
+
+/* Class sessions: compact and energetic like Mes classes */
+#workflowContent:has(.eps-lessons-grid)>.workspace-title{background:linear-gradient(110deg,#163875,#3866dc)!important;border:0!important;border-radius:21px!important;padding:25px 28px!important;box-shadow:0 12px 25px #254dc126}
+#workflowContent:has(.eps-lessons-grid)>.workspace-title h2{color:#fff!important;font-size:2rem!important}
+#workflowContent:has(.eps-lessons-grid)>.workspace-title p{color:#dce9ff!important}
+#workflowContent:has(.eps-lessons-grid)>.workspace-title button{background:#ffffffed!important;color:#2a59c3!important;border:0!important;font-weight:800}
+#workflowContent:has(.eps-lessons-grid)>.flow-actions{justify-content:flex-start!important;max-width:1050px;margin:18px auto!important;gap:10px}
+#workflowContent:has(.eps-lessons-grid)>.flow-actions .flow-primary{background:#365fe0!important;border-color:#365fe0!important;color:white!important;box-shadow:0 4px 12px #365fe033}
+.eps-lessons-intro{display:flex;align-items:center;gap:14px;max-width:1050px;margin:14px auto 0;padding:15px 19px;background:linear-gradient(100deg,#e3edff,#f5f8ff);border:1px solid #cbdcfb;border-left:5px solid #446ee1;border-radius:15px}
+.eps-lessons-intro-icon{display:grid;place-items:center;flex:0 0 47px;height:47px;border-radius:13px;background:#cfdfff;font-size:23px}
+.eps-lessons-intro>div{display:flex;flex-direction:column;gap:3px;flex:1}
+.eps-lessons-intro strong{font-size:16px;color:#21447e}
+.eps-lessons-intro>div>span{font-size:13px;color:#577092}
+.eps-lessons-count{padding:8px 13px;border-radius:99px;background:#365fda;color:white;font-size:13px;font-weight:800;white-space:nowrap}
+#workflowContent .eps-lessons-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;max-width:1050px;margin:18px auto!important;justify-content:initial!important}
+#workflowContent .eps-lesson-tile{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:195px!important;padding:0!important;gap:0!important;text-align:left!important;border-radius:18px!important;border:1px solid #cdd9f8!important;border-top:6px solid #4268e4!important;background:linear-gradient(140deg,#e4ecff,#f7f9ff)!important;box-shadow:0 7px 20px #233a6517!important;transition:transform .16s,box-shadow .16s}
+#workflowContent .eps-lesson-tile:hover{transform:translateY(-2px);box-shadow:0 12px 25px #233a6526!important}
+#workflowContent .eps-lesson-color-1{border-color:#bce6d9!important;border-top-color:#00a27e!important;background:linear-gradient(140deg,#d9f8ec,#f5fdf9)!important}
+#workflowContent .eps-lesson-color-2{border-color:#f1d8b3!important;border-top-color:#e89522!important;background:linear-gradient(140deg,#fff0d7,#fffaf2)!important}
+#workflowContent .eps-lesson-color-3{border-color:#e2c9f9!important;border-top-color:#9651d6!important;background:linear-gradient(140deg,#f2e4ff,#fcf7ff)!important}
+#workflowContent .eps-lesson-main{display:flex!important;flex-direction:column;align-items:flex-start;gap:8px;width:100%;flex:1;padding:19px 20px 11px;background:transparent!important;border:0!important;text-align:left!important;color:#20385e!important;cursor:pointer}
+#workflowContent .eps-lesson-kicker{font-size:10px;letter-spacing:.14em;font-weight:850;color:#4666c8}
+#workflowContent .eps-lesson-main strong{font-size:24px!important;line-height:1.15!important;letter-spacing:-.025em;color:#294fbd!important}
+#workflowContent .eps-lesson-label{font-size:13px;color:#516782;font-weight:600}
+#workflowContent .eps-lesson-exercises{display:inline-flex!important;align-items:center;gap:5px;padding:6px 11px;border-radius:99px;background:#ffffffc7;border:1px solid #ffffffea;color:#54657a;font-size:13px}
+#workflowContent .eps-lesson-exercises b{color:#3159c8;font-size:16px}
+#workflowContent .eps-lesson-color-1 .eps-lesson-kicker,#workflowContent .eps-lesson-color-1 .eps-lesson-main strong,#workflowContent .eps-lesson-color-1 .eps-lesson-exercises b{color:#078569!important}
+#workflowContent .eps-lesson-color-2 .eps-lesson-kicker,#workflowContent .eps-lesson-color-2 .eps-lesson-main strong,#workflowContent .eps-lesson-color-2 .eps-lesson-exercises b{color:#b57114!important}
+#workflowContent .eps-lesson-color-3 .eps-lesson-kicker,#workflowContent .eps-lesson-color-3 .eps-lesson-main strong,#workflowContent .eps-lesson-color-3 .eps-lesson-exercises b{color:#8641bf!important}
+#workflowContent .eps-lesson-results{display:flex!important;justify-content:space-between;align-items:center;margin:0 14px 14px!important;padding:11px 14px!important;border:1px solid #c8d7f3!important;border-radius:10px!important;background:white!important;color:#315dc7!important;font-weight:800!important;text-align:left!important;cursor:pointer}
+#workflowContent .eps-lesson-color-1 .eps-lesson-results{color:#078569!important;border-color:#b5dfd2!important}
+#workflowContent .eps-lesson-color-2 .eps-lesson-results{color:#ae6c12!important;border-color:#e9d2ac!important}
+#workflowContent .eps-lesson-color-3 .eps-lesson-results{color:#8641bf!important;border-color:#ddc5f2!important}
+@media(max-width:900px){#workflowContent .eps-lessons-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:580px){#workflowContent .eps-lessons-grid{grid-template-columns:1fr!important}.eps-lessons-intro-icon{display:none}.eps-lessons-intro{padding:12px}.eps-lessons-intro>div>span{font-size:12px}#workflowContent .eps-lesson-tile{min-height:165px!important}}
+@media(prefers-reduced-motion:reduce){#workflowContent .eps-lesson-tile{transition:none}}
