@@ -254,7 +254,7 @@
       const minutes=Math.floor(n/60000),seconds=((n%60000)/1000).toFixed(2).padStart(5,'0');
       return minutes+':'+seconds;
     };
-    const field=(label,value)=>'<div class="student-sheet-field"><span>'+html(label)+'</span><strong>'+html(value==null||value===''?'—':value)+'</strong></div>';
+    const field=(label,value)=>'<div class="student-sheet-field'+(label==='Temps final'?' student-sheet-final':'')+'"><span>'+html(label)+'</span><strong>'+html(value==null||value===''?'—':value)+'</strong></div>';
     let content='';
     if(exercise.type==='exam500'){
       const races=student.exam500?.races||[];
@@ -266,10 +266,11 @@
           (splits.length?field('Passages',splits.map(ms).join(' · ')):'')+
           field('Estimation',race.project||student['project'+(i+1)]||'—')+'</section>';
       }).join('');
-      content+=field('AFL 2',student.exam500Afl2)+field('AFL 3',student.exam500Afl3);
+      content+='<div class="student-sheet-evaluation"><h4>Évaluation</h4>'+field('AFL 2',student.exam500Afl2)+field('AFL 3',student.exam500Afl3);
       for(const [key,label] of [['exam500Warmup','Échauffement'],['exam500Carnet','Carnet'],['exam500Observation','Observation']]){
         if(student[key]!=null&&student[key]!=='')content+=field(label,student[key]);
       }
+      content+='</div>';
     } else {
       for(const n of [1,2]){
         const race=student.races?.[n];if(!race)continue;
@@ -278,7 +279,7 @@
           (Array.isArray(race.splits)?race.splits.map((v,i)=>field('Passage '+(i+1),ms(v))).join(''):'')+
           field('Estimation',race.project||student['project'+n]||'—')+'</section>';
       }
-      content+=field('AFL 2',student.afl2)+field('AFL 3',student.afl3);
+      content+='<div class="student-sheet-evaluation"><h4>Évaluation</h4>'+field('AFL 2',student.afl2)+field('AFL 3',student.afl3)+'</div>';
     }
     if(!content)content='<p>Aucun résultat individuel disponible.</p>';
     dialog.innerHTML='<div class="student-sheet"><div class="student-sheet-head"><div><small>FICHE ÉLÈVE</small><h2>'+html(fullName)+'</h2><p>'+html(exercise.label||'Résultats')+'</p></div><button type="button" class="student-sheet-close" aria-label="Fermer">✕</button></div>'+
