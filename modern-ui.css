@@ -1411,3 +1411,12 @@ nav{gap:12px}
 #studentResultSheet .student-sheet-annotation{background:#fff;color:#14747a;border-color:#a9d0d1}
 #studentResultSheet .student-sheet-close{color:#475569}
 @media(max-width:650px){#studentResultSheet .student-sheet-evaluation{grid-template-columns:1fr}#studentResultSheet .student-sheet-final strong{font-size:23px}#studentResultSheet .student-sheet-actions{flex-wrap:wrap}}
+
+/* Subtle alternating rows for instant split-time scanning */
+#studentResultSheet .student-sheet-race .student-sheet-field:not(.student-sheet-final){padding:10px 12px;margin:0 -1px;border-bottom:0;border-radius:5px}
+#studentResultSheet .student-sheet-race .student-sheet-field:not(.student-sheet-final):nth-of-type(even){background:#f0f4fa}
+#studentResultSheet .student-sheet-race .student-sheet-field:not(.student-sheet-final):nth-of-type(odd){background:#fff}
+#studentResultSheet .student-sheet-race:nth-of-type(even) .student-sheet-field:not(.student-sheet-final):nth-of-type(even){background:#eaf5f3}
+#studentResultSheet .student-sheet-race .student-sheet-field:not(.student-sheet-final) strong{color:#233955}
+#studentResultSheet .student-sheet-evaluation .student-sheet-field:nth-of-type(even){background:#edf3f9;border-radius:7px;padding:10px 12px}
+#studentResultSheet .student-sheet-evaluation .student-sheet-field:nth-of-type(odd){background:#eaf5f3;border-radius:7px;padding:10px 12px}
