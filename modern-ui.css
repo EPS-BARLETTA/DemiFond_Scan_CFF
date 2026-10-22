@@ -1262,3 +1262,18 @@ nav{gap:12px}
 .class-tile-main:focus-visible,.class-tile-results:focus-visible{outline:3px solid var(--class-color,#2563eb);outline-offset:-3px}
 @media(max-width:780px){#flowClassGrid.flow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:490px){#flowClassGrid.flow-grid{grid-template-columns:1fr}}
+
+
+/* Individual result cards: compact, alternating and readable on tablets. */
+#sessionResultsOverview>.flow-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:none;margin:12px 0}
+#sessionResultsOverview>.flow-grid>.student-result-card{min-width:0;min-height:0;width:auto;display:block;flex:none;margin:0;border:1px solid #cbd5e1;border-left:5px solid #4f46e5;border-radius:13px;background:#fff;padding:0;box-shadow:none;overflow:hidden}
+#sessionResultsOverview>.flow-grid>.student-result-alt{background:#eef4ff;border-left-color:#2563eb}
+.student-result-card summary{display:flex;flex-direction:column;gap:4px;cursor:pointer;padding:13px 15px;list-style-position:inside}
+.student-result-card summary strong{font-size:1.03rem;line-height:1.3;color:#1e3a8a}
+.student-result-card summary span{font-size:.75rem;color:#64748b}
+.student-result-fields{padding:0 14px 14px;display:grid;gap:5px}
+.student-result-field{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #e2e8f0;font-size:.85rem}
+.student-result-field span{color:#475569;overflow-wrap:anywhere}
+.student-result-field strong{font-weight:700;color:#172554;text-align:right;overflow-wrap:anywhere}
+@media(max-width:900px){#sessionResultsOverview>.flow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){#sessionResultsOverview>.flow-grid{grid-template-columns:1fr}}
