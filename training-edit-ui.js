@@ -413,6 +413,14 @@
   const observer = new MutationObserver(() => decorate());
 
   function install() {
+    document.addEventListener('click',event=>{
+      const button=event.target.closest?.('.training-personal-edit');
+      if(!button)return;
+      event.preventDefault();
+      const session=typeof activeSession==='function'?activeSession():null;
+      if(session?.status==='locked'){toast?.('Évaluation verrouillée.');return;}
+      openEditor(button.dataset.editId);
+    });
     installStyles();
     decorate();
     observer.observe(document.body, { childList:true, subtree:true });
