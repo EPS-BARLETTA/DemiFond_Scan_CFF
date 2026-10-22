@@ -390,6 +390,8 @@
     document.head.appendChild(style);
   }
 
+  window.openTrainingStudentEditor = id => openEditor(id);
+
   const observer = new MutationObserver(() => decorate());
 
   function install() {
