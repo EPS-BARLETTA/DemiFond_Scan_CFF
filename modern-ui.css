@@ -1559,3 +1559,30 @@ nav{gap:12px}
 .eps-home-track-inner>span{display:flex;align-items:baseline;gap:2px;font-size:25px;letter-spacing:-.045em;white-space:nowrap}
 .eps-home-track-inner .eps-home-unit{font-size:17px;font-weight:850;color:#78f0c6}
 .eps-home-track-inner small{font-size:7px;letter-spacing:.04em}
+
+/* Punchy class selection: stronger identity, color and readable hierarchy */
+#workflowContent:has(#flowClassGrid)>.workspace-title{background:linear-gradient(105deg,#183978 0%,#3565e8 100%)!important;border:0!important;border-radius:21px!important;padding:26px 30px!important;box-shadow:0 12px 25px #254dc12a}
+#workflowContent:has(#flowClassGrid)>.workspace-title h2{color:#fff!important;font-size:2rem!important;letter-spacing:-.03em}
+#workflowContent:has(#flowClassGrid)>.workspace-title p{color:#dceaff!important;font-size:1rem!important}
+.eps-classes-intro{display:flex;align-items:center;gap:16px;max-width:1050px;margin:17px auto;padding:17px 20px;background:linear-gradient(100deg,#e3edff,#f3f8ff);border:1px solid #cbdcfb;border-left:5px solid #466de6;border-radius:15px}
+.eps-classes-intro-icon{display:grid;place-items:center;flex:0 0 49px;height:49px;background:#cddcff;border-radius:14px;font-size:25px}
+.eps-classes-intro>div{display:flex;flex-direction:column;gap:3px;flex:1}
+.eps-classes-intro strong{font-size:17px;color:#20447e}
+.eps-classes-intro>div>span{font-size:13px;color:#577092}
+.eps-classes-count{padding:9px 14px;border-radius:30px;background:#365fda;color:#fff;font-size:13px;font-weight:800;white-space:nowrap}
+#workflowContent:has(#flowClassGrid)>.flow-actions{max-width:1050px;margin:15px auto 0!important;gap:12px}
+#workflowContent:has(#flowClassGrid)>.flow-actions .flow-primary{background:#365ee3!important;border-color:#365ee3!important;box-shadow:0 4px 12px #365ee333;font-weight:800}
+#flowClassSearch{background:#fff!important;border:2px solid #d8e2f1!important;border-radius:12px!important;min-height:45px}
+#flowClassSearch:focus{border-color:#4d73df!important;outline:3px solid #4d73df1f}
+#flowClassGrid.flow-grid{gap:16px!important;margin-top:20px!important}
+#flowClassGrid.flow-grid>.class-tile{position:relative;min-height:188px!important;border-radius:18px!important;border:1px solid color-mix(in srgb,var(--class-color,#4569db) 35%,white)!important;border-top:6px solid var(--class-color,#4569db)!important;border-left:1px solid color-mix(in srgb,var(--class-color,#4569db) 35%,white)!important;background:linear-gradient(140deg,color-mix(in srgb,var(--class-color,#4569db) 16%,white),color-mix(in srgb,var(--class-color,#4569db) 4%,white))!important;box-shadow:0 6px 18px #21395f16!important;transition:transform .16s,box-shadow .16s}
+#flowClassGrid.flow-grid>.class-tile:hover{transform:translateY(-3px);box-shadow:0 12px 25px #21395f22!important}
+#flowClassGrid .class-tile-main{padding:20px 20px 10px;gap:9px;flex:1}
+#flowClassGrid .eps-class-kicker{font-size:10px;font-weight:850;letter-spacing:.13em;color:var(--class-color,#4569db);opacity:.9}
+#flowClassGrid .class-tile-main strong{font-size:23px;letter-spacing:-.025em;color:var(--class-color,#3655a0);font-weight:850;line-height:1.15}
+#flowClassGrid .eps-class-session-count{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#4f6075;background:#ffffffb5;border:1px solid #ffffffcf;border-radius:30px;padding:6px 11px}
+#flowClassGrid .eps-class-session-count b{font-size:16px;color:var(--class-color,#3655a0)}
+#flowClassGrid .class-tile-results{margin:0 14px 14px;padding:12px 14px;background:#fff!important;border:1px solid color-mix(in srgb,var(--class-color,#4569db) 32%,white)!important;border-radius:11px!important;font-size:14px;box-shadow:0 2px 6px #1a315a0b}
+#flowClassGrid .class-tile-results:hover{background:color-mix(in srgb,var(--class-color,#4569db) 9%,white)!important}
+@media(max-width:650px){.eps-classes-intro{gap:10px;padding:13px}.eps-classes-intro-icon{display:none}.eps-classes-intro>div>span{font-size:12px}.eps-classes-count{padding:7px 10px}#flowClassGrid.flow-grid>.class-tile{min-height:160px!important}#flowClassGrid .class-tile-main strong{font-size:19px}}
+@media(prefers-reduced-motion:reduce){#flowClassGrid.flow-grid>.class-tile{transition:none}}
