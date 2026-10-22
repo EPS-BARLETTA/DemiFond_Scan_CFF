@@ -1359,3 +1359,27 @@ nav{gap:12px}
 .training-detail-actions{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
 .training-detail-actions .training-personal-edit{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
 @media(max-width:600px){#dfStudentFollowup{width:95vw}.df-followup-tags{grid-template-columns:1fr}.df-followup-head,.df-followup-body,.df-followup-actions{padding-left:14px;padding-right:14px}}
+
+/* Calm, cohesive EPS palette: indigo, teal and warm amber */
+:root{--eps-ink:#23324a;--eps-indigo:#5146a8;--eps-indigo-soft:#f2f0fb;--eps-teal:#167a78;--eps-teal-soft:#eaf6f4;--eps-amber:#a56d20;--eps-amber-soft:#fff7e8}
+.student-picker{border-color:#dce3ee;border-left-color:var(--eps-indigo);background:#fafbff;color:var(--eps-ink);box-shadow:0 2px 7px #182b4a0a;transition:background .15s,border-color .15s}
+.student-picker-alt{background:#f0f5f7;border-left-color:var(--eps-teal)}
+.student-picker:hover,.student-picker:focus-visible{background:var(--eps-indigo-soft);border-color:#a8a0d8}
+.student-picker-alt:hover,.student-picker-alt:focus-visible{background:var(--eps-teal-soft);border-color:#8ac4bc}
+.student-picker span{color:#68758a}
+.student-sheet-head{background:linear-gradient(110deg,#f3f1fc,#f7fafc)}
+.student-sheet-head small,.df-followup-head small{color:var(--eps-indigo)}
+.student-sheet-race{background:#f7f8fd;border-color:#dce1f2;border-left:4px solid var(--eps-indigo)}
+.student-sheet-race:nth-of-type(even){background:#f2f9f8;border-left-color:var(--eps-teal);border-color:#d4e9e5}
+.student-sheet-edit,#dfFollowupSave{background:var(--eps-indigo);border-color:var(--eps-indigo);color:white}
+.student-sheet-annotation{background:var(--eps-teal-soft);color:#0d6865;border-color:#a6d7d1}
+.df-followup-head{background:linear-gradient(110deg,#f3f1fc,#f6faf9)}
+.df-followup-tags label{background:#f8f9fc;border-color:#dce3ee;color:var(--eps-ink)}
+.df-followup-tags label:has(input:checked){background:var(--eps-teal-soft);border-color:#78bdb4;color:#125c58}
+.df-followup-tags input{accent-color:var(--eps-teal)}
+.df-followup-label input:focus,.df-followup-label textarea:focus{outline:2px solid #b7b0e3;outline-offset:1px}
+.training-detail-actions .training-personal-edit{background:var(--eps-indigo-soft);border-color:#c8c2ed;color:#453995}
+.training-detail-actions .training-personal-followup{background:var(--eps-teal-soft);border-color:#b5dcd6;color:#136d68}
+#ccfPersonalEditor fieldset{background:#f8f9fd;border-color:#dce3ee!important}
+#ccfPersonalEditor fieldset:nth-of-type(even){background:#f3f9f8}
+#ccfPersonalEditor .flow-primary{background:var(--eps-indigo)}
