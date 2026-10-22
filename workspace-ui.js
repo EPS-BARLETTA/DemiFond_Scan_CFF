@@ -118,6 +118,7 @@
         '<div class="flow-actions" style="align-items:center;flex-wrap:wrap">' +
         '<button type="button" class="flow-primary" data-action="new-class">+ Créer une classe</button>' +
         '<input id="flowClassSearch" type="search" aria-label="Rechercher une classe" placeholder="Rechercher une classe…" style="flex:1;min-width:170px;max-width:360px;padding:11px;border:1px solid #cbd5e1;border-radius:10px"></div>' +
+        '<p class="eps-class-delete-hint">Astuce : maintenez une classe appuyée pour la supprimer intégralement (confirmation obligatoire).</p>' +
         '<div class="flow-grid" id="flowClassGrid">' +
         groups.map(g => '<div class="flow-card class-tile" style="'+classStyle(g)+'" data-class-name="'+html(g.name.toLocaleLowerCase())+'"><button type="button" class="class-tile-main" data-action="open-class" data-id="'+html(g.id)+'"><span class="eps-class-kicker">CLASSE · EPS</span><strong>'+html(g.name)+'</strong><span class="eps-class-session-count"><b>'+lessons(g).length+'</b> séance'+(lessons(g).length>1?'s':'')+'</span></button><button type="button" class="class-tile-results" data-action="class-results" data-id="'+html(g.id)+'">Résultats <span aria-hidden="true">→</span></button></div>').join('') + '</div>' +
         (!groups.length ? '<div class="card empty">Aucune classe enregistrée. Crée ta première classe depuis « Mes classes ».</div>' : '');
@@ -548,6 +549,55 @@
     if(String(db.activeGroupId)===String(group.id)&&ids.has(String(db.activeSessionId)))db.activeSessionId=null;
     lessonId=null;view='lessons';save();render();showPage('workflow');toast('Séance supprimée.');
   }
+  // Long press on a class card: deliberate destructive action, with explicit name confirmation.
+  function deleteClass(groupId) {
+    const group=groupById(groupId);
+    if(!group)return;
+    const sessionIds=new Set((group.sessions||[]).map(e=>String(e.id)));
+    const count=lessons(group).length;
+    const answer=prompt('SUPPRESSION DÉFINITIVE\\n\\nClasse : '+group.name+'\\n'+count+' séance(s) et tous les résultats associés seront supprimés de cet appareil.\\n\\nSaisissez exactement le nom de la classe pour confirmer :');
+    if(answer===null)return;
+    if(answer!==group.name){alert('Suppression annulée : le nom saisi ne correspond pas.');return;}
+    if(!confirm('Dernière confirmation : supprimer définitivement « '+group.name+' » et toutes ses données locales ?\\nCette opération est irréversible sans sauvegarde préalable.'))return;
+    if(target&&String(target.groupId)===String(group.id)){$('cameraStop')?.click();target=null;}
+    db.groups=(db.groups||[]).filter(g=>String(g.id)!==String(group.id));
+    db.trainingScans=(db.trainingScans||[]).filter(r=>String(r.groupId)!==String(group.id)&&!sessionIds.has(String(r.sessionId)));
+    for(const key of Object.keys(db.settings?.htmlExports||{}))if(key.startsWith(String(group.id)+'/'))delete db.settings.htmlExports[key];
+    if(String(db.activeGroupId)===String(group.id)){db.activeGroupId=db.groups[0]?.id||null;db.activeSessionId=null;}
+    if(String(classId)===String(group.id)){classId=null;lessonId=null;}
+    view='classes';save();render();showPage('workflow');toast('Classe « '+group.name+' » supprimée.');
+  }
+  function installClassLongPress() {
+    const root=$('workflowContent');
+    if(!root)return;
+    let timer=null,origin=null,held=false;
+    const clear=()=>{if(timer!==null)clearTimeout(timer);timer=null;origin=null;};
+    root.addEventListener('pointerdown',event=>{
+      const card=event.target.closest?.('#flowClassGrid .class-tile');
+      if(!card||event.button!==0)return;
+      const button=card.querySelector('.class-tile-main');
+      if(!button)return;
+      clear();held=false;
+      origin={x:event.clientX,y:event.clientY};
+      const id=button.dataset.id;
+      timer=setTimeout(()=>{timer=null;held=true;card.dataset.longPressed='yes';deleteClass(id);},800);
+    });
+    root.addEventListener('pointermove',event=>{if(origin&&Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>12)clear();});
+    for(const name of ['pointerup','pointercancel','pointerleave'])root.addEventListener(name,clear);
+    root.addEventListener('click',event=>{
+      const card=event.target.closest?.('#flowClassGrid .class-tile');
+      if(!card)return;
+      if(held||card.dataset.longPressed==='yes'){
+        event.preventDefault();event.stopImmediatePropagation();held=false;delete card.dataset.longPressed;
+      }
+    },true);
+    root.addEventListener('contextmenu',event=>{
+      const card=event.target.closest?.('#flowClassGrid .class-tile');
+      if(!card)return;
+      event.preventDefault();clear();held=true;card.dataset.longPressed='yes';
+      deleteClass(card.querySelector('.class-tile-main')?.dataset.id);
+    });
+  }
   function action(event) {
     const button=event.target.closest?.('[data-action]');if(!button)return;
     const a=button.dataset.action;
@@ -577,6 +627,7 @@
   }
   function install() {
     normalizeLessons();save();
+    installClassLongPress();
     const originalShowPage=window.showPage;
     window.showPage=function(id) {
       if(id==='scan'&&!targetReady()){goFlow('classes');toast('Choisis la classe et la séance avant de scanner.');return;}
@@ -600,7 +651,7 @@
     $('backup').onclick=()=>exportHTML('all');
     $('restore').onchange=async event=>{const file=event.target.files?.[0];if(file)await importHTML(file);event.target.value='';};
     window.addEventListener('online',refresh);window.addEventListener('offline',refresh);
-    window.DFClassFlow={digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,routeProtocol,openScan,quickScan,goFlow};
+    window.DFClassFlow={deleteClass,digest,lessons,snapshot,backedUp,makeSelection,buildBundle,exportHTML,mergePayload,importHTML,deleteLesson,guardQR,routeProtocol,openScan,quickScan,goFlow};
     showPage('home');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
