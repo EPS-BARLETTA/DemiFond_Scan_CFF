@@ -233,37 +233,68 @@
       '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">'+
       [['Élèves de la classe',roster.length||students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value])=>'<div class="flow-card"><strong>'+value+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
       '<details style="margin:12px 0"><summary>Contrôles ('+warnings.length+' alerte(s))</summary>'+
-      (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée par ces contrôles.</p>')+'</details>'+
-      '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un nom pour consulter ses données. En 3 × 500, utilisez « Modifier » pour corriger les temps, estimations et notes.</p>'+
-      '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+
-      sorted.map((student,i)=>{
-        const name=fullName(student)||'Élève '+(i+1);
-        const skip=new Set(['id','externalId','externalid','last','lastName','nom','first','firstName','prenom','name','classroom','sex','gender','createdAt','updatedAt','groupId','sessionId']);
-        const labels={project1:'Estimation course 1',project2:'Estimation course 2',project3:'Estimation course 3',afl2:'AFL 2',afl3:'AFL 3',exam500Afl2:'AFL 2',exam500Afl3:'AFL 3',score:'Note',total:'Total',time:'Temps',duration:'Durée',performance:'Performance',regularity:'Régularité',races:'Courses',laps:'Passages',estimated:'Estimation',actual:'Réalisé',result:'Résultat'};
-        const entries=[];
-        const collect=(obj,prefix='',depth=0)=>{
-          if(obj==null||depth>4)return;
-          if(Array.isArray(obj)){obj.forEach((item,j)=>collect(item,prefix+' '+(j+1),depth+1));return;}
-          if(typeof obj==='object'){Object.entries(obj).forEach(([k,v])=>{if(skip.has(k)||k.startsWith('_')||v==null||v==='')return;collect(v,prefix?(prefix+' · '+(labels[k]||k)):(labels[k]||k),depth+1);});return;}
-          entries.push([prefix,obj]);
-        };
-        collect(student);
-        return '<details class="student-result-card '+(i%2?'student-result-alt':'')+'"><summary><strong>'+html(name)+'</strong><span>'+html(entries.length)+' donnée(s) disponibles</span></summary><div class="student-result-fields">'+
-          (entries.length?entries.map(([label,value])=>'<div class="student-result-field"><span>'+html(label)+'</span><strong>'+html(value)+'</strong></div>').join(''):'<p>Aucune donnée individuelle supplémentaire. Consulte le tableau détaillé ci-dessous.</p>')+
-          (exercise.type==='exam500' ? '<button type="button" class="student-result-edit" data-student-id="'+html(student.id||student.externalId)+'" '+(exercise.status==='locked'?'disabled title="Évaluation verrouillée"':'')+'>✏️ Modifier les temps et notes</button>' : '<button type="button" class="student-result-edit" data-student-id="'+html(student.id||student.externalId)+'" '+(exercise.status==='locked'?'disabled title="Évaluation verrouillée"':'')+'>✏️ Modifier les résultats</button>')+
-          '</div></details>';
-      }).join('')+'</div>';
-    panel.querySelectorAll('.student-result-edit[data-student-id]').forEach(button=>{
-      button.onclick=()=>{
-        if(exercise.status==='locked')return toast('Cette évaluation est verrouillée.');
-        const id=button.dataset.studentId;
-        if(exercise.type==='exam500') {
-          if(typeof window.openExam500StudentEditor==='function')window.openExam500StudentEditor(id);
-          else toast('Éditeur indisponible.');
-        } else openCcfStudentEditor(id);
-      };
+      (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</details>'+
+      '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève pour ouvrir sa fiche et corriger ses résultats.</p>'+
+      '<div class="student-picker-grid">'+sorted.map((student,i)=>
+        '<button type="button" class="student-picker '+(i%2?'student-picker-alt':'')+'" data-student-index="'+i+'"><strong>'+html(fullName(student)||'Élève '+(i+1))+'</strong><span>Voir la fiche →</span></button>'
+      ).join('')+'</div>';
+    panel.querySelectorAll('[data-student-index]').forEach(button=>{
+      button.onclick=()=>openStudentResultSheet(sorted[Number(button.dataset.studentIndex)]);
     });
-
+  }
+  function openStudentResultSheet(student) {
+    const {exercise}=activePair();
+    if(!exercise||!student)return;
+    const fullName=[student.last||student.lastName||student.nom||'',student.first||student.firstName||student.prenom||''].join(' ').trim()||student.name||'Élève';
+    let dialog=$('studentResultSheet');
+    if(!dialog){dialog=document.createElement('dialog');dialog.id='studentResultSheet';document.body.appendChild(dialog);}
+    const ms=value=>{
+      const n=Number(value);
+      if(!Number.isFinite(n)||n<=0)return '—';
+      const minutes=Math.floor(n/60000),seconds=((n%60000)/1000).toFixed(2).padStart(5,'0');
+      return minutes+':'+seconds;
+    };
+    const field=(label,value)=>'<div class="student-sheet-field"><span>'+html(label)+'</span><strong>'+html(value==null||value===''?'—':value)+'</strong></div>';
+    let content='';
+    if(exercise.type==='exam500'){
+      const races=student.exam500?.races||[];
+      content=races.map((race,i)=>{
+        const splits=Array.isArray(race.splits)?race.splits:[];
+        return '<section class="student-sheet-race"><h4>500 m · course '+(i+1)+'</h4>'+
+          field('Temps final',ms(race.total500Ms||race.totalMs))+
+          field('Passage 250 m',ms(race.split250Ms))+
+          (splits.length?field('Passages',splits.map(ms).join(' · ')):'')+
+          field('Estimation',race.project||student['project'+(i+1)]||'—')+'</section>';
+      }).join('');
+      content+=field('AFL 2',student.exam500Afl2)+field('AFL 3',student.exam500Afl3);
+      for(const [key,label] of [['exam500Warmup','Échauffement'],['exam500Carnet','Carnet'],['exam500Observation','Observation']]){
+        if(student[key]!=null&&student[key]!=='')content+=field(label,student[key]);
+      }
+    } else {
+      for(const n of [1,2]){
+        const race=student.races?.[n];if(!race)continue;
+        content+='<section class="student-sheet-race"><h4>800 m · course '+n+'</h4>'+
+          field('Temps final',ms(race.totalMs))+
+          (Array.isArray(race.splits)?race.splits.map((v,i)=>field('Passage '+(i+1),ms(v))).join(''):'')+
+          field('Estimation',race.project||student['project'+n]||'—')+'</section>';
+      }
+      content+=field('AFL 2',student.afl2)+field('AFL 3',student.afl3);
+    }
+    if(!content)content='<p>Aucun résultat individuel disponible.</p>';
+    dialog.innerHTML='<div class="student-sheet"><div class="student-sheet-head"><div><small>FICHE ÉLÈVE</small><h2>'+html(fullName)+'</h2><p>'+html(exercise.label||'Résultats')+'</p></div><button type="button" class="student-sheet-close" aria-label="Fermer">✕</button></div>'+
+      '<div class="student-sheet-content">'+content+'</div><div class="student-sheet-actions"><button type="button" class="student-sheet-close">Fermer</button>'+
+      (exercise.status==='locked'?'': '<button type="button" class="student-sheet-edit">✏️ Modifier les résultats</button>')+'</div></div>';
+    dialog.querySelectorAll('.student-sheet-close').forEach(button=>button.onclick=()=>dialog.close());
+    const edit=dialog.querySelector('.student-sheet-edit');
+    if(edit)edit.onclick=()=>{
+      dialog.close();
+      const id=student.id||student.externalId;
+      if(exercise.type==='exam500'){
+        if(typeof window.openExam500StudentEditor==='function')window.openExam500StudentEditor(id);
+        else toast('Éditeur indisponible.');
+      }else openCcfStudentEditor(id);
+    };
+    dialog.showModal();
   }
   function openCcfStudentEditor(id) {
     const {exercise}=activePair();
