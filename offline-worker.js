@@ -1,5 +1,5 @@
 const VERSION =
-  "df-ccf-87";
+  "df-ccf-88";
 
 
 const FILES = [
@@ -10,7 +10,7 @@ const FILES = [
 
   "/app.css",
 
-  "/modern-ui.css?v=15",
+  "/modern-ui.css?v=16",
 
   "/app.js?v=18",
 
@@ -24,9 +24,9 @@ const FILES = [
 
   "/exam500-ui.js?v=33",
 
-  "/training-qr-ui.js?v=14",
+  "/training-qr-ui.js?v=15",
 
-  "/training-edit-ui.js?v=4",
+  "/training-edit-ui.js?v=5",
 
   "/hold-delete-ui.js",
 
@@ -38,7 +38,7 @@ const FILES = [
 
   "/help-ui.js",
 
-  "/workspace-ui.js?v=19",
+  "/workspace-ui.js?v=20",
 
   "/scanner-ios.js?v=4",
 
