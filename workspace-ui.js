@@ -230,11 +230,11 @@
     }
     const sorted=[...students].sort((a,b)=>fullName(a).localeCompare(fullName(b),'fr'));
     panel.innerHTML='<h2>Tableau de bord · '+html(exercise.label)+'</h2>'+
-      '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">'+
-      [['Élèves de la classe',roster.length||students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value])=>'<div class="flow-card"><strong>'+value+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
+      '<div class="flow-grid eps-dashboard-metrics">'+
+      [['Élèves de la classe',roster.length||students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value],i)=>'<div class="flow-card eps-metric eps-metric-'+i+'"><span class="eps-metric-symbol">'+['♙','✓','!'][i]+'</span><div class="eps-metric-copy"><strong>'+value+'</strong><span>'+label+'</span></div></div>').join('')+'</div>'+
       '<details style="margin:12px 0"><summary>Contrôles ('+warnings.length+' alerte(s))</summary>'+
       (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</details>'+
-      '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève pour ouvrir sa fiche et corriger ses résultats.</p>'+
+      '<div class="eps-student-heading"><h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève pour ouvrir sa fiche et corriger ses résultats.</p></div>'+
       '<div class="student-picker-grid">'+sorted.map((student,i)=>
         '<button type="button" class="student-picker '+(i%2?'student-picker-alt':'')+'" data-student-index="'+i+'"><strong>'+html(fullName(student)||'Élève '+(i+1))+'</strong><span>Voir la fiche →</span></button>'
       ).join('')+'</div>';
