@@ -1336,3 +1336,26 @@ nav{gap:12px}
  #trainingEditDialog{width:95vw!important}
  #trainingEditDialog .training-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+/* Shared pedagogical follow-up dialog */
+#dfStudentFollowup{width:min(88vw,860px);max-width:860px;max-height:88dvh;padding:0;border:0;border-radius:18px;box-shadow:0 24px 65px #11182755}
+#dfStudentFollowup::backdrop{background:#1018279c}
+.df-followup-form{display:flex;flex-direction:column;max-height:88dvh}
+.df-followup-head,.df-followup-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 24px;background:#fff}
+.df-followup-head{border-bottom:1px solid #e2e8f0}
+.df-followup-head small{color:#6553d7;font-weight:700;letter-spacing:.08em}
+.df-followup-head h2{margin:4px 0}
+.df-followup-head button{padding:8px 12px}
+.df-followup-body{overflow:auto;padding:20px 24px}
+.df-followup-body h3{margin:0 0 12px}
+.df-followup-tags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:22px}
+.df-followup-tags label{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #d8e0ed;border-radius:10px;background:#f8faff;cursor:pointer}
+.df-followup-tags input{width:18px;height:18px}
+.df-followup-label{display:flex;flex-direction:column;gap:7px;font-weight:600;margin:14px 0}
+.df-followup-label input,.df-followup-label textarea{box-sizing:border-box;width:100%;font:inherit;padding:12px;border:1px solid #cbd5e1;border-radius:10px}
+.df-followup-actions{border-top:1px solid #e2e8f0;justify-content:flex-end}
+.df-followup-actions button,.training-detail-actions button,.student-sheet-annotation{padding:10px 14px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font-weight:650;cursor:pointer}
+#dfFollowupSave{background:#5146bd;color:white;border-color:#5146bd}
+.training-detail-actions{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
+.training-detail-actions .training-personal-edit{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
+@media(max-width:600px){#dfStudentFollowup{width:95vw}.df-followup-tags{grid-template-columns:1fr}.df-followup-head,.df-followup-body,.df-followup-actions{padding-left:14px;padding-right:14px}}
