@@ -234,7 +234,7 @@
       [['Élèves de la classe',roster.length||students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value])=>'<div class="flow-card"><strong>'+value+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
       '<details style="margin:12px 0"><summary>Contrôles ('+warnings.length+' alerte(s))</summary>'+
       (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée par ces contrôles.</p>')+'</details>'+
-      '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un nom pour déplier les données. Pour modifier une note ou un temps, utilisez « Corriger les résultats ».</p>'+
+      '<h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un nom pour consulter ses données. En 3 × 500, utilisez « Modifier » pour corriger les temps, estimations et notes.</p>'+
       '<div class="flow-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+
       sorted.map((student,i)=>{
         const name=fullName(student)||'Élève '+(i+1);
@@ -250,8 +250,19 @@
         collect(student);
         return '<details class="student-result-card '+(i%2?'student-result-alt':'')+'"><summary><strong>'+html(name)+'</strong><span>'+html(entries.length)+' donnée(s) disponibles</span></summary><div class="student-result-fields">'+
           (entries.length?entries.map(([label,value])=>'<div class="student-result-field"><span>'+html(label)+'</span><strong>'+html(value)+'</strong></div>').join(''):'<p>Aucune donnée individuelle supplémentaire. Consulte le tableau détaillé ci-dessous.</p>')+
+          (exercise.type==='exam500' ? '<button type="button" class="student-result-edit" data-student-id="'+html(student.id||student.externalId)+'" '+(exercise.status==='locked'?'disabled title="Évaluation verrouillée"':'')+'>✏️ Modifier les temps et notes</button>' : '<button type="button" class="student-result-edit" data-action="edit-exercise">✏️ Corriger les résultats</button>')+
           '</div></details>';
       }).join('')+'</div>';
+    panel.querySelectorAll('.student-result-edit[data-student-id]').forEach(button=>{
+      button.onclick=()=>{
+        if(exercise.status==='locked')return toast('Cette évaluation est verrouillée.');
+        if(typeof window.openExam500StudentEditor==='function')window.openExam500StudentEditor(button.dataset.studentId);
+        else toast('Éditeur indisponible : ouvre « Corriger les résultats ».');
+      };
+    });
+    panel.querySelectorAll('.student-result-edit[data-action="edit-exercise"]').forEach(button=>{
+      button.onclick=()=>{showPage('group');render();};
+    });
   }
   function renderDestination() {
     const {group, exercise} = activePair();
