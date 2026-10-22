@@ -50,13 +50,26 @@
 
 
 <main>
-  <section id="home" class="page">
-    <div class="scan-home-title"><h2 tabindex="-1">DemiFond Scan</h2><p>Le carnet du professeur</p></div>
-    <div class="scan-home-grid classes-home-grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr))">
-      <button type="button" class="scan-home-card home-spaces" data-flow="classes"><span class="home-card-step">ESPACE DE TRAVAIL</span><strong>📚 Mes classes</strong><span>Séances, exercices, scan et résultats au même endroit.</span><b>Accéder à mes classes →</b></button>
-      <button type="button" class="scan-home-card home-backups" data-flow="backups"><span class="home-card-step">PROTÉGER MES DONNÉES</span><strong>💾 Sauvegarder / Restaurer</strong><span>Exporter toutes les données ou importer un fichier HTML.</span><b>Gérer mes sauvegardes →</b></button>
+  <section id="home" class="page eps-home">
+    <div class="eps-home-hero">
+      <div class="eps-home-hero-copy">
+        <span class="eps-home-kicker"><span class="eps-home-live"></span> EPS · VOTRE ESPACE DE TRAVAIL</span>
+        <h2 tabindex="-1">Vos chronos.<br><em>Votre terrain de jeu.</em></h2>
+        <p>Scannez, analysez, évaluez. Toutes vos données de demi-fond, au même endroit.</p>
+        <div class="eps-home-hero-tags"><span>⚡ Rapide sur iPad</span><span>📊 Résultats & évaluations</span><span>🎯 Suivi des élèves</span></div>
+      </div>
+      <div class="eps-home-track" aria-hidden="true"><div class="eps-home-track-outer"><div class="eps-home-track-inner"><span>500<span class="eps-home-unit">m</span></span><small>800 m · CHRONO PERF</small></div></div><span class="eps-home-track-dot"></span></div>
     </div>
-    <div class="card" style="margin-top:16px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap"><div><strong>📷 Scanner les résultats de Chrono Carnet EPS</strong><p style="margin:6px 0 0">DemiFond Scan fonctionne avec Chrono Carnet EPS : réalisez vos courses dans Chrono Carnet, puis scannez ici les QR codes des résultats.</p></div><a href="https://chrono-carnet-eps.vercel.app/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;border-radius:12px;background:#172554;color:#fff;font-weight:700;text-decoration:none">Ouvrir Chrono Carnet EPS ↗</a></div>
+    <div class="eps-home-section-heading"><div><span>TABLEAU DE BORD</span><h3>Que souhaitez-vous faire ?</h3></div></div>
+    <div class="scan-home-grid classes-home-grid eps-home-actions">
+      <button type="button" class="scan-home-card home-spaces" data-flow="classes"><span class="eps-home-card-icon" aria-hidden="true">🏃</span><span class="home-card-step">01 · PILOTER</span><strong>Mes classes</strong><span>Séances, exercices, résultats et suivi des élèves.</span><b>Accéder à mes classes <span aria-hidden="true">↗</span></b></button>
+      <button type="button" class="scan-home-card home-backups" data-flow="backups"><span class="eps-home-card-icon" aria-hidden="true">🛡️</span><span class="home-card-step">02 · SÉCURISER</span><strong>Mes sauvegardes</strong><span>Protéger, exporter et restaurer les données de vos classes.</span><b>Gérer mes sauvegardes <span aria-hidden="true">↗</span></b></button>
+    </div>
+    <div class="eps-home-chrono">
+      <div class="eps-home-chrono-icon" aria-hidden="true">📷</div>
+      <div class="eps-home-chrono-copy"><span>LE DUO GAGNANT</span><strong>Chrono Carnet EPS + DemiFond Scan</strong><p>Chronométrez les courses, puis récupérez les résultats en scannant les QR codes.</p></div>
+      <a href="https://chrono-carnet-eps.vercel.app/" target="_blank" rel="noopener noreferrer">Ouvrir Chrono Carnet <span aria-hidden="true">↗</span></a>
+    </div>
     <div id="homeActiveContext" class="workspace-context" aria-live="polite"></div>
   </section>
   <section id="workflow" class="page hidden"><div id="workflowContent"></div></section>
