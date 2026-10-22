@@ -6,12 +6,12 @@
   };
   const states=new Map();
   function install() {
-    const containers=document.querySelectorAll('#results .table, #trainingResultsCard .training-table-wrap');
+    const containers=document.querySelectorAll('#results .table:not(.ccf-quick-table-container), #trainingResultsCard .training-table-wrap');
     containers.forEach((table,index)=>{
       if(table.dataset.epsCollapsible==='yes')return;
       const card=table.closest('.card');
-      if(!card || card.id==='sessionResultsOverview')return;
-      const key=keyFor(table)+':'+index;
+      if(!card || card.id==='sessionResultsOverview' || table.closest('#ccfQuickView'))return;
+      const key=keyFor(table)+':'+(table.id||index);
       const isOpen=states.has(key)?states.get(key):false;
       const button=document.createElement('button');
       button.type='button';
