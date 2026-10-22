@@ -1,5 +1,5 @@
 const VERSION =
-  "df-ccf-83";
+  "df-ccf-84";
 
 
 const FILES = [
@@ -24,9 +24,9 @@ const FILES = [
 
   "/exam500-ui.js?v=33",
 
-  "/training-qr-ui.js?v=13",
+  "/training-qr-ui.js?v=14",
 
-  "/training-edit-ui.js?v=3",
+  "/training-edit-ui.js?v=4",
 
   "/hold-delete-ui.js",
 
