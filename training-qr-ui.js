@@ -368,7 +368,7 @@
                         : '') +
                     '</section>') +
               '</div>' +
-              '<button type="button" class="training-personal-edit" data-edit-id="' + esc(String(item.id)) + '" style="margin:10px 14px 15px;padding:10px 14px;border-radius:9px;border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-weight:700">✏️ Modifier les données scannées</button>' +
+              '<div class="training-detail-actions"><button type="button" class="training-personal-followup" data-followup-id="' + esc(String(item.id)) + '">📝 Annotations et suivi</button><button type="button" class="training-personal-edit" data-edit-id="' + esc(String(item.id)) + '">✏️ Modifier les données scannées</button></div>' +
             '</details>'
         )
         .join('');
