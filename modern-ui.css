@@ -1440,3 +1440,12 @@ nav{gap:12px}
 #sessionResultsOverview>.student-picker-grid{padding:3px 0 8px}
 #sessionResultsOverview>.student-picker-grid .student-picker{border-radius:10px;min-height:66px}
 @media(max-width:700px){#sessionResultsOverview .eps-dashboard-metrics{gap:7px!important}#sessionResultsOverview .eps-dashboard-metrics>.eps-metric{padding:10px!important;gap:8px!important}#sessionResultsOverview .eps-metric .eps-metric-symbol{display:none}#sessionResultsOverview .eps-metric .eps-metric-copy strong{font-size:22px}#sessionResultsOverview .eps-metric .eps-metric-copy>span{font-size:11px}}
+
+/* Collapsible detailed tables; overview remains visible */
+.eps-table-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:13px 16px;margin:12px 0 8px;border:1px solid #cbd9eb;border-left:4px solid #3567ae;border-radius:11px;background:#f1f6fd;color:#263e63;text-align:left;font:inherit;font-weight:750;cursor:pointer}
+.eps-table-toggle-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#dce8f9;color:#3567ae;font-size:18px;transition:transform .16s}
+.eps-table-toggle[aria-expanded="true"] .eps-table-toggle-icon{transform:rotate(90deg)}
+.eps-table-toggle-title{flex:1}
+.eps-table-toggle-hint{font-size:12px;font-weight:650;color:#547198}
+.eps-table-toggle:hover{background:#e9f2fd;border-color:#aac5e7}
+#results .table[hidden],#trainingResultsCard .training-table-wrap[hidden]{display:none!important}
