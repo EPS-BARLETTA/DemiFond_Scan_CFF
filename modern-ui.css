@@ -1476,3 +1476,29 @@ nav{gap:12px}
 #results #ccfQuickView .ccf-quick-header h3{color:#176e61}
 #results #ccfQuickView .ccf-quick-header p{color:#52786f}
 @media(prefers-reduced-motion:no-preference){#sessionResultsOverview .student-picker,#results .eps-table-toggle{transition:background .18s,box-shadow .18s,border-color .18s}}
+
+/* Sporty, energetic EPS dashboard - vibrant accents without visual clutter */
+#sessionResultsOverview .eps-dashboard-metrics>.eps-metric-0{background:linear-gradient(125deg,#e2eaff,#f4f7ff)!important;border-left:6px solid #3a62e8!important}
+#sessionResultsOverview .eps-dashboard-metrics>.eps-metric-1{background:linear-gradient(125deg,#d5f8ec,#f2fdf8)!important;border-left:6px solid #00a77e!important}
+#sessionResultsOverview .eps-dashboard-metrics>.eps-metric-2{background:linear-gradient(125deg,#ffecd3,#fff9ef)!important;border-left:6px solid #f19a20!important}
+#sessionResultsOverview .eps-metric-0 .eps-metric-symbol{background:#345fe1!important;color:white!important}
+#sessionResultsOverview .eps-metric-1 .eps-metric-symbol{background:#079e7a!important;color:white!important}
+#sessionResultsOverview .eps-metric-2 .eps-metric-symbol{background:#ef9a24!important;color:white!important}
+#sessionResultsOverview .eps-metric-0 .eps-metric-copy strong{color:#2e55cf!important}
+#sessionResultsOverview .eps-metric-1 .eps-metric-copy strong{color:#00896a!important}
+#sessionResultsOverview .eps-metric-2 .eps-metric-copy strong{color:#bd6b08!important}
+#sessionResultsOverview .eps-student-heading{background:linear-gradient(100deg,#dce9ff,#f5f8ff 80%)!important;border-left:6px solid #4169e1!important}
+#sessionResultsOverview .student-picker{background:linear-gradient(145deg,#e7edff,#f7f9ff)!important;border-left:5px solid #5868e8!important}
+#sessionResultsOverview .student-picker-alt{background:linear-gradient(145deg,#d8f7ee,#f3fcf9)!important;border-left:5px solid #00a58a!important}
+#sessionResultsOverview .student-picker strong{color:#283b92!important}
+#sessionResultsOverview .student-picker-alt strong{color:#076f63!important}
+#sessionResultsOverview .student-picker:hover{background:#d4e0ff!important;transform:translateY(-1px)}
+#sessionResultsOverview .student-picker-alt:hover{background:#c5f1e3!important}
+#results .ccf-results-card>h2{background:linear-gradient(90deg,#dbe7ff,#fff 75%)!important;border-left:6px solid #4169e1!important}
+#results #ccfViewTabs{background:#eaf0fc!important}
+#results #ccfViewTabs button.active{background:#405ee0!important}
+#results .eps-table-toggle{background:linear-gradient(90deg,#d9e8ff,#eff6ff)!important;border-left:6px solid #456de7!important;color:#2448a4!important}
+#results .eps-table-toggle[aria-expanded="true"]{background:linear-gradient(90deg,#d2f6e8,#f0fcf8)!important;border-left-color:#00a184!important}
+#results #ccfQuickView .ccf-quick-header{background:linear-gradient(90deg,#d9f8e9,#fff 80%)!important;border-left:6px solid #00a77e!important}
+#results #resultFilters{background:#edf2ff!important;border-color:#d5dffc!important}
+#results #resultFilters button.active,#results #resultFilters button[aria-pressed="true"]{background:#405ee0!important;color:#fff!important}
