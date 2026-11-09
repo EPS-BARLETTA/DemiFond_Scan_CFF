@@ -3,7 +3,7 @@
    Données : celles de la version 1, relues et enregistrées dans le même format. */
 (function () {
 "use strict";
-const D = window.DF, APP_VERSION = "2.0";
+const D = window.DF, APP_VERSION = "2.1";
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const sid = v => esc(String(v));
@@ -89,19 +89,26 @@ function crumbs(r) {
 }
 
 /* ---------- Accueil ---------- */
+const TRACK_SVG = '<svg class="track" viewBox="0 0 300 170" aria-hidden="true"><rect x="12" y="12" width="276" height="146" rx="73" class="lane1"/><rect x="34" y="34" width="232" height="102" rx="51" class="lane2"/><rect x="56" y="56" width="188" height="58" rx="29" class="infield"/><path id="tp" d="M85 12 H215 A73 73 0 0 1 215 158 H85 A73 73 0 0 1 85 12 Z" fill="none"/><circle r="8" class="runner">'+(matchMedia("(prefers-reduced-motion: reduce)").matches?"":'<animateMotion dur="9s" repeatCount="indefinite" rotate="auto"><mpath href="#tp"/></animateMotion>')+'</circle><text x="150" y="91" text-anchor="middle">2 × 800 · 3 × 500</text></svg>';
+const initials = n => esc(String(n || "?").trim().slice(0, 4));
 function pageHome() {
   const act = db.activeGroupId && groupById(db.activeGroupId), aex = act && exById(act, db.activeSessionId);
   const live = db.groups.filter(g => !g.archived), arch = db.groups.filter(g => g.archived);
   const card = g => {
     const ls = D.lessons(g), last = ls[0];
-    return '<a class="classcard c' + (g.uiColor % 8) + '" href="' + hClass(g) + '"><strong>' + esc(g.name) + "</strong><span>" + g.students.length + " élève" + (g.students.length > 1 ? "s" : "") + " · " + ls.length + " séance" + (ls.length > 1 ? "s" : "") + "</span><small>" + (last ? "Dernière : " + esc(fmtDate(last.date)) + " · " + esc(last.label) : "Aucune séance") + "</small></a>";
+    return '<a class="classcard c' + ((g.uiColor ?? 0) % 8) + '" href="' + hClass(g) + '"><span class="cbadge">' + initials(g.name) + '</span><strong>' + esc(g.name) + "</strong><span>👥 " + g.students.length + " élève" + (g.students.length > 1 ? "s" : "") + " · 📅 " + ls.length + " séance" + (ls.length > 1 ? "s" : "") + "</span><small>" + (last ? "Dernière : " + esc(fmtDate(last.date)) + " · " + esc(last.label) : "Aucune séance") + "</small></a>";
   };
-  return '<section class="hero"><div><h1>Mes classes</h1><p>Choisis une classe, puis une séance : le scan va toujours dans l’exercice ouvert.</p></div><div class="row">' +
-    btn("+ Nouvelle classe", "new-class", "primary") + '<a class="btn" href="#/sauvegardes">🛡️ Sauvegardes</a></div></section>' +
-    (aex ? '<a class="resume" href="' + hEx(act, aex) + '"><span>Reprendre</span><strong>' + esc(act.name) + " · " + esc(fmtDate(aex.lessonDate)) + " · " + esc(aex.label) + "</strong><b>›</b></a>" : "") +
+  return '<section class="homehero"><div class="hcopy"><p class="kicker"><i></i>DemiFond Scan · EPS Vauban</p><h1>Chronométrer.<br><em>Analyser. Faire progresser.</em></h1><p>Scanne les QR de Chrono Carnet : les temps, les notes et la progression de chaque élève se rangent tout seuls.</p><div class="row">' +
+    btn("＋ Nouvelle classe", "new-class", "light") + '<a class="btn ghost" href="#/sauvegardes">🛡️ Sauvegardes</a></div></div>' + TRACK_SVG + "</section>" +
+    (aex ? '<a class="resume" href="' + hEx(act, aex) + '"><span class="ricon">▶</span><span class="rtxt"><small>Reprendre où tu en étais</small><strong>' + esc(act.name) + " · " + esc(fmtDate(aex.lessonDate)) + " · " + esc(aex.label) + "</strong></span><b>›</b></a>" : "") +
     backupWarning() +
+    '<div class="sectitle"><h2>Mes classes</h2><span class="muted">' + live.length + " classe" + (live.length > 1 ? "s" : "") + "</span></div>" +
     (live.length ? '<div class="grid">' + live.map(card).join("") + "</div>" : '<div class="empty">Aucune classe. Crée ta première classe, ou restaure une sauvegarde HTML depuis « Sauvegardes ».</div>') +
-    (arch.length ? '<details class="archived"><summary>Classes archivées (' + arch.length + ")</summary><div class=\"grid\">" + arch.map(card).join("") + "</div></details>" : "");
+    (arch.length ? '<details class="archived"><summary>Classes archivées (' + arch.length + ")</summary><div class=\"grid\">" + arch.map(card).join("") + "</div></details>" : "") +
+    '<div class="sectitle"><h2>Outils</h2></div><div class="tools">' +
+    '<a class="toolcard tc-safe" href="#/sauvegardes"><span class="ticon">🛡️</span><strong>Mes sauvegardes</strong><span>Exporter, restaurer, copies de secours automatiques.</span></a>' +
+    '<button type="button" class="toolcard tc-bareme" data-act="bareme-open"><span class="ticon">⚙️</span><strong>Barème 3 × 500</strong><span>Modèle Seconde / Première pour les nouveaux exercices. Accès par code.</span></button>' +
+    '<a class="toolcard tc-chrono" href="https://chrono-carnet-eps.vercel.app/" target="_blank" rel="noopener"><span class="ticon">⏱️</span><strong>Chrono Carnet EPS</strong><span>Chronométrer les courses, puis scanner les QR ici. ↗</span></a></div>';
 }
 function backupWarning() {
   const last = Number(db.settings.lastHtmlExportAt || 0), change = Number(db.settings.lastChangeAt || 0);
@@ -113,7 +120,7 @@ const btn = (label, act, cls, extra) => '<button type="button" class="btn ' + (c
 /* ---------- Classe ---------- */
 function pageClass(g) {
   const tab = ui.classTab;
-  let html = '<section class="pagehead"><div><h1>' + esc(g.name) + '</h1><p class="muted">' + g.students.length + " élèves · " + D.lessons(g).length + " séances" + (g.archived ? " · archivée" : "") + "</p></div><div class=\"row\">" +
+  let html = '<section class="pagehead tinted c' + ((g.uiColor ?? 0) % 8) + '"><div><h1>' + esc(g.name) + '</h1><p class="muted">' + g.students.length + " élèves · " + D.lessons(g).length + " séances" + (g.archived ? " · archivée" : "") + "</p></div><div class=\"row\">" +
     btn("+ Nouvelle séance", "new-lesson:" + g.id, "primary") +
     '<details class="menu"><summary class="btn">⋯</summary><div>' + btn("Renommer", "rename-class:" + g.id) + btn(g.archived ? "Désarchiver" : "Archiver", "archive-class:" + g.id) + btn("Sauvegarder cette classe (HTML)", "export-class:" + g.id) + btn("Supprimer la classe", "delete-class:" + g.id, "danger") + "</div></details></div></section>" +
     '<div class="tabs">' + ["seances", "eleves"].map(t => '<button type="button" data-act="class-tab:' + t + '" aria-pressed="' + (tab === t) + '">' + (t === "seances" ? "Séances" : "Élèves (" + g.students.length + ")") + "</button>").join("") + "</div>";
@@ -136,7 +143,7 @@ function pageClass(g) {
 function pageLesson(g, lid) {
   const l = lessonOf(g, lid);
   if (!l) return '<div class="empty">Séance introuvable.</div>';
-  return '<section class="pagehead"><div><h1>' + esc(l.label) + '</h1><p class="muted">' + esc(g.name) + " · " + esc(fmtDate(l.date)) + '</p></div><div class="row">' + btn("+ Ajouter un exercice", "new-ex:" + g.id + ":" + l.id, "primary") +
+  return '<section class="pagehead tinted c' + ((g.uiColor ?? 0) % 8) + '"><div><h1>' + esc(l.label) + '</h1><p class="muted">' + esc(g.name) + " · " + esc(fmtDate(l.date)) + '</p></div><div class="row">' + btn("+ Ajouter un exercice", "new-ex:" + g.id + ":" + l.id, "primary") +
     '<details class="menu"><summary class="btn">⋯</summary><div>' + btn("Renommer / changer la date", "edit-lesson:" + g.id + ":" + l.id) + btn("Sauvegarder cette séance (HTML)", "export-lesson:" + g.id + ":" + l.id) + btn("Supprimer la séance", "delete-lesson:" + g.id + ":" + l.id, "danger") + "</div></details></div></section>" +
     '<div class="excards">' + l.exercises.map(ex => {
       const t = typeOf(g, ex);
@@ -151,7 +158,7 @@ function pageExercise(g, ex) {
     (lk ? '<span class="lockinfo">🔒 Verrouillé : ni scan ni correction</span>' : btn("📷 Scanner dans cet exercice", "scan:" + g.id + ":" + ex.id, "primary big")) +
     '<details class="menu"><summary class="btn">⋯</summary><div>' + btn("Renommer", "rename-ex:" + g.id + ":" + ex.id) +
     ["open", "closed", "locked"].map(s => btn((ex.status === s ? "✓ " : "") + ({ open: "En cours", closed: "Terminé", locked: "Verrouiller" })[s], "ex-status:" + g.id + ":" + ex.id + ":" + s)).join("") +
-    (t !== "training" ? btn("Exporter les notes (CSV)", "ex-csv:" + g.id + ":" + ex.id) : "") + btn("Supprimer l’exercice", "delete-ex:" + g.id + ":" + ex.id, "danger") + "</div></details></div></section>";
+    (t === "exam500" ? btn("⚙️ Barème et réglages 3 × 500", "bareme-open:" + g.id + ":" + ex.id) : "") + (t !== "training" ? btn("Exporter les notes (CSV)", "ex-csv:" + g.id + ":" + ex.id) : "") + btn("Supprimer l’exercice", "delete-ex:" + g.id + ":" + ex.id, "danger") + "</div></details></div></section>";
   html += '<div class="toolbar"><input class="search" id="filter" placeholder="Rechercher un élève…" value="' + esc(ui.filter) + '" autocomplete="off"><label class="toggle"><input type="checkbox" id="onlyMissing"' + (ui.onlyMissing ? " checked" : "") + "> À compléter seulement</label></div>";
   if (t === "ccf" || t === "") html += tableCCF(g, ex);
   else if (t === "exam500") html += table500(g, ex);
@@ -183,12 +190,12 @@ function tableCCF(g, ex) {
 }
 function table500(g, ex) {
   const lk = locked(ex), pr = D.premiere500(ex), lab = D.labels500(ex);
-  if (!ex.students.length) return '<div class="empty big">Aucun résultat. Touche « 📷 Scanner » et présente les QR 3 × 500.</div>';
+  if (!ex.students.length) return '<div class="setbar"><span class="lvl ' + (pr ? "p1" : "p2") + '">' + (pr ? "Première" : "Seconde") + "</span><span>Régularité : " + (D.indexMode500(ex) === "three" ? "C1, C2 et C3" : "C1 et C2") + "</span><span>" + D.estimationCount500(ex) + " estimations</span>" + (lk ? "" : btn("⚙️ Modifier le barème", "bareme-open:" + g.id + ":" + ex.id, "small")) + '</div><div class="empty big">Aucun résultat. Touche « 📷 Scanner » et présente les QR 3 × 500.</div>';
   const rows = sortSt(ex.students).filter(match).map(st => ({ st, sc: D.score500(db, ex, st) })).filter(x => !ui.onlyMissing || x.sc?.total20 == null);
   const opt = (f, max, st) => '<select data-change="s500:' + sid(ex.id) + ":" + sid(st.id) + ":" + f + '"' + (lk ? " disabled" : "") + '><option value="">—</option>' + Array.from({ length: Math.round(max * 4) + 1 }, (_, i) => i / 4).map(v => '<option value="' + v + '"' + (st[f] !== "" && st[f] != null && Number(st[f]) === v ? " selected" : "") + ">" + D.pts(v) + "</option>").join("") + "</select>";
   const extra = pr ? [["exam500Warmup", 2, "Échauffement"], ["exam500Carnet", 2, "Carnet"], ["exam500Observation", 1, "Observation"]] : [["exam500Afl2", 2, lab.afl2], ["exam500Afl3", 4, lab.afl3]];
   const race = (st, i) => { const r = D.races500(st)[i]; return r ? "<td>" + esc(D.short(r.total500Ms)) + "<small>" + (r.projectMs ? "est. " + esc(D.short(r.projectMs)) : "") + "</small></td>" : '<td class="miss">—</td>'; };
-  return '<p class="muted small">Barème ' + (pr ? "Première" : "Seconde") + " · régularité sur " + (D.indexMode500(ex) === "three" ? "les 3 courses" : "C1 et C2") + " · " + D.estimationCount500(ex) + " estimations</p>" +
+  return '<div class="setbar"><span class="lvl ' + (pr ? "p1" : "p2") + '">' + (pr ? "Première" : "Seconde") + "</span><span>Régularité : " + (D.indexMode500(ex) === "three" ? "C1, C2 et C3" : "C1 et C2") + "</span><span>" + D.estimationCount500(ex) + " estimations</span>" + (ex.exam500BaremeCustomized ? "<span>Barème personnalisé</span>" : "") + (lk ? "" : btn("⚙️ Modifier le barème", "bareme-open:" + g.id + ":" + ex.id, "small")) + "</div>" +
     '<div class="tablewrap"><table class="res"><thead><tr><th>Élève</th><th>500 n°1</th><th>500 n°2</th><th>500 n°3</th><th>Perf.<small>/6</small></th><th>Régularité<small>écart · pts</small></th><th>Estimation<small>écart · pts</small></th>' + extra.map(([, m, l]) => "<th>" + esc(l) + "<small>/" + m + "</small></th>").join("") + "<th>Note<small>/20</small></th></tr></thead><tbody>" +
     rows.map(({ st, sc }) => '<tr class="' + (sc?.total20 != null ? "done" : "") + '"><td><button type="button" class="namebtn" data-act="edit-500:' + sid(g.id) + ":" + sid(ex.id) + ":" + sid(st.id) + '">' + esc(D.studentName(st)) + "<small>Corriger ›</small></button></td>" + race(st, 0) + race(st, 1) + race(st, 2) +
       "<td><b>" + (sc ? D.pts(sc.perf) : "—") + "</b>" + (sc ? "<small>" + D.short(sc.totalRaceMs) + "</small>" : "") + "</td><td><b>" + (sc ? D.pts(sc.effPts) : "—") + "</b>" + (sc?.eff != null ? "<small>" + sc.eff + " s</small>" : "") + "</td><td><b>" + (sc ? D.pts(sc.gapPts) : "—") + "</b>" + (sc?.gap != null ? "<small>" + D.pts(sc.gap) + " s</small>" : "") + "</td>" +
@@ -544,9 +551,96 @@ function exCSV(g, ex) {
   download(("notes_" + g.name + "_" + (ex.lessonDate || "") + "_" + (ex.label || "")).replace(/[^a-zA-Z0-9_-]/g, "_") + ".csv", "﻿" + rows.map(r => r.map(cell).join(";")).join("\r\n"), "text/csv;charset=utf-8");
 }
 
+/* ---------- Barème 3 × 500 (code 57, comme la version 1) ---------- */
+const BAREME_CODE = "57"; // verrou d'interface, pas une authentification
+const avg500 = t => { const ms = D.parseTime500(t); if (ms == null) return ""; const s = ms / 3000, m = Math.floor(s / 60); return "≈ " + m + "’" + String(Math.round(s - m * 60)).padStart(2, "0") + " / 500"; };
+const rowLine = (r, kind) => '<div class="rl"><input class="rk" value="' + esc(r[0]) + '" inputmode="' + (kind === "time" ? "text" : "decimal") + '" aria-label="' + (kind === "time" ? "Temps total" : "Écart en secondes") + '"><span class="eq">→</span><input class="rp" value="' + esc(String(r[1]).replace(".", ",")) + '" inputmode="decimal" aria-label="Points"><small class="avg">' + (kind === "time" ? avg500(r[0]) : "s") + '</small><button type="button" class="rdel" data-act="row-del" aria-label="Supprimer la ligne">✕</button></div>';
+const rowEditor = (id, title, sub, rows, kind) => '<div class="rowed" data-kind="' + kind + '"><h4>' + title + "<small>" + sub + '</small></h4><div class="rlhead"><span>' + (kind === "time" ? "Total 3 × 500" : "Écart (s)") + '</span><span></span><span>Points</span></div><div class="rls" id="' + id + '">' + rows.map(r => rowLine(r, kind)).join("") + "</div>" + btn("＋ Ligne", "row-add:" + id + ":" + kind, "small") + "</div>";
+function readRows(id, kind) {
+  const out = [];
+  for (const l of document.querySelectorAll("#" + id + " .rl")) {
+    const k = l.querySelector(".rk").value.trim(), p = l.querySelector(".rp").value.trim().replace(",", ".");
+    if (!k && !p) continue;
+    const pts = Number(p);
+    if (!Number.isFinite(pts) || pts < 0 || pts > 6) throw Error("points incorrects (« " + (p || "vide") + " »), entre 0 et 6.");
+    if (kind === "time") { if (D.parseTime500(k) == null || !k.includes(":")) throw Error("temps incorrect (« " + (k || "vide") + " »). Écris-le comme 6:32."); out.push([k, pts]); }
+    else { const n = Number(k.replace(",", ".")); if (!Number.isFinite(n) || n < 0) throw Error("écart incorrect (« " + (k || "vide") + " »)."); out.push([n, pts]); }
+  }
+  if (!out.length) throw Error("un tableau est vide.");
+  return out;
+}
+function baremeAsk(gid, eid) {
+  if (ui.baremeOK) return baremeDialog(gid, eid);
+  modal("Barème 3 × 500", '<p class="muted">Accès réservé : saisis le code du barème.</p>' + field("Code", "fcode", "", 'type="password" inputmode="numeric" autocomplete="off"'), () => {
+    if (val("fcode") !== BAREME_CODE) { toast("Code incorrect.", "err"); $("#fcode").value = ""; return false; }
+    ui.baremeOK = true; $("#toast").className = ""; close(); baremeDialog(gid, eid);
+  }, { saveLabel: "Ouvrir" });
+}
+function baremeDialog(gid, eid) {
+  const g = gid ? groupById(gid) : null, ex = g && eid ? exById(g, eid) : null, global = !ex;
+  const b = D.bareme500(db, ex);
+  const st = { level: ex ? (D.premiere500(ex) ? "premiere" : "seconde") : null };
+  const scored = ex ? ex.students.filter(s => D.score500(db, ex, s)).length : 0;
+  const lab = D.labels500(ex);
+  const lvlBtns = '<div class="seg" role="group" aria-label="Niveau">' + [["seconde", "Seconde"], ["premiere", "Première"]].map(([k, l]) => '<button type="button" data-act="bareme-level:' + k + '" aria-pressed="' + (st.level === k) + '">' + l + "</button>").join("") + "</div>";
+  const body =
+    (global ? '<p class="intro">Ce barème sert de <b>modèle</b> pour les prochains exercices 3 × 500. Les exercices existants gardent le leur.</p>'
+      : '<p class="intro">Barème de <b>' + esc(ex.label) + "</b> (" + esc(g.name) + ")." + (scored ? " Les notes des " + scored + " élève" + (scored > 1 ? "s" : "") + " seront recalculées." : "") + "</p>") +
+    '<section class="bsec"><h3>1 · Niveau</h3>' + (global ? '<p class="muted small">Charger les références :</p>' : "") + lvlBtns +
+    '<p class="muted small" id="blvlnote">' + (global ? "Le bouton remplit les tableaux de performance ci-dessous ; rien n’est enregistré avant « Enregistrer »." : "Choisir un niveau recharge ses références de performance. Les autres critères restent inchangés.") + "</p></section>" +
+    (global ? "" :
+      '<section class="bsec"><h3>2 · Réglages de l’évaluation</h3><div class="bgrid">' +
+      '<label class="field">Régularité /6 · portions de 250 m<select id="bidx"><option value="c1c2"' + (D.indexMode500(ex) === "c1c2" ? " selected" : "") + '>4 portions · C1 et C2</option><option value="three"' + (D.indexMode500(ex) === "three" ? " selected" : "") + ">6 portions · C1, C2 et C3</option></select></label>" +
+      '<label class="field only-p1">Estimation /3 · nombre d’annonces<select id="best"><option value="2"' + (D.estimationCount500(ex) === 2 ? " selected" : "") + '>2 annonces · 1,5 pt chacune</option><option value="3"' + (D.estimationCount500(ex) === 3 ? " selected" : "") + ">3 annonces · 1 pt chacune</option></select></label>" +
+      '<label class="field only-p2">Intitulé du critère /2<input id="bafl2" value="' + esc(lab.afl2) + '"></label>' +
+      '<label class="field only-p2">Intitulé du critère /4<input id="bafl3" value="' + esc(lab.afl3) + '"></label>' +
+      '</div><p class="muted small only-p1">Première : échauffement /2, carnet /2, observation /1 ; estimation : 0 à 3 s d’écart = totalité, 3 à 6 s = moitié, au-delà = 0.</p></section>') +
+    '<section class="bsec"><h3>' + (global ? "2" : "3") + ' · Performance /6</h3><p class="muted small">Temps <b>total des trois 500 m</b> (format 6:32) → points. L’élève obtient les points de la première ligne qu’il atteint.</p><div class="bgrid two" id="bperf">' +
+    rowEditor("bgirls", "Filles", "", b.girls, "time") + rowEditor("bboys", "Garçons", "", b.boys, "time") + "</div></section>" +
+    '<section class="bsec"><h3>' + (global ? "3" : "4") + ' · Régularité /6</h3><p class="muted small">Écart en secondes entre la portion de 250 m la plus rapide et la plus lente → points.</p><div class="bgrid two">' + rowEditor("beff", "Indice de régularité", "", b.efficiency, "num") + "</div></section>" +
+    (global ? "" : '<label class="check"><input type="checkbox" id="bmodel" checked> Utiliser aussi ce barème comme modèle pour les prochains exercices</label>');
+  ui.bareme = { gid, eid, level: st.level };
+  modal(global ? "Barème 3 × 500 · modèle" : "Barème et réglages 3 × 500", body, () => {
+    let next;
+    try { next = { girls: readRows("bgirls", "time"), boys: readRows("bboys", "time"), gap: D.copy(b.gap), efficiency: readRows("beff", "num") }; }
+    catch (e) { toast("Barème non enregistré : " + e.message, "err"); return false; }
+    const before = JSON.stringify(db);
+    if (global) db.settings.exam500Bareme = D.copy(next);
+    else {
+      ex.exam500Bareme = D.copy(next); ex.exam500BaremeCustomized = true;
+      if (ui.bareme.level) ex.exam500EvaluationLevel = ui.bareme.level;
+      ex.exam500IndexMode = val("bidx") === "three" ? "three" : "c1c2";
+      ex.exam500EstimationCount = Number(val("best")) === 3 ? 3 : 2;
+      ex.exam500Afl2Label = val("bafl2") || "Carnet / échauffement";
+      ex.exam500Afl3Label = val("bafl3") || "Partenaire / starter";
+      if ($("#bmodel")?.checked) db.settings.exam500Bareme = D.copy(next);
+    }
+    save("barème"); close(); render(); undoToast(before, "Barème 3 × 500 enregistré.");
+  }, { wide: true, extra: btn("Valeurs d’origine", "bareme-reset", "ghostdark") });
+  $("#modal .sheet").classList.add("bareme", "lvl-" + (st.level || "none"));
+}
+function baremeLoadLevel(level) {
+  const p = D.performancePreset500(level, D.DEFAULT_BAREME);
+  $("#bgirls").innerHTML = p.girls.map(r => rowLine(r, "time")).join("");
+  $("#bboys").innerHTML = p.boys.map(r => rowLine(r, "time")).join("");
+  document.querySelectorAll('[data-act^="bareme-level"]').forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act.endsWith(level))));
+  const sh = $("#modal .sheet"); sh.classList.remove("lvl-seconde", "lvl-premiere", "lvl-none"); sh.classList.add("lvl-" + level);
+  if (ui.bareme.eid) ui.bareme.level = level;
+  $("#blvlnote").textContent = "Références " + (level === "premiere" ? "Première" : "Seconde") + " chargées. Clique sur « Enregistrer » pour les appliquer.";
+}
+
 /* ---------- Actions ---------- */
 const ACT = {
   close,
+  "bareme-open"(gid, eid) { baremeAsk(gid, eid); },
+  "bareme-level"(level) { baremeLoadLevel(level); },
+  "bareme-reset"() {
+    if (!confirm("Remettre les valeurs d’origine dans les tableaux (Seconde) ? Rien n’est enregistré avant « Enregistrer ».")) return;
+    baremeLoadLevel("seconde");
+    $("#beff").innerHTML = D.DEFAULT_BAREME.efficiency.map(r => rowLine(r, "num")).join("");
+  },
+  "row-add"(id, kind) { $("#" + id).insertAdjacentHTML("beforeend", rowLine(["", ""], kind)); $("#" + id + " .rl:last-child .rk").focus(); },
+  "row-del"(el) { el.closest(".rl").remove(); },
   "modal-save"() { if (modalSave && modalSave() !== false) {} },
   "new-class"() { modal("Nouvelle classe", field("Nom de la classe", "fname", "", 'placeholder="Ex. 2A, Term lundi…"'), () => { const n = val("fname"); if (!n) return false; const g = { id: D.uid(), name: n, archived: false, sessions: [], students: [], uiColor: db.groups.length % 8 }; db.groups.push(g); save(); close(); go(hClass(g)); }); },
   "class-tab"(t) { ui.classTab = t; render(); },
@@ -615,8 +709,8 @@ document.addEventListener("change", e => {
   if (kind === "s500") st[f] = el.value;
   save(); render();
 });
-document.addEventListener("input", e => { if (e.target.id === "filter") { ui.filter = e.target.value; const pos = e.target.selectionStart; render(); const f = $("#filter"); f.focus(); f.setSelectionRange(pos, pos); } });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#modal").hidden) close(); if (e.key === "Enter" && !$("#modal").hidden && e.target.tagName === "INPUT" && modalSave) { e.preventDefault(); modalSave(); } });
+document.addEventListener("input", e => { if (e.target.classList.contains("rk") && e.target.closest('[data-kind="time"]')) { e.target.parentElement.querySelector(".avg").textContent = avg500(e.target.value); return; } if (e.target.id === "filter") { ui.filter = e.target.value; const pos = e.target.selectionStart; render(); const f = $("#filter"); f.focus(); f.setSelectionRange(pos, pos); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#modal").hidden) close(); if (e.key === "Enter" && !$("#modal").hidden && e.target.tagName === "INPUT" && modalSave && !e.target.closest(".bareme")) { e.preventDefault(); modalSave(); } });
 document.addEventListener("visibilitychange", () => { if (document.hidden && SC.stream) stopScanner(); });
 
 $("#version").textContent = "v" + APP_VERSION;

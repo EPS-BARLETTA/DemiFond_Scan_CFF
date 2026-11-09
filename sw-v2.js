@@ -1,8 +1,8 @@
 /* DemiFond Scan v2 — fonctionnement hors ligne.
    Page : réseau d'abord (pour recevoir les mises à jour), copie locale si pas de réseau.
    Fichiers versionnés : copie locale d'abord. */
-const CACHE = "df-v2-2.0";
-const FILES = ["/", "/index.html", "/v2/app.css?v=2.0", "/v2/core.js?v=2.0", "/v2/app.js?v=2.0", "/jsQR.js", "/manifest.webmanifest"];
+const CACHE = "df-v2-2.1";
+const FILES = ["/", "/index.html", "/v2/app.css?v=2.1", "/v2/core.js?v=2.1", "/v2/app.js?v=2.1", "/jsQR.js", "/manifest.webmanifest"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
