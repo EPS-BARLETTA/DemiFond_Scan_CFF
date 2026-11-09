@@ -3,7 +3,7 @@
    Données : celles de la version 1, relues et enregistrées dans le même format. */
 (function () {
 "use strict";
-const D = window.DF, APP_VERSION = "2.1";
+const D = window.DF, APP_VERSION = "2.2";
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const sid = v => esc(String(v));
@@ -50,6 +50,7 @@ window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); }
 function route() {
   const p = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   if (p[0] === "sauvegardes") return { page: "backups" };
+  if (p[0] === "baremes") return { page: "baremes" };
   if (p[0] === "c" && p[1]) {
     const g = groupById(decodeURIComponent(p[1]));
     if (!g) return { page: "home" };
@@ -76,6 +77,7 @@ function render() {
   else if (r.page === "exercise") { db.activeGroupId = r.g.id; db.activeSessionId = r.ex.id; html = pageExercise(r.g, r.ex); }
   else if (r.page === "student") html = pageStudent(r.g, r.stId);
   else if (r.page === "backups") html = pageBackups();
+  else if (r.page === "baremes") html = pageBaremes();
   $("#app").innerHTML = html;
   $("#crumbs").innerHTML = crumbs(r);
   if (r.page === "backups") fillBackups();
@@ -85,6 +87,7 @@ function crumbs(r) {
   if (r.g) parts.push('<a href="' + hClass(r.g) + '">' + esc(r.g.name) + "</a>");
   if (r.page === "exercise" && r.ex) parts.push('<a href="' + hLesson(r.g, r.ex.lessonId || r.ex.id) + '">' + esc(fmtDate(r.ex.lessonDate) + " · " + (r.ex.lessonLabel || "Séance")) + "</a>");
   if (r.page === "backups") parts.push("<span>Sauvegardes</span>");
+  if (r.page === "baremes") parts.push("<span>Barèmes 3 × 500</span>");
   return parts.join('<span class="sep">›</span>');
 }
 
@@ -107,7 +110,7 @@ function pageHome() {
     (arch.length ? '<details class="archived"><summary>Classes archivées (' + arch.length + ")</summary><div class=\"grid\">" + arch.map(card).join("") + "</div></details>" : "") +
     '<div class="sectitle"><h2>Outils</h2></div><div class="tools">' +
     '<a class="toolcard tc-safe" href="#/sauvegardes"><span class="ticon">🛡️</span><strong>Mes sauvegardes</strong><span>Exporter, restaurer, copies de secours automatiques.</span></a>' +
-    '<button type="button" class="toolcard tc-bareme" data-act="bareme-open"><span class="ticon">⚙️</span><strong>Barème 3 × 500</strong><span>Modèle Seconde / Première pour les nouveaux exercices. Accès par code.</span></button>' +
+    '<a class="toolcard tc-bareme" href="#/baremes"><span class="ticon">⚙️</span><strong>Barèmes 3 × 500</strong><span>Barème de chaque classe, construire ou adapter un barème. Accès par code.</span></a>' +
     '<a class="toolcard tc-chrono" href="https://chrono-carnet-eps.vercel.app/" target="_blank" rel="noopener"><span class="ticon">⏱️</span><strong>Chrono Carnet EPS</strong><span>Chronométrer les courses, puis scanner les QR ici. ↗</span></a></div>';
 }
 function backupWarning() {
@@ -159,7 +162,7 @@ function pageExercise(g, ex) {
     '<details class="menu"><summary class="btn">⋯</summary><div>' + btn("Renommer", "rename-ex:" + g.id + ":" + ex.id) +
     ["open", "closed", "locked"].map(s => btn((ex.status === s ? "✓ " : "") + ({ open: "En cours", closed: "Terminé", locked: "Verrouiller" })[s], "ex-status:" + g.id + ":" + ex.id + ":" + s)).join("") +
     (t === "exam500" ? btn("⚙️ Barème et réglages 3 × 500", "bareme-open:" + g.id + ":" + ex.id) : "") + (t !== "training" ? btn("Exporter les notes (CSV)", "ex-csv:" + g.id + ":" + ex.id) : "") + btn("Supprimer l’exercice", "delete-ex:" + g.id + ":" + ex.id, "danger") + "</div></details></div></section>";
-  html += '<div class="toolbar"><input class="search" id="filter" placeholder="Rechercher un élève…" value="' + esc(ui.filter) + '" autocomplete="off"><label class="toggle"><input type="checkbox" id="onlyMissing"' + (ui.onlyMissing ? " checked" : "") + "> À compléter seulement</label></div>";
+  html += '<div class="toolbar"><input class="search" id="filter" placeholder="Rechercher un élève…" value="' + esc(ui.filter) + '" autocomplete="off"><label class="toggle"><input type="checkbox" id="onlyMissing"' + (ui.onlyMissing ? " checked" : "") + "> À compléter seulement</label>" + ((t === "ccf" || t === "exam500") && !lk ? btn("＋ Ajouter un élève", "add-st:" + g.id + ":" + ex.id, "small") : "") + "</div>";
   if (t === "ccf" || t === "") html += tableCCF(g, ex);
   else if (t === "exam500") html += table500(g, ex);
   else html += tableTraining(g, ex);
@@ -190,12 +193,13 @@ function tableCCF(g, ex) {
 }
 function table500(g, ex) {
   const lk = locked(ex), pr = D.premiere500(ex), lab = D.labels500(ex);
-  if (!ex.students.length) return '<div class="setbar"><span class="lvl ' + (pr ? "p1" : "p2") + '">' + (pr ? "Première" : "Seconde") + "</span><span>Régularité : " + (D.indexMode500(ex) === "three" ? "C1, C2 et C3" : "C1 et C2") + "</span><span>" + D.estimationCount500(ex) + " estimations</span>" + (lk ? "" : btn("⚙️ Modifier le barème", "bareme-open:" + g.id + ":" + ex.id, "small")) + '</div><div class="empty big">Aucun résultat. Touche « 📷 Scanner » et présente les QR 3 × 500.</div>';
+  const setbar = '<div class="setbar"><span class="lvl ' + (pr ? "p1" : "p2") + '">' + (pr ? "Première" : "Seconde") + "</span><span>Régularité : " + (D.indexMode500(ex) === "three" ? "C1, C2 et C3" : "C1 et C2") + "</span><span>" + D.estimationCount500(ex) + " estimations</span>" + (ex.exam500BaremeCustomized ? "<span>Barème ajusté</span>" : ex.exam500BaremeName ? "<span>" + esc(ex.exam500BaremeName) + "</span>" : "") + (lk ? "" : btn("⚙️ Modifier le barème", "bareme-open:" + g.id + ":" + ex.id, "small")) + "</div>";
+  if (!ex.students.length) return setbar + '<div class="empty big">Aucun résultat. Touche « 📷 Scanner » et présente les QR 3 × 500, ou « ＋ Ajouter un élève ».</div>';
   const rows = sortSt(ex.students).filter(match).map(st => ({ st, sc: D.score500(db, ex, st) })).filter(x => !ui.onlyMissing || x.sc?.total20 == null);
   const opt = (f, max, st) => '<select data-change="s500:' + sid(ex.id) + ":" + sid(st.id) + ":" + f + '"' + (lk ? " disabled" : "") + '><option value="">—</option>' + Array.from({ length: Math.round(max * 4) + 1 }, (_, i) => i / 4).map(v => '<option value="' + v + '"' + (st[f] !== "" && st[f] != null && Number(st[f]) === v ? " selected" : "") + ">" + D.pts(v) + "</option>").join("") + "</select>";
   const extra = pr ? [["exam500Warmup", 2, "Échauffement"], ["exam500Carnet", 2, "Carnet"], ["exam500Observation", 1, "Observation"]] : [["exam500Afl2", 2, lab.afl2], ["exam500Afl3", 4, lab.afl3]];
   const race = (st, i) => { const r = D.races500(st)[i]; return r ? "<td>" + esc(D.short(r.total500Ms)) + "<small>" + (r.projectMs ? "est. " + esc(D.short(r.projectMs)) : "") + "</small></td>" : '<td class="miss">—</td>'; };
-  return '<div class="setbar"><span class="lvl ' + (pr ? "p1" : "p2") + '">' + (pr ? "Première" : "Seconde") + "</span><span>Régularité : " + (D.indexMode500(ex) === "three" ? "C1, C2 et C3" : "C1 et C2") + "</span><span>" + D.estimationCount500(ex) + " estimations</span>" + (ex.exam500BaremeCustomized ? "<span>Barème personnalisé</span>" : "") + (lk ? "" : btn("⚙️ Modifier le barème", "bareme-open:" + g.id + ":" + ex.id, "small")) + "</div>" +
+  return setbar +
     '<div class="tablewrap"><table class="res"><thead><tr><th>Élève</th><th>500 n°1</th><th>500 n°2</th><th>500 n°3</th><th>Perf.<small>/6</small></th><th>Régularité<small>écart · pts</small></th><th>Estimation<small>écart · pts</small></th>' + extra.map(([, m, l]) => "<th>" + esc(l) + "<small>/" + m + "</small></th>").join("") + "<th>Note<small>/20</small></th></tr></thead><tbody>" +
     rows.map(({ st, sc }) => '<tr class="' + (sc?.total20 != null ? "done" : "") + '"><td><button type="button" class="namebtn" data-act="edit-500:' + sid(g.id) + ":" + sid(ex.id) + ":" + sid(st.id) + '">' + esc(D.studentName(st)) + "<small>Corriger ›</small></button></td>" + race(st, 0) + race(st, 1) + race(st, 2) +
       "<td><b>" + (sc ? D.pts(sc.perf) : "—") + "</b>" + (sc ? "<small>" + D.short(sc.totalRaceMs) + "</small>" : "") + "</td><td><b>" + (sc ? D.pts(sc.effPts) : "—") + "</b>" + (sc?.eff != null ? "<small>" + sc.eff + " s</small>" : "") + "</td><td><b>" + (sc ? D.pts(sc.gapPts) : "—") + "</b>" + (sc?.gap != null ? "<small>" + D.pts(sc.gap) + " s</small>" : "") + "</td>" +
@@ -241,7 +245,15 @@ function modal(title, body, onSave, opts) {
   $("#modal").hidden = false; modalSave = onSave;
   setTimeout(() => $("#modal input:not([type=checkbox]),#modal select")?.focus(), 30);
 }
-function close() { $("#modal").hidden = true; $("#modal").innerHTML = ""; modalSave = null; }
+function close(keepPending) {
+  $("#modal").hidden = true; $("#modal").innerHTML = ""; modalSave = null;
+  if (ui.pending && keepPending !== true) {
+    const g = groupById(ui.pending.gid), ex = exById(g, ui.pending.eid), st = ex?.students.find(s => String(s.id) === String(ui.pending.sid));
+    ui.pending = null;
+    if (st && !hasResult(st)) { ex.students = ex.students.filter(s => s !== st); render(); }
+    else if (st) { master(g, st); save("ajout manuel"); render(); }
+  }
+}
 const val = id => ($("#" + id)?.value || "").trim();
 const field = (label, id, value, attrs) => '<label class="field">' + esc(label) + '<input id="' + id + '" value="' + esc(value ?? "") + '" ' + (attrs || "") + "></label>";
 function toast(msg, kind) { const t = $("#toast"); t.textContent = msg; t.className = "show " + (kind || ""); clearTimeout(toast.t); toast.t = setTimeout(() => (t.className = ""), 2600); }
@@ -249,7 +261,11 @@ function toast(msg, kind) { const t = $("#toast"); t.textContent = msg; t.classN
 /* ---------- Création ---------- */
 function newExercise(g, type, lesson) {
   const ex = { id: D.uid(), createdAt: Date.now(), lessonId: lesson.id, lessonDate: lesson.date, lessonLabel: lesson.label, label: D.TYPES[type], type, status: "open", students: [] };
-  if (type === "exam500") { ex.exam500Bareme = D.copy(D.bareme500(db, null)); ex.exam500EvaluationLevel = "seconde"; ex.exam500IndexMode = "c1c2"; ex.exam500EstimationCount = 2; }
+  if (type === "exam500") {
+    const bm = classBareme(g);
+    ex.exam500Bareme = bm ? baremeRows(bm) : D.copy(D.bareme500(db, null)); ex.exam500EvaluationLevel = bm ? bm.level : "seconde"; ex.exam500IndexMode = "c1c2"; ex.exam500EstimationCount = 2;
+    if (bm) ex.exam500BaremeName = bm.name;
+  }
   g.sessions.push(ex); return ex;
 }
 const typePicker = (name, cur) => '<div class="typepick">' + Object.entries(D.TYPES).map(([k, l]) => '<label class="' + TYPE_CLASS[k] + '"><input type="radio" name="' + name + '" value="' + k + '"' + (cur === k ? " checked" : "") + "><span>" + esc(l) + "</span></label>").join("") + "</div>";
@@ -396,14 +412,20 @@ function finishScan(before, msg) {
   scanShow("ok", "✓ " + msg, btn("Annuler ce scan", "scan-undo", "small"));
 }
 function err(m) { beep(false); scanShow("err", "QR refusé : " + esc(m)); return null; }
-function findSt(ex, id) { return ex.students.find(s => s.externalId === id || s.id === id); }
+const norm = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+function findSt(ex, id, d) {
+  const st = ex.students.find(s => s.externalId === id || s.id === id); if (st || !d) return st;
+  const m = ex.students.find(s => s.manual && !s.externalId && norm(s.last) === norm(d.last) && norm(s.first) === norm(d.first));
+  if (m && id) m.externalId = id;
+  return m;
+}
 function buildSt(d) { return { id: d.studentId || D.uid(), externalId: d.studentId || "", last: d.last || "Élève", first: d.first || "", classroom: String(d.classroom || "").toUpperCase(), sex: d.sex || "", project1: "", project2: "", races: {}, afl2: "", afl3: "" }; }
 function identity(st, d) { if (d.last) st.last = d.last; if (d.first) st.first = d.first; if (d.classroom) st.classroom = String(d.classroom).toUpperCase(); if (d.sex) st.sex = d.sex; }
-function master(g, src) { let s = g.students.find(x => x.externalId === src.externalId || x.id === src.id); if (!s) { s = { ...D.copy(src), races: {} }; delete s.exam500; g.students.push(s); } identity(s, src); }
+function master(g, src) { let s = g.students.find(x => (src.externalId && x.externalId === src.externalId) || x.id === src.id); if (!s) { s = { ...D.copy(src), races: {} }; delete s.exam500; g.students.push(s); } identity(s, src); if (!s.externalId && src.externalId) s.externalId = src.externalId; }
 function applyCCF(g, ex, raw, force) {
   const ck = D.validateCCF(raw); if (!ck.ok) return err(ck.message);
   const d = ck.data; ex.type = "ccf";
-  let st = findSt(ex, d.studentId);
+  let st = findSt(ex, d.studentId, d);
   if (st?.races?.[d.race] && !force) {
     const p = st.races[d.race];
     if (d.resultId && p.resultId && String(d.resultId) === String(p.resultId)) { beep(false); scanShow("info", esc(D.studentName(st)) + " · QR déjà scanné."); return null; }
@@ -426,11 +448,11 @@ function apply500(g, ex, raw, force) {
     if (ex.exam500QrConfig) { const o = ex.exam500QrConfig; if (o.level !== level || o.index !== index || o.count !== count) return err("QR incompatible avec les réglages de cet exercice (niveau, régularité ou estimations)."); }
     else {
       ex.exam500QrConfig = { level, index, count }; ex.exam500EvaluationLevel = level; ex.exam500IndexMode = index; ex.exam500EstimationCount = count;
-      if (!ex.students.some(s => s?.exam500?.races?.length) && !ex.exam500BaremeCustomized) ex.exam500Bareme = D.performancePreset500(level, db.settings.exam500Bareme || D.DEFAULT_BAREME);
+      if (!ex.students.some(s => s?.exam500?.races?.length) && !ex.exam500BaremeCustomized) { const bm = classBareme(g); ex.exam500Bareme = bm && bm.level === level ? baremeRows(bm) : D.performancePreset500(level, db.settings.exam500Bareme || D.DEFAULT_BAREME); ex.exam500BaremeName = bm && bm.level === level ? bm.name : (level === "premiere" ? "Première (référence)" : "Seconde (référence)"); }
     }
   }
   ex.type = "exam500";
-  let st = findSt(ex, d.studentId);
+  let st = findSt(ex, d.studentId, d);
   if (st?.exam500?.races?.length && !force) {
     if (d.resultId && st.exam500.resultId && String(d.resultId) === String(st.exam500.resultId)) { beep(false); scanShow("info", esc(D.studentName(st)) + " · QR déjà scanné."); return null; }
     return { ask: "<strong>" + esc(D.studentName(st)) + "</strong><br>Un 3 × 500 est déjà enregistré. Remplacer par ce nouveau relevé ?" };
@@ -586,7 +608,8 @@ function baremeDialog(gid, eid) {
   const body =
     (global ? '<p class="intro">Ce barème sert de <b>modèle</b> pour les prochains exercices 3 × 500. Les exercices existants gardent le leur.</p>'
       : '<p class="intro">Barème de <b>' + esc(ex.label) + "</b> (" + esc(g.name) + ")." + (scored ? " Les notes des " + scored + " élève" + (scored > 1 ? "s" : "") + " seront recalculées." : "") + "</p>") +
-    '<section class="bsec"><h3>1 · Niveau</h3>' + (global ? '<p class="muted small">Charger les références :</p>' : "") + lvlBtns +
+    '<section class="bsec"><h3>1 · Niveau et barème</h3>' + lvlBtns +
+    '<div class="row" style="margin-top:10px"><span class="muted small">Charger un barème :</span><select id="bload" data-nochange><option value="">— choisir —</option>' + allBaremes().map(x => '<option value="' + esc(x.id) + '">' + esc(x.name) + "</option>").join("") + "</select>" + btn("Enregistrer ces tableaux comme barème", "bm-saveas", "small") + "</div>" +
     '<p class="muted small" id="blvlnote">' + (global ? "Le bouton remplit les tableaux de performance ci-dessous ; rien n’est enregistré avant « Enregistrer »." : "Choisir un niveau recharge ses références de performance. Les autres critères restent inchangés.") + "</p></section>" +
     (global ? "" :
       '<section class="bsec"><h3>2 · Réglages de l’évaluation</h3><div class="bgrid">' +
@@ -599,7 +622,7 @@ function baremeDialog(gid, eid) {
     rowEditor("bgirls", "Filles", "", b.girls, "time") + rowEditor("bboys", "Garçons", "", b.boys, "time") + "</div></section>" +
     '<section class="bsec"><h3>' + (global ? "3" : "4") + ' · Régularité /6</h3><p class="muted small">Écart en secondes entre la portion de 250 m la plus rapide et la plus lente → points.</p><div class="bgrid two">' + rowEditor("beff", "Indice de régularité", "", b.efficiency, "num") + "</div></section>" +
     (global ? "" : '<label class="check"><input type="checkbox" id="bmodel" checked> Utiliser aussi ce barème comme modèle pour les prochains exercices</label>');
-  ui.bareme = { gid, eid, level: st.level };
+  ui.bareme = { gid, eid, level: st.level, name: null };
   modal(global ? "Barème 3 × 500 · modèle" : "Barème et réglages 3 × 500", body, () => {
     let next;
     try { next = { girls: readRows("bgirls", "time"), boys: readRows("bboys", "time"), gap: D.copy(b.gap), efficiency: readRows("beff", "num") }; }
@@ -607,7 +630,7 @@ function baremeDialog(gid, eid) {
     const before = JSON.stringify(db);
     if (global) db.settings.exam500Bareme = D.copy(next);
     else {
-      ex.exam500Bareme = D.copy(next); ex.exam500BaremeCustomized = true;
+      ex.exam500Bareme = D.copy(next); ex.exam500BaremeCustomized = !ui.bareme.name; if (ui.bareme.name) ex.exam500BaremeName = ui.bareme.name;
       if (ui.bareme.level) ex.exam500EvaluationLevel = ui.bareme.level;
       ex.exam500IndexMode = val("bidx") === "three" ? "three" : "c1c2";
       ex.exam500EstimationCount = Number(val("best")) === 3 ? 3 : 2;
@@ -618,6 +641,9 @@ function baremeDialog(gid, eid) {
     save("barème"); close(); render(); undoToast(before, "Barème 3 × 500 enregistré.");
   }, { wide: true, extra: btn("Valeurs d’origine", "bareme-reset", "ghostdark") });
   $("#modal .sheet").classList.add("bareme", "lvl-" + (st.level || "none"));
+  $("#bload").onchange = e => { const bm = baremeById(e.target.value); if (!bm) return; const r = baremeRows(bm);
+    baremeLoadLevel(bm.level); $("#bgirls").innerHTML = r.girls.map(x => rowLine(x, "time")).join(""); $("#bboys").innerHTML = r.boys.map(x => rowLine(x, "time")).join(""); $("#beff").innerHTML = r.efficiency.map(x => rowLine(x, "num")).join("");
+    ui.bareme.name = bm.name; $("#blvlnote").textContent = "Barème « " + bm.name + " » chargé. Clique sur « Enregistrer » pour l’appliquer."; };
 }
 function baremeLoadLevel(level) {
   const p = D.performancePreset500(level, D.DEFAULT_BAREME);
@@ -626,13 +652,145 @@ function baremeLoadLevel(level) {
   document.querySelectorAll('[data-act^="bareme-level"]').forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act.endsWith(level))));
   const sh = $("#modal .sheet"); sh.classList.remove("lvl-seconde", "lvl-premiere", "lvl-none"); sh.classList.add("lvl-" + level);
   if (ui.bareme.eid) ui.bareme.level = level;
+  ui.bareme.name = null;
   $("#blvlnote").textContent = "Références " + (level === "premiere" ? "Première" : "Seconde") + " chargées. Clique sur « Enregistrer » pour les appliquer.";
 }
+
+/* ---------- Bibliothèque de barèmes 3 × 500 ---------- */
+// Un barème = niveau (critères Seconde ou Première) + performance filles / garçons + régularité.
+// Les barèmes « référence » viennent des allures de la version 1 ; les autres sont construits par l'enseignante.
+const BUILTIN = {
+  seconde: { id: "seconde", name: "Seconde (référence)", level: "seconde", anchors: D.LEVEL_ANCHORS_500.seconde, builtin: true },
+  premiere: { id: "premiere", name: "Première (référence)", level: "premiere", anchors: D.LEVEL_ANCHORS_500.premiere, builtin: true }
+};
+const LIB = () => (db.settings.bareme500Library = Array.isArray(db.settings.bareme500Library) ? db.settings.bareme500Library : []);
+const allBaremes = () => [BUILTIN.seconde, BUILTIN.premiere, ...LIB()];
+const baremeById = id => allBaremes().find(b => String(b.id) === String(id));
+function guessLevel(g) { const n = String(g?.name || "").trim(); if (/^1|premi[eè]re/i.test(n)) return "premiere"; if (/^2|seconde/i.test(n)) return "seconde"; return null; }
+function classBareme(g) { if (g?.bareme500Id === "model") return null; return (g?.bareme500Id && baremeById(g.bareme500Id)) || (guessLevel(g) ? BUILTIN[guessLevel(g)] : null); }
+function baremeRows(bm) {
+  const base = D.bareme500(db, null);
+  if (bm.rows) return { girls: D.copy(bm.rows.girls), boys: D.copy(bm.rows.boys), gap: D.copy(base.gap), efficiency: D.copy(bm.rows.efficiency || base.efficiency) };
+  return { girls: D.perfRowsFromAnchors(bm.anchors.girls), boys: D.perfRowsFromAnchors(bm.anchors.boys), gap: D.copy(base.gap), efficiency: D.copy(bm.efficiency || D.DEFAULT_BAREME.efficiency) };
+}
+const secTxt = sec => { const m = Math.floor(sec / 60), r = Math.round((sec - m * 60) * 10) / 10; return m + ":" + (r < 10 ? "0" : "") + String(r).replace(".", ","); };
+const lvlName = l => l === "premiere" ? "Première" : "Seconde";
+
+function codeGate(what) {
+  return '<section class="pagehead tinted c2"><div><h1>Barèmes 3 × 500</h1><p class="muted">Accès réservé.</p></div></section><div class="card gate"><label class="field">Code ' + esc(what) + '<input id="gatecode" type="password" inputmode="numeric" autocomplete="off"></label>' + btn("Ouvrir", "gate-open", "primary") + "</div>";
+}
+function pageBaremes() {
+  if (!ui.baremeOK) return codeGate("du barème");
+  const opts = g => {
+    const auto = guessLevel(g);
+    return '<select data-change="class-bareme:' + sid(g.id) + '"><option value=""' + (!g.bareme500Id ? " selected" : "") + ">Automatique · " + (auto ? lvlName(auto) + " (d’après le nom)" : "modèle par défaut") + "</option>" +
+      allBaremes().map(b => '<option value="' + esc(b.id) + '"' + (String(g.bareme500Id) === String(b.id) ? " selected" : "") + ">" + esc(b.name) + "</option>").join("") +
+      '<option value="model"' + (g.bareme500Id === "model" ? " selected" : "") + ">Modèle par défaut</option></select>";
+  };
+  const live = db.groups.filter(g => !g.archived);
+  const cardB = b => {
+    const rows = baremeRows(b), g6 = rows.girls[0], b6 = rows.boys[0];
+    const used = db.groups.filter(g => classBareme(g)?.id === b.id).map(g => esc(g.name));
+    return '<div class="bmcard ' + (b.level === "premiere" ? "p1" : "p2") + '"><div class="bmtop"><span class="lvl">' + lvlName(b.level) + "</span>" + (b.builtin ? '<span class="tag">référence</span>' : b.rows ? '<span class="tag">ajusté ligne par ligne</span>' : '<span class="tag">construit</span>') + "</div><strong>" + esc(b.name) + "</strong>" +
+      '<p class="muted small">6 pts : filles ' + esc(g6[0]) + " · garçons " + esc(b6[0]) + " (total 3 × 500)</p>" +
+      '<p class="small">' + (used.length ? "Utilisé par : " + used.join(", ") : '<span class="muted">Aucune classe</span>') + '</p><div class="row">' +
+      (b.builtin ? btn("Partir de celui-ci", "bm-build::" + b.id, "small") : (b.anchors ? btn("Modifier", "bm-build:" + b.id, "small") : btn("Renommer", "bm-rename:" + b.id, "small")) + btn("Dupliquer", "bm-build::" + b.id, "small") + btn("Supprimer", "bm-del:" + b.id, "small danger")) + "</div></div>";
+  };
+  return '<section class="pagehead tinted c2"><div><h1>Barèmes 3 × 500</h1><p class="muted">Chaque classe reçoit son barème automatiquement à la création d’un exercice 3 × 500.</p></div><div class="row">' + btn("＋ Construire un barème", "bm-build", "primary") + "</div></section>" +
+    '<div class="sectitle"><h2>Barème de chaque classe</h2></div><div class="card"><p class="muted small">« Automatique » : une classe dont le nom commence par 1 (1G, 1ABCDE…) reçoit le barème Première, par 2 (2A…) le barème Seconde. Les autres reçoivent le modèle par défaut.</p><div class="tablewrap flat"><table class="res compact"><thead><tr><th>Classe</th><th>Barème des nouveaux exercices</th><th>Exercices 3 × 500 existants</th></tr></thead><tbody>' +
+    live.map(g => { const n = g.sessions.filter(e => typeOf(g, e) === "exam500").length; return "<tr><td><strong>" + esc(g.name) + "</strong></td><td>" + opts(g) + "</td><td>" + (n ? btn("Appliquer aux " + n + " exercice" + (n > 1 ? "s" : ""), "class-bareme-apply:" + g.id, "small") : '<span class="muted">aucun</span>') + "</td></tr>"; }).join("") +
+    "</tbody></table></div></div>" +
+    '<div class="sectitle"><h2>Mes barèmes</h2></div><div class="bmgrid">' + allBaremes().map(cardB).join("") + "</div>" +
+    '<div class="sectitle"><h2>Modèle par défaut</h2></div><div class="card row"><span class="muted" style="flex:1">Utilisé pour les classes non reconnues (ex. « Test »), et quand un exercice n’a pas de barème de classe.</span>' + btn("Modifier le modèle", "bareme-open", "small") + "</div>";
+}
+
+/* Constructeur : 6 allures au 500 m par sexe → 24 paliers au quart de point (même calcul que les références). */
+function baremeBuilder(editId, fromId) {
+  const edit = editId ? baremeById(editId) : null, from = edit || (fromId ? baremeById(fromId) : null) || BUILTIN.seconde;
+  const an = from.anchors || BUILTIN[from.level].anchors, level = from.level;
+  const name = edit ? edit.name : fromId ? from.name.replace(/ \(référence\)$/, "") + " (copie)" : "";
+  ui.builder = { editId: edit?.id || null, level };
+  const line = pt => { const gs = an.girls.find(x => x[0] === pt)[1], bs = an.boys.find(x => x[0] === pt)[1];
+    return '<tr><th>' + pt + " pt" + (pt > 1 ? "s" : "") + "</th>" + [["g", gs], ["b", bs]].map(([k, v]) => '<td><input id="an' + k + pt + '" value="' + esc(secTxt(v)) + '" inputmode="decimal" data-anchor><small class="tot" id="tot' + k + pt + '">' + esc(totTxt(v)) + "</small></td>").join("") + "</tr>"; };
+  modal(edit ? "Modifier le barème" : "Construire un barème",
+    '<p class="intro">Indique l’<b>allure moyenne au 500 m</b> attendue pour chaque note. L’application calcule les 24 paliers (tous les quarts de point) sur le temps total des trois 500 m, exactement comme pour les barèmes de référence.</p>' +
+    field("Nom du barème", "bmname", name, 'placeholder="Ex. Seconde 2026 – piste 400 m"') +
+    '<p class="fieldlabel">Niveau (critères de la note)</p><div class="seg">' + ["seconde", "premiere"].map(l => '<button type="button" data-act="bm-level:' + l + '" aria-pressed="' + (level === l) + '">' + lvlName(l) + "</button>").join("") + "</div>" +
+    '<div class="row" style="margin:12px 0"><span class="muted small">Pré-remplir avec :</span>' + allBaremes().filter(b => b.anchors).map(b => btn(esc(b.name), "bm-fill:" + b.id, "small")).join("") + "</div>" +
+    '<table class="anchors"><thead><tr><th>Note perf.</th><th>Filles · allure / 500</th><th>Garçons · allure / 500</th></tr></thead><tbody>' + [6, 5, 4, 3, 2, 1].map(line).join("") + "</tbody></table>" +
+    '<p class="muted small">Format 1:59 ou 1:59,5. Les allures doivent ralentir de 6 à 1 point. En dessous de 1 point, on retire 0,25 pt par tranche de 10 s au 500 m.</p>',
+    () => {
+      const nm = val("bmname"); if (!nm) { toast("Donne un nom au barème.", "err"); return false; }
+      const read = k => [6, 5, 4, 3, 2, 1].map(pt => { const ms = D.parseTime500(val("an" + k + pt)); return [pt, ms == null ? null : Math.round(ms / 100) / 10]; });
+      const girls = read("g"), boys = read("b");
+      for (const [k, arr] of [["Filles", girls], ["Garçons", boys]]) {
+        if (arr.some(x => x[1] == null || x[1] < 40 || x[1] > 600)) { toast(k + " : une allure est vide ou incorrecte.", "err"); return false; }
+        for (let i = 1; i < arr.length; i++) if (arr[i][1] <= arr[i - 1][1]) { toast(k + " : l’allure à " + arr[i][0] + " pt doit être plus lente qu’à " + arr[i - 1][0] + " pts.", "err"); return false; }
+      }
+      const before = JSON.stringify(db);
+      if (ui.builder.editId) Object.assign(LIB().find(b => b.id === ui.builder.editId), { name: nm, level: ui.builder.level, anchors: { girls, boys } });
+      else LIB().push({ id: D.uid(), name: nm, level: ui.builder.level, anchors: { girls, boys }, createdAt: Date.now() });
+      save("barème"); close(); render(); undoToast(before, "Barème « " + nm + " » enregistré.");
+    }, { wide: true, saveLabel: "Enregistrer le barème" });
+  $("#modal .sheet").classList.add("bareme");
+}
+const totTxt = sec => { const t = Math.round(sec * 3); return "total " + Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+
+/* ---------- Ajout manuel d'un élève ---------- */
+function addStudent(g, ex) {
+  const t = typeOf(g, ex), present = ex.students;
+  const free = sortSt(g.students.filter(s => !present.some(x => D.sameStudent(x, s))));
+  modal("Ajouter un élève à l’exercice",
+    (free.length ? '<label class="field">Élève de la classe<select id="fpick"><option value="">— Nouvel élève (saisie ci-dessous) —</option>' + free.map(s => '<option value="' + esc(s.externalId || s.id) + '">' + esc(D.studentName(s)) + "</option>").join("") + "</select></label>" : "") +
+    '<div id="newst"><div class="bgrid">' + field("Nom", "flast", "") + field("Prénom", "ffirst", "") + field("Classe", "fclass", g.students[0]?.classroom || g.name) +
+    '<label class="field">Sexe (barème)<select id="fsex"><option value="">—</option><option value="F">Fille</option><option value="M">Garçon</option></select></label></div></div>' +
+    '<p class="muted small">Ensuite, tu saisis ses temps. Si son QR est scanné plus tard, il sera reconnu (même nom et prénom) : rien ne sera en double.</p>',
+    () => {
+      const pick = val("fpick");
+      let st;
+      if (pick) { const s = g.students.find(x => String(x.externalId || x.id) === pick); st = { ...D.copy(s), races: {}, project1: "", project2: "", afl2: "", afl3: "" }; delete st.exam500; }
+      else {
+        const last = val("flast"), first = val("ffirst"), sex = val("fsex");
+        if (!last || !first) { toast("Nom et prénom obligatoires.", "err"); return false; }
+        if (!sex) { toast("Indique fille ou garçon (nécessaire au barème).", "err"); return false; }
+        const dup = g.students.find(x => norm(x.last) === norm(last) && norm(x.first) === norm(first));
+        st = dup ? { ...D.copy(dup), races: {}, project1: "", project2: "", afl2: "", afl3: "" } : { id: D.uid(), externalId: "", manual: true, last, first, classroom: val("fclass").toUpperCase(), sex, project1: "", project2: "", races: {}, afl2: "", afl3: "" };
+        delete st.exam500;
+      }
+      ex.students.push(st); ui.pending = { gid: g.id, eid: ex.id, sid: st.id };
+      close(true);
+      (t === "exam500" ? edit500 : editCCF)(g, ex, st.id);
+      $("#mtitle").textContent = "Temps de " + D.studentName(st);
+    }, { saveLabel: "Continuer" });
+  setTimeout(() => { const p = $("#fpick"); if (p) p.onchange = () => { $("#newst").hidden = !!p.value; }; }, 0);
+}
+const hasResult = st => Object.keys(st.races || {}).length > 0 || (st.exam500?.races?.length > 0);
 
 /* ---------- Actions ---------- */
 const ACT = {
   close,
   "bareme-open"(gid, eid) { baremeAsk(gid, eid); },
+  "gate-open"() { if (val("gatecode") !== BAREME_CODE) { toast("Code incorrect.", "err"); $("#gatecode").value = ""; return; } ui.baremeOK = true; render(); },
+  "bm-build"(editId, fromId) { baremeBuilder(editId || null, fromId || null); },
+  "bm-level"(l) { ui.builder.level = l; document.querySelectorAll('[data-act^="bm-level"]').forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act.endsWith(l)))); },
+  "bm-fill"(id) { const b = baremeById(id); for (const [k, arr] of [["g", b.anchors.girls], ["b", b.anchors.boys]]) for (const [pt, sec] of arr) { $("#an" + k + pt).value = secTxt(sec); $("#tot" + k + pt).textContent = totTxt(sec); } ACT["bm-level"](b.level); },
+  "bm-rename"(id) { const b = LIB().find(x => x.id === id); const n = prompt("Nouveau nom du barème :", b.name); if (!n?.trim()) return; b.name = n.trim(); save(); render(); },
+  "bm-del"(id) { const b = LIB().find(x => x.id === id); const used = db.groups.filter(g => String(g.bareme500Id) === String(id)); if (!confirm("Supprimer le barème « " + b.name + " » ?" + (used.length ? "\n" + used.length + " classe(s) repasseront en automatique." : "") + "\nLes exercices déjà notés gardent leurs valeurs.")) return; const before = JSON.stringify(db); used.forEach(g => delete g.bareme500Id); db.settings.bareme500Library = LIB().filter(x => x !== b); save("barème"); render(); undoToast(before, "Barème supprimé."); },
+  "bm-saveas"() {
+    let rows; try { rows = { girls: readRows("bgirls", "time"), boys: readRows("bboys", "time"), efficiency: readRows("beff", "num") }; } catch (e) { return toast("Impossible : " + e.message, "err"); }
+    const n = prompt("Nom du nouveau barème :"); if (!n?.trim()) return;
+    const lvl = ui.bareme.level || ($('[data-act="bareme-level:premiere"][aria-pressed=true]') ? "premiere" : "seconde");
+    LIB().push({ id: D.uid(), name: n.trim(), level: lvl, rows, createdAt: Date.now() }); ui.bareme.name = n.trim(); save("barème"); toast("Barème « " + n.trim() + " » ajouté à ta bibliothèque.", "ok");
+  },
+  "class-bareme-apply"(gid) {
+    const g = groupById(gid), bm = classBareme(g), list = g.sessions.filter(e => typeOf(g, e) === "exam500" && !locked(e));
+    const label = bm ? bm.name : "modèle par défaut";
+    if (!confirm("Appliquer « " + label + " » aux " + list.length + " exercice(s) 3 × 500 de " + g.name + " (hors exercices verrouillés) ?\nLes notes seront recalculées. Une copie de secours est faite avant.")) return;
+    const before = JSON.stringify(db); D.idbAdd(before, "avant barème");
+    list.forEach(e => { e.exam500Bareme = bm ? baremeRows(bm) : D.copy(D.bareme500(db, null)); e.exam500EvaluationLevel = bm ? bm.level : "seconde"; e.exam500BaremeName = label; e.exam500BaremeCustomized = false; });
+    save("barème"); render(); undoToast(before, "Barème appliqué à " + list.length + " exercice(s).");
+  },
+  "add-st"(gid, eid) { const g = groupById(gid); addStudent(g, exById(g, eid)); },
   "bareme-level"(level) { baremeLoadLevel(level); },
   "bareme-reset"() {
     if (!confirm("Remettre les valeurs d’origine dans les tableaux (Seconde) ? Rien n’est enregistré avant « Enregistrer ».")) return;
@@ -701,6 +859,7 @@ document.addEventListener("change", e => {
   if (el.id === "importFile" && el.files?.[0]) { importFile(el.files[0]); el.value = ""; return; }
   if (el.id === "onlyMissing") { ui.onlyMissing = el.checked; render(); return; }
   const c = el.dataset.change; if (!c) return;
+  if (c.startsWith("class-bareme:")) { const g = groupById(c.slice(13)); if (el.value) g.bareme500Id = el.value; else delete g.bareme500Id; save(); render(); toast(g.name + " : " + (classBareme(g)?.name || "modèle par défaut") + " pour les prochains 3 × 500.", "ok"); return; }
   const [kind, eid, stId, f] = c.split(":"), r = route(), g = r.g, ex = exById(g, eid), st = ex?.students.find(s => String(s.id) === String(stId));
   if (!st || locked(ex)) return;
   if (kind === "ccf-alloc") st.aflAllocation = el.value;
@@ -709,7 +868,7 @@ document.addEventListener("change", e => {
   if (kind === "s500") st[f] = el.value;
   save(); render();
 });
-document.addEventListener("input", e => { if (e.target.classList.contains("rk") && e.target.closest('[data-kind="time"]')) { e.target.parentElement.querySelector(".avg").textContent = avg500(e.target.value); return; } if (e.target.id === "filter") { ui.filter = e.target.value; const pos = e.target.selectionStart; render(); const f = $("#filter"); f.focus(); f.setSelectionRange(pos, pos); } });
+document.addEventListener("input", e => { if (e.target.hasAttribute("data-anchor")) { const ms = D.parseTime500(e.target.value); e.target.nextElementSibling.textContent = ms ? totTxt(ms / 1000) : "—"; return; } if (e.target.classList.contains("rk") && e.target.closest('[data-kind="time"]')) { e.target.parentElement.querySelector(".avg").textContent = avg500(e.target.value); return; } if (e.target.id === "filter") { ui.filter = e.target.value; const pos = e.target.selectionStart; render(); const f = $("#filter"); f.focus(); f.setSelectionRange(pos, pos); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#modal").hidden) close(); if (e.key === "Enter" && !$("#modal").hidden && e.target.tagName === "INPUT" && modalSave && !e.target.closest(".bareme")) { e.preventDefault(); modalSave(); } });
 document.addEventListener("visibilitychange", () => { if (document.hidden && SC.stream) stopScanner(); });
 

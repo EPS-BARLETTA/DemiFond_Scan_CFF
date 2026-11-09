@@ -282,3 +282,22 @@ h1{font-weight:850}
 .pagehead.tinted{--c:#3157d5;background:linear-gradient(120deg,color-mix(in srgb,var(--c) 16%,#fff),#fff 72%);border-color:color-mix(in srgb,var(--c) 25%,#fff);box-shadow:inset 7px 0 0 var(--c),var(--shadow)}
 .pagehead.tinted h1{color:color-mix(in srgb,var(--c) 65%,#162447)}
 .pagehead.c0{--c:#3157d5}.pagehead.c1{--c:#11845b}.pagehead.c2{--c:#d9601f}.pagehead.c3{--c:#7546c9}.pagehead.c4{--c:#0e8aa8}.pagehead.c5{--c:#c42b6a}.pagehead.c6{--c:#b9860b}.pagehead.c7{--c:#4f6380}
+/* Barèmes */
+.gate{max-width:420px}
+.bmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.bmcard{--c:#d9601f;display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:var(--r);background:linear-gradient(150deg,color-mix(in srgb,var(--c) 12%,#fff),#fff 75%);border:1px solid color-mix(in srgb,var(--c) 24%,#fff);box-shadow:var(--shadow)}
+.bmcard.p1{--c:#7546c9}.bmcard strong{font-size:19px;color:color-mix(in srgb,var(--c) 70%,#162447)}
+.bmcard p{margin:0}.bmcard .row{margin-top:auto;padding-top:6px}
+.bmtop{display:flex;gap:6px;align-items:center}
+.bmtop .lvl{padding:3px 10px;border-radius:999px;background:var(--c);color:#fff;font-size:13px;font-weight:800}
+.bmtop .tag{padding:3px 10px;border-radius:999px;background:#fff;border:1px solid color-mix(in srgb,var(--c) 25%,#fff);font-size:12px;font-weight:600;color:var(--muted)}
+.tablewrap.flat{box-shadow:none}
+table.anchors{width:100%;border-collapse:separate;border-spacing:0 6px;margin-top:6px}
+.anchors th{text-align:left;font-size:13px;color:var(--muted);padding:0 8px}
+.anchors tbody th{font-size:17px;color:var(--ink);white-space:nowrap}
+.anchors td{padding:0 8px}.anchors input{width:100%;min-height:46px;padding:6px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:18px;font-variant-numeric:tabular-nums}
+.anchors .tot{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.sheet .intro{padding:12px 14px;border-radius:12px;background:#fff4ec;color:#7a3e16;margin-top:0}
+.toolbar .btn{flex:0 0 auto}
+#bload{min-height:40px;border:1.5px solid var(--line);border-radius:9px;padding:4px 8px;max-width:260px}
+.res select[data-change^="class-bareme"]{max-width:none;min-width:300px}

@@ -377,6 +377,6 @@ function qrType(d) {
 
 window.DF = { KEY, uid, copy, num, dayOf, time, short, pts, parseTimeInput, studentName, sameStudent, emptyDB, normalizeDB, loadDB, idbAdd, idbList, lessons, TYPES, effectiveType, trainingRows,
   scoreCCF, noteCCF, projectMetrics, allocation, levelPoints, laps200, medicalRace, medicalCCF, parseProject,
-  DEFAULT_BAREME, performancePreset500, bareme500, premiere500, races500, complete500, score500, estimationCount500, labels500, parseTime500, indexMode500,
+  DEFAULT_BAREME, LEVEL_ANCHORS_500, perfRowsFromAnchors: makePerformanceRows500, performancePreset500, bareme500, premiere500, races500, complete500, score500, estimationCount500, labels500, parseTime500, indexMode500,
   toolLabel, resultLabel, expandCompactChrono, normalizeTraining, validateCCF, validate500, qrType };
 })();
