@@ -225,20 +225,20 @@
     const counts = new Map();
     students.forEach(s=>{const name=key(fullName(s));if(name)counts.set(name,(counts.get(name)||0)+1);});
     const warnings = [];
-    for(const [name,n] of counts) if(n>1) warnings.push('Nom en double : '+name);
-    const missing = roster.filter(s=>!students.some(x=>(s.externalId||s.id) && String(x.externalId||x.id)===String(s.externalId||s.id) || (key(fullName(s)) && key(fullName(s))===key(fullName(x)))));
-    if(missing.length) warnings.push('Non scannés : '+missing.map(fullName).join(', '));
-    if(roster.length && rosterCheck?.extra.length) warnings.push('Scannés hors liste : '+rosterCheck.extra.map(fullName).join(', '));
+    for(const [name,n] of counts) if(n>1) warnings.push('Doublon de scan : '+name+' ('+n+' fiches)');
+    const missing = rosterCheck?.missing || [];
     if(exercise.type==='exam500') {
       const incomplete=students.filter(s=>s.exam500 && Array.isArray(s.exam500.races) && s.exam500.races.length<3);
-      if(incomplete.length) warnings.push(incomplete.length+' résultat(s) 3 × 500 incomplet(s)');
+      if(incomplete.length) warnings.push('3 × 500 incomplet : '+incomplete.map(fullName).join(', '));
     }
+    if(roster.length && rosterCheck?.extra.length) warnings.push('Scannés hors liste PRONOTE : '+rosterCheck.extra.map(fullName).join(', '));
     const sorted=[...students].sort((a,b)=>fullName(a).localeCompare(fullName(b),'fr'));
     panel.innerHTML='<h2>Tableau de bord · '+html(exercise.label)+'</h2>'+
       '<div class="flow-grid eps-dashboard-metrics">'+
-      [[roster.length?'Scannés / liste PRONOTE':'Élèves scannés',roster.length?(rosterCheck?.found||0)+' / '+roster.length:students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value],i)=>'<div class="flow-card eps-metric eps-metric-'+i+'"><span class="eps-metric-symbol">'+['♙','✓','!'][i]+'</span><div class="eps-metric-copy"><strong>'+value+'</strong><span>'+label+'</span></div></div>').join('')+'</div>'+
-      '<details style="margin:12px 0"><summary>Contrôles ('+warnings.length+' alerte(s))</summary>'+
-      (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</details>'+
+      [[roster.length?'Scannés / liste PRONOTE':'Élèves scannés',roster.length?(rosterCheck?.found||0)+' / '+roster.length:students.length],['Résultats enregistrés',students.length],['Anomalies de scans',warnings.length]].map(([label,value],i)=>'<div class="flow-card eps-metric eps-metric-'+i+'"><span class="eps-metric-symbol">'+['♙','✓','!'][i]+'</span><div class="eps-metric-copy"><strong>'+value+'</strong><span>'+label+'</span></div></div>').join('')+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0">'+
+      (roster.length?'<section style="border:1px solid #cbd5e1;border-radius:12px;padding:14px"><h3 style="margin:0 0 8px">Non scannés · '+missing.length+'</h3><details><summary>Voir les noms</summary><ul style="columns:2;line-height:1.8">'+missing.map(s=>'<li>'+html(fullName(s))+'</li>').join('')+'</ul></details></section>':'<section style="padding:14px;border:1px solid #cbd5e1;border-radius:12px">Importe une liste PRONOTE pour connaître les élèves non scannés.</section>')+
+      '<section style="border:1px solid #cbd5e1;border-radius:12px;padding:14px"><h3 style="margin:0 0 8px">Anomalies · '+warnings.length+'</h3>'+(warnings.length?'<ul style="line-height:1.6">'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</section></div>'+
       '<div class="eps-student-heading"><h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève pour ouvrir sa fiche et corriger ses résultats.</p></div>'+
       '<div class="student-picker-grid">'+sorted.map((student,i)=>
         '<button type="button" class="student-picker '+(i%2?'student-picker-alt':'')+'" data-student-index="'+i+'"><strong>'+html(fullName(student)||'Élève '+(i+1))+'</strong><span>Voir la fiche →</span></button>'
