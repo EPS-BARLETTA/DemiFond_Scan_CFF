@@ -1873,3 +1873,39 @@ border-top-color:var(--eps-accent)!important;background:linear-gradient(145deg,v
 #workflowContent .eps-pro-exercise:nth-child(4n+3){--eps-exercise-accent:#a86c17;--eps-exercise-tint:#fff5e6}
 #workflowContent .eps-pro-exercise:nth-child(4n){--eps-exercise-accent:#8054bb;--eps-exercise-tint:#f3edff}
 #workflowContent .eps-pro-exercise{background:var(--eps-exercise-tint)!important;border-left:4px solid var(--eps-exercise-accent)!important}
+
+/* Palette plus expressive pour classes, séances et exercices */
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card{
+background:linear-gradient(145deg,color-mix(in srgb,var(--eps-accent) 22%,white) 0%,color-mix(in srgb,var(--eps-accent) 10%,white) 58%,#fff 100%)!important;
+border:1px solid color-mix(in srgb,var(--eps-accent) 42%,white)!important;
+border-top:6px solid var(--eps-accent)!important;
+box-shadow:0 8px 22px color-mix(in srgb,var(--eps-accent) 13%,transparent)!important;
+}
+#workflowContent .eps-pro-class-card .eps-pro-class-name{color:color-mix(in srgb,var(--eps-accent) 65%,#172b4d)!important}
+#workflowContent .eps-pro-class-card .eps-pro-class-count{
+background:color-mix(in srgb,var(--eps-accent) 18%,white)!important;
+border:1px solid color-mix(in srgb,var(--eps-accent) 24%,white)!important;
+}
+#workflowContent .eps-pro-class-card .eps-pro-class-open{
+background:var(--eps-accent)!important;border-color:var(--eps-accent)!important;color:#fff!important;
+}
+#workflowContent .eps-pro-class-card .eps-pro-class-results{
+background:#fff!important;border-color:color-mix(in srgb,var(--eps-accent) 38%,white)!important;color:var(--eps-accent)!important;
+}
+#workflowContent .eps-pro-session-card{
+background:linear-gradient(155deg,color-mix(in srgb,var(--eps-session-accent) 18%,white) 0%,#fff 62%)!important;
+border-color:color-mix(in srgb,var(--eps-session-accent) 30%,white)!important;
+border-top:6px solid var(--eps-session-accent)!important;
+}
+#workflowContent .eps-pro-session-card h3{color:color-mix(in srgb,var(--eps-session-accent) 65%,#172b4d)!important}
+#workflowContent .eps-pro-session-count{background:color-mix(in srgb,var(--eps-session-accent) 16%,white)!important;color:var(--eps-session-accent)!important}
+#workflowContent .eps-pro-exercise{
+background:linear-gradient(115deg,color-mix(in srgb,var(--eps-exercise-accent) 21%,white),color-mix(in srgb,var(--eps-exercise-accent) 9%,white))!important;
+border-color:color-mix(in srgb,var(--eps-exercise-accent) 32%,white)!important;
+border-left:6px solid var(--eps-exercise-accent)!important;
+}
+#workflowContent .eps-pro-exercise strong{color:color-mix(in srgb,var(--eps-exercise-accent) 65%,#172b4d)!important}
+#workflowContent .eps-pro-exercise-actions button:not(.flow-scan){
+border-color:color-mix(in srgb,var(--eps-exercise-accent) 38%,white)!important;
+color:var(--eps-exercise-accent)!important;
+}
