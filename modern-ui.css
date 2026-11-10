@@ -1773,3 +1773,16 @@ details>summary{cursor:pointer;font-weight:750}
 .eps-session-footer{display:flex;justify-content:flex-end;padding-top:12px}
 .eps-session-footer button{border:0;background:transparent;color:#315bb3;font-size:13px;padding:7px}
 @media(max-width:680px){.eps-session-number{display:none}.eps-session-content{padding:0 13px 12px}.eps-session-exercise{align-items:flex-start;flex-direction:column}.eps-session-buttons{width:100%}.eps-session-buttons button{flex:1}.eps-session-row>summary{padding:13px}}
+
+/* Vue classes — liste compacte, neutre et tactile */
+#flowClassGrid.eps-class-list{display:flex!important;flex-direction:column!important;gap:9px!important}
+#flowClassGrid .eps-class-row{display:flex!important;align-items:center!important;gap:12px!important;padding:9px 12px!important;background:#fff!important;border:1px solid #e0e7f0!important;border-radius:14px!important;box-shadow:0 3px 12px rgba(23,50,91,.035)!important;min-height:74px}
+#flowClassGrid .eps-class-row .class-tile-main{display:flex!important;align-items:center!important;flex:1!important;gap:13px!important;text-align:left!important;min-width:0!important;background:transparent!important;padding:7px!important;box-shadow:none!important;border:0!important}
+#flowClassGrid .eps-class-avatar{width:43px;height:43px;flex:none;display:grid;place-items:center;background:#eef3fc;border-radius:11px;font-size:20px}
+#flowClassGrid .eps-class-row-info{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
+#flowClassGrid .eps-class-row-info strong{font-size:17px!important;color:#1c355c!important;font-weight:800!important}
+#flowClassGrid .eps-class-row-info small{font-size:12px;color:#71829a;font-weight:500}
+#flowClassGrid .eps-class-open{font-size:27px;color:#8ba1c3;font-weight:400}
+#flowClassGrid .eps-class-row .class-tile-results{width:auto!important;min-width:120px!important;min-height:44px!important;flex:none!important;background:#f0f5ff!important;border:1px solid #d5e2f7!important;border-radius:10px!important;color:#2953a2!important;font-weight:750!important;padding:10px 14px!important}
+#flowClassGrid .eps-class-row:hover{border-color:#b5c8e7!important;background:#fafcff!important}
+@media(max-width:520px){#flowClassGrid .eps-class-row{gap:5px!important;padding:7px!important}#flowClassGrid .eps-class-row .class-tile-results{min-width:90px!important;padding:8px!important;font-size:12px!important}#flowClassGrid .eps-class-avatar{width:36px;height:36px}#flowClassGrid .eps-class-row-info strong{font-size:15px!important}}
