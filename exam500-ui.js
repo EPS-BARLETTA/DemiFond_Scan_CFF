@@ -1089,7 +1089,7 @@
     window.handleQR = wrapped;
   }
 
-  function open500Editor(studentId, visibleIndex = null) {
+  function open500Editor(studentId, visibleIndex = null, manualRoster = null) {
     const session = activeSession();
 
     let student = null;
@@ -1117,6 +1117,14 @@
         ) || null;
     }
 
+    const isManualNew = !student && !!manualRoster;
+    if (isManualNew) {
+      const group=activeGroup();
+      if(session?.status==="locked"){toast?.("Évaluation verrouillée.");return;}
+      if(!group||!session)return;
+      if((session.students||[]).some(s=>window.DFRoster?.match(s,manualRoster))){toast?.("Fiche déjà existante.");return;}
+      student={id:"manual-"+Date.now()+"-"+Math.random().toString(36).slice(2,8),last:manualRoster.last,first:manualRoster.first,classroom:manualRoster.classroom||group.name||"",sex:manualRoster.sex||"F",exam500:{races:[],manualEntry:true,validation:[]}};
+    }
     if (!student) {
       toast?.("Élève introuvable dans cette évaluation.");
       return;
@@ -1382,6 +1390,7 @@
 
         student.exam500.races =
           previewRaces;
+        if(isManualNew){student.exam500.manualEntry=true;session.students.push(student);}
 
         if (!premiereMode()) student.exam500Afl2 =
           afl2;
@@ -1556,7 +1565,7 @@
       summary.innerHTML = '<h3 style="margin:0 0 10px">Élèves · synthèse des notes /20</h3>'+
         '<div class="exam500-student-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:10px;align-items:start">'+
         summaryEntries.map(({student,roster},index)=>{
-          if(!student)return '<div class="exam500-summary-missing" style="background:#fff1d6;border:2px solid #f59e0b;border-radius:11px;padding:13px;min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px"><strong style="color:#854d0e">'+esc(String(roster.last||"").toUpperCase()+' '+(roster.first||""))+'</strong><span style="font-size:12px;font-weight:750;color:#92400e;white-space:nowrap">NON SCANNÉ</span></div>';
+          if(!student)return '<div class="exam500-summary-missing" style="background:#fff1d6;border:2px solid #f59e0b;border-radius:11px;padding:13px;min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px"><strong style="color:#854d0e">'+esc(String(roster.last||"").toUpperCase()+' '+(roster.first||""))+'</strong><span style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><small style="font-weight:750;color:#92400e">NON SCANNÉ</small><button type="button" class="exam500-manual-entry" data-roster-index="'+rosterForSummary.indexOf(roster)+'" style="padding:8px;border:1px solid #f59e0b;border-radius:8px;background:#fff;color:#92400e;font-weight:700">✏️ Saisir</button></span></div>';
           const sc=score500(student), id=String(student.id);
           const line=(label,value,max)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #e2e8f0"><span>'+esc(label)+'</span><b>'+(value==null?"—":fmtPts(value))+'/'+max+'</b></div>';
           return '<details class="exam500-summary-student" data-student-id="'+esc(id)+'" '+(opened===id?'open':'')+' style="border:2px solid '+(opened===id?'#2563eb':'#cbd5e1')+';border-radius:11px;margin:0;background:'+(index%2===0?'#eff6ff':'#f1f5f9')+'">'+
@@ -1570,6 +1579,7 @@
           if(detail.open) summary.querySelectorAll("details").forEach(other=>{if(other!==detail)other.open=false;});
         });
       });
+      summary.querySelectorAll(".exam500-manual-entry").forEach(button=>{button.onclick=()=>open500Editor(null,null,rosterForSummary[Number(button.dataset.rosterIndex)]);});
       summary.querySelectorAll(".exam500-summary-score").forEach(select=>{
         select.onchange=()=>{
           const student=activeSession()?.students?.find(x=>String(x.id)===select.dataset.id);
