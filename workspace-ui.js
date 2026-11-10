@@ -130,7 +130,7 @@
     if (!group) { view='classes'; renderWorkflow(); return; }
     if (view === 'lessons') {
       box.innerHTML = header(group.name, 'Séances · scanner, consulter ou sauvegarder au même endroit.', 'class-list') +
-        '<div class="flow-actions"><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button><button type="button" data-action="export-class" data-id="'+html(group.id)+'">💾 Sauvegarder la classe</button></div>' +
+        '<div class="flow-actions"><button type="button" data-action="import-pronote">📋 Liste PRONOTE ('+((group.rosterPronote||[]).length)+')</button><button type="button" class="flow-primary" data-action="new-lesson">+ Séance du jour</button><button type="button" data-action="rename-class">Renommer la classe</button><button type="button" data-action="export-class" data-id="'+html(group.id)+'">💾 Sauvegarder la classe</button></div>' +
         '<div class="eps-lessons-intro"><span class="eps-lessons-intro-icon">📅</span><div><strong>Vos séances, en un coup d’œil</strong><span>Retrouvez les exercices et accédez directement aux résultats.</span></div><span class="eps-lessons-count">'+lessons(group).length+' séance'+(lessons(group).length>1?'s':'')+'</span></div>' +
         '<div class="flow-grid eps-lessons-grid">'+lessons(group).map((l,i) => '<div class="flow-card eps-lesson-tile eps-lesson-color-'+(i%4)+'"><button type="button" class="eps-lesson-main" data-action="open-lesson" data-id="'+html(l.id)+'"><span class="eps-lesson-kicker">SÉANCE '+String(i+1).padStart(2,'0')+'</span><strong>'+html(dayLabel(l.date))+'</strong><span class="eps-lesson-label">'+html(l.label)+'</span><span class="eps-lesson-exercises"><b>'+l.exercises.length+'</b> exercice'+(l.exercises.length>1?'s':'')+'</span></button><button type="button" class="eps-lesson-results" data-action="lesson-results" data-id="'+html(l.id)+'">Voir les résultats <span aria-hidden="true">↗</span></button></div>').join('')+'</div>'+
         (!lessons(group).length ? '<div class="card empty">Aucune séance pour cette classe.</div>' : '');
@@ -217,16 +217,18 @@
     }
     const {group,exercise} = activePair();
     if (!group || !exercise) { panel.innerHTML=''; return; }
-    const roster = Array.isArray(group.students) ? group.students : [];
+    const roster = Array.isArray(group.rosterPronote) ? group.rosterPronote : [];
     const students = Array.isArray(exercise.students) ? exercise.students : [];
     const fullName = s => [s.last || s.lastName || s.nom || '',s.first || s.firstName || s.prenom || ''].join(' ').trim() || s.name || '';
     const key = s => String(s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim().toLowerCase();
+    const rosterCheck=window.DFRoster?.compare(roster,students);
     const counts = new Map();
     students.forEach(s=>{const name=key(fullName(s));if(name)counts.set(name,(counts.get(name)||0)+1);});
     const warnings = [];
     for(const [name,n] of counts) if(n>1) warnings.push('Nom en double : '+name);
     const missing = roster.filter(s=>!students.some(x=>(s.externalId||s.id) && String(x.externalId||x.id)===String(s.externalId||s.id) || (key(fullName(s)) && key(fullName(s))===key(fullName(x)))));
-    if(missing.length) warnings.push(missing.length+' élève(s) de la classe sans résultat');
+    if(missing.length) warnings.push('Non scannés : '+missing.map(fullName).join(', '));
+    if(roster.length && rosterCheck?.extra.length) warnings.push('Scannés hors liste : '+rosterCheck.extra.map(fullName).join(', '));
     if(exercise.type==='exam500') {
       const incomplete=students.filter(s=>s.exam500 && Array.isArray(s.exam500.races) && s.exam500.races.length<3);
       if(incomplete.length) warnings.push(incomplete.length+' résultat(s) 3 × 500 incomplet(s)');
@@ -234,7 +236,7 @@
     const sorted=[...students].sort((a,b)=>fullName(a).localeCompare(fullName(b),'fr'));
     panel.innerHTML='<h2>Tableau de bord · '+html(exercise.label)+'</h2>'+
       '<div class="flow-grid eps-dashboard-metrics">'+
-      [['Élèves de la classe',roster.length||students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value],i)=>'<div class="flow-card eps-metric eps-metric-'+i+'"><span class="eps-metric-symbol">'+['♙','✓','!'][i]+'</span><div class="eps-metric-copy"><strong>'+value+'</strong><span>'+label+'</span></div></div>').join('')+'</div>'+
+      [[roster.length?'Scannés / liste PRONOTE':'Élèves scannés',roster.length?(rosterCheck?.found||0)+' / '+roster.length:students.length],['Résultats enregistrés',students.length],['Alertes à vérifier',warnings.length]].map(([label,value],i)=>'<div class="flow-card eps-metric eps-metric-'+i+'"><span class="eps-metric-symbol">'+['♙','✓','!'][i]+'</span><div class="eps-metric-copy"><strong>'+value+'</strong><span>'+label+'</span></div></div>').join('')+'</div>'+
       '<details style="margin:12px 0"><summary>Contrôles ('+warnings.length+' alerte(s))</summary>'+
       (warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</details>'+
       '<div class="eps-student-heading"><h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève pour ouvrir sa fiche et corriger ses résultats.</p></div>'+
@@ -607,6 +609,7 @@
     else if(a==='lesson-results'){lessonId=button.dataset.id;const lesson=chosenLesson();if(lesson?.exercises.length===1)openResults(lesson.exercises[0].id);else {view='exercises';refresh();}}
     else if(a==='class-list'){view='classes';refresh();}
     else if(a==='lesson-list'){view='lessons';refresh();}
+    else if(a==='import-pronote')window.DFRoster?.open(chosenGroup(),refresh);
     else if(a==='new-lesson')createLesson();
     else if(a==='new-exercise')addExercise();
     else if(a==='rename-class')renameClass();
