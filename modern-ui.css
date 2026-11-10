@@ -1674,3 +1674,77 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible,select:focus-visi
 @media(hover:none){button:hover:not(:disabled),.button:hover,.space-card:hover,.class-tile:hover{transform:none}}
 @media(max-width:700px){main{padding-inline:12px}.card{border-radius:15px!important}.toolbar{padding:10px}nav{padding:9px 12px}nav button{min-height:44px}}
 @media(prefers-reduced-motion:reduce){button,.button,.space-card,.class-tile{transition:none!important}}
+
+
+/* =========================================================
+   DESIGN SYSTEM — Vauban Studio / édition professionnelle
+   Surcouche purement visuelle. Aucune modification de données.
+   ========================================================= */
+:root{
+ --ui-bg:#f6f8fc;--ui-surface:#fff;--ui-text:#172b49;
+ --ui-muted:#62748e;--ui-primary:#244c9f;--ui-primary-dark:#183a82;
+ --ui-primary-soft:#edf3ff;--ui-border:#e0e7f0;
+ --ui-radius:18px;--ui-shadow:0 8px 26px rgba(21,43,83,.055);
+ --studio-navy:#152b50;--studio-blue:#2959b9;--studio-teal:#087e78;
+ --studio-amber:#c78119;--studio-line:#e0e7f0;
+}
+body{background:linear-gradient(180deg,#f1f5fb 0,#f7f9fd 420px,#f7f9fd 100%);color:var(--studio-navy);font-feature-settings:"tnum" 1}
+header.scan-app-header{background:#142a4e!important;color:#fff!important;padding:20px clamp(18px,3.5vw,54px)!important;border-bottom:3px solid #3d75db!important;box-shadow:0 9px 30px rgba(18,40,76,.16)!important}
+header.scan-app-header small{background:rgba(255,255,255,.1)!important;color:#d7e5fc!important;font-size:10px!important;letter-spacing:.14em!important}
+header.scan-app-header h1{font-weight:800!important;letter-spacing:-.045em!important}
+header.scan-app-header p{color:#c4d3e9!important}
+header.scan-app-header .network-status{border-radius:100px}
+nav{border-bottom:1px solid #e0e7f0!important;box-shadow:0 3px 14px rgba(27,51,87,.035)!important}
+nav button{font-size:14px!important;font-weight:750!important}
+main{max-width:1480px!important}
+.workspace-title{border-bottom:1px solid #e0e7f0;padding-bottom:17px;margin-bottom:20px}
+.workspace-title h2{font-size:clamp(23px,2.3vw,32px)!important;font-weight:800!important;letter-spacing:-.045em!important}
+.workspace-title p{color:#62748e!important}
+.card{border:1px solid #e0e7f0!important;border-radius:19px!important;box-shadow:0 6px 24px rgba(21,43,83,.055)!important}
+.card h2,.card h3{color:#19345e}
+.toolbar{border-radius:16px!important;box-shadow:0 3px 13px rgba(20,44,82,.035)!important}
+button,.button{font-weight:750;min-height:42px}
+button:not(.scan-home-card):not(.space-card):not(.class-tile):not(.eps-lesson-main){-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible{outline:3px solid #7ba9ef!important;outline-offset:3px!important}
+button:disabled{opacity:.55;cursor:not-allowed}
+input,select,textarea{font-size:16px;accent-color:#2959b9}
+input:not([type="checkbox"]):not([type="radio"]),select,textarea{border:1px solid #cdd9e9;background:#fff;box-shadow:inset 0 1px 2px rgba(17,39,75,.025)}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px #dbe9ff!important;border-color:#5481d5!important}
+.eps-home-hero{border-radius:24px!important;box-shadow:0 15px 40px rgba(22,47,94,.12)!important;overflow:hidden}
+.eps-home-hero h2{font-weight:850!important;letter-spacing:-.055em!important;line-height:1.1!important}
+.eps-home-hero-tags span{border-radius:999px!important}
+.eps-home-section-heading h3{font-weight:800;letter-spacing:-.04em}
+.scan-home-card{border:1px solid #dbe5f2!important;border-radius:20px!important;box-shadow:0 7px 23px rgba(23,50,91,.06)!important;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease!important}
+.scan-home-card:hover{border-color:#a9bde4!important;box-shadow:0 13px 28px rgba(23,50,91,.1)!important}
+.scan-home-card strong{font-weight:800!important;letter-spacing:-.035em!important}
+.scan-home-card b{font-weight:800!important}
+.eps-home-chrono{border-radius:18px!important}
+.space-card{border-radius:18px!important;background:#fff!important}
+.space-card strong{font-weight:800!important}
+.space-card.active{background:#f0f5ff!important;border-color:#93b0e8!important}
+#flowClassGrid .class-tile{border-radius:18px!important}
+#workflowContent .eps-lesson-tile{box-shadow:0 8px 23px rgba(23,50,91,.065)!important}
+#workflowContent .eps-lesson-main strong{letter-spacing:-.04em!important}
+#workflowContent .eps-lesson-results{border-radius:11px!important}
+#sessionResultsOverview{border-radius:20px!important;box-shadow:0 8px 25px rgba(21,43,83,.055)!important}
+#sessionResultsOverview .eps-progress-panel{border-radius:16px!important;background:#f0f5fd!important}
+#sessionResultsOverview .eps-progress-heading strong{font-weight:850!important;letter-spacing:-.055em}
+#sessionResultsOverview .eps-progress-track{height:11px!important}
+#sessionResultsOverview .eps-dashboard-checks section{border:1px solid #e0e7f0!important;box-shadow:none!important}
+#sessionResultsOverview .eps-dashboard-checks h3{font-size:15px!important;color:#19365e}
+#sessionResultsOverview .eps-dashboard-filters button[aria-pressed=true]{background:#244c9f!important;color:#fff!important;border-color:#244c9f!important}
+#sessionResultsOverview .eps-issue{border-radius:12px!important}
+#sessionResultsOverview .eps-unscanned-picker{border-left-width:4px!important}
+#results .table{box-shadow:0 4px 17px rgba(21,43,83,.035)}
+#results .table thead th{background:#eaf0fa!important;color:#1c3862!important;font-size:12px;letter-spacing:.01em}
+#results .table tbody td{border-bottom-color:#e8edf4}
+#exam500EditDialog .e500-edit-layout{background:#fff}
+#exam500EditDialog .e500-edit-layout h2{color:#152f57!important;font-weight:850!important;letter-spacing:-.045em!important}
+#exam500EditDialog .e500-races section{border:1px solid #dce6f1!important}
+#exam500EditDialog .e500-races h3{font-weight:800!important;color:#1c385d}
+#exam500EditDialog .e500-field span{font-size:12px!important;color:#526983!important;letter-spacing:.005em}
+#exam500EditDialog .e500-edit-layout input{font-variant-numeric:tabular-nums}
+details>summary{cursor:pointer;font-weight:750}
+@media(min-width:900px){main{padding-top:32px!important}.scan-home-card:hover{transform:translateY(-3px)!important}}
+@media(max-width:760px){header.scan-app-header{padding:15px 18px!important}.eps-home-hero{border-radius:18px!important}.scan-home-card{border-radius:16px!important}.workspace-title h2{font-size:23px!important}}
+@media(prefers-reduced-motion:reduce){.scan-home-card{transition:none!important}}
