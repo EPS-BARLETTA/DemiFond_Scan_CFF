@@ -22,15 +22,15 @@ function convert(text) {
  const h=rows.shift().map(norm), col=(...names)=>h.findIndex(x=>names.includes(x));
  const combined=col("eleves","eleve","nom prenom","nom et prenom");
  const last=col("nom","nom de famille"),first=col("prenom","prenoms");
- const sex=col("sexe","genre"),classCol=col("classe","division");
- if((combined<0&&(last<0||first<0))||classCol<0)throw Error("Colonnes Élèves (ou Nom et Prénom) et Classe introuvables.");
+ const sex=col("sexe","genre"),classCol=col("classe","division","classe de rattachement");
+ if(combined<0&&(last<0||first<0))throw Error("Colonne Élèves (ou Nom et Prénom) introuvable.");
  const students=[],seen=new Set();
  for(const r of rows){let l="",f="";
   if(combined>=0){const v=(r[combined]||"").trim();const parts=v.split(/\s+/);if(parts.length<2)continue;
    const firstLower=parts.findIndex(p=>/[a-zà-ÿ]/.test(p)&&p!==p.toUpperCase());
    const cut=firstLower>0?firstLower:1;l=parts.slice(0,cut).join(" ");f=parts.slice(cut).join(" ");
   }else{l=(r[last]||"").trim();f=(r[first]||"").trim();}
-  const classroom=(r[classCol]||"").trim();if(!l||!f)continue;
+  const classroom=classCol>=0?(r[classCol]||"").trim():"";if(!l||!f)continue;
   const k=norm(l+" "+f);if(seen.has(k))continue;seen.add(k);
   const sx=norm(sex>=0?r[sex]:"");
   students.push({last:l,first:f,sex:sx.startsWith("f")?"F":sx.startsWith("m")?"M":"",classroom});
