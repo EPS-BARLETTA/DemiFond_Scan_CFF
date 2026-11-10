@@ -1465,7 +1465,15 @@
     const body = document.getElementById("resultRows");
     if (!body) return;
 
-    body.innerHTML = visibleStudents().map(student => {
+    const group=activeGroup();
+    const roster=Array.isArray(group?.rosterPronote)?group.rosterPronote:[];
+    const scanned=visibleStudents();
+    const ordered=roster.length ? [
+      ...roster.map(r=>({student:scanned.find(s=>window.DFRoster?.match(r,s))||null,roster:r})),
+      ...scanned.filter(s=>!roster.some(r=>window.DFRoster?.match(r,s))).map(s=>({student:s,roster:null}))
+    ].sort((a,b)=>String(a.roster?.last||a.student?.last||"").localeCompare(String(b.roster?.last||b.student?.last||""),"fr",{sensitivity:"base"})) : scanned.map(student=>({student,roster:null}));
+    body.innerHTML = ordered.map(({student,roster}) => {
+      if(!student)return '<tr class="pronote-unscanned"><td><b>'+esc(String(roster.last||"").toUpperCase()+' '+(roster.first||""))+'</b></td><td>'+esc(roster.sex||"")+'</td>'+Array.from({length:premiereMode()?12:11},()=>'<td></td>').join("")+'</tr>';
       const sc = score500(student);
       const audit=student.exam500?.validation||[];
       const correctionDetail=audit.filter(v=>Array.isArray(v)&&v[1]==="C").map(v=>{
