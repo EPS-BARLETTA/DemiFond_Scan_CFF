@@ -1821,3 +1821,31 @@ background:#f0f5ff!important;border:1px solid #d5e2f7!important;box-shadow:none!
 #workflowContent #flowClassGrid .eps-class-row .eps-class-open{display:none!important}
 #workflowContent #flowClassGrid .eps-class-row>.class-tile-results{padding:7px 9px!important;font-size:12px!important}
 }
+
+/* Grandes cartes ergonomiques : classes et séances, actions visibles */
+#workflowContent #flowClassGrid.eps-pro-class-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+#workflowContent .eps-pro-class-card{display:flex;flex-direction:column;min-width:0;min-height:195px;padding:22px;background:#fff;border:1px solid #dce5f1;border-top:4px solid #3869c7;border-radius:19px;box-shadow:0 7px 22px rgba(24,49,90,.065)}
+#workflowContent .eps-pro-class-head,#workflowContent .eps-pro-session-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#workflowContent .eps-pro-class-label,#workflowContent .eps-pro-session-tag{font-size:11px;font-weight:850;letter-spacing:.1em;color:#5475ac}
+#workflowContent .eps-pro-class-count,#workflowContent .eps-pro-session-count{font-size:12px;font-weight:700;color:#5c7293;background:#f0f5fc;padding:7px 10px;border-radius:30px}
+#workflowContent .eps-pro-class-name{display:block;font-size:26px;font-weight:850;letter-spacing:-.05em;color:#1b355e;margin:22px 0 4px;line-height:1.15}
+#workflowContent .eps-pro-class-students{font-size:13px;color:#72839c}
+#workflowContent .eps-pro-class-actions{display:flex;gap:9px;margin-top:auto;padding-top:24px}
+#workflowContent .eps-pro-class-actions button{flex:1;min-width:0;min-height:46px;border-radius:11px;font-size:13px;padding:10px;border:1px solid #cbd9ee;font-weight:750}
+#workflowContent .eps-pro-class-open{background:#315fbc;color:#fff;border-color:#315fbc!important}
+#workflowContent .eps-pro-class-results{background:#eff4fd;color:#28529c}
+#workflowContent .eps-pro-session-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-top:16px}
+#workflowContent .eps-pro-session-card{display:flex;flex-direction:column;min-width:0;padding:21px;background:#fff;border:1px solid #dce5f1;border-top:4px solid #3869c7;border-radius:18px;box-shadow:0 7px 23px rgba(24,49,90,.055)}
+#workflowContent .eps-pro-session-card h3{font-size:23px;font-weight:850;letter-spacing:-.04em;margin:17px 0 5px;color:#1c385f}
+#workflowContent .eps-pro-session-card p{font-size:13px;color:#6a7e99;margin:0 0 15px}
+#workflowContent .eps-pro-exercises{display:flex;flex-direction:column;gap:9px;flex:1}
+#workflowContent .eps-pro-exercise{display:flex;flex-direction:column;gap:11px;background:#f5f8fd;border:1px solid #e4ebf5;border-radius:12px;padding:13px}
+#workflowContent .eps-pro-exercise>div:first-child{display:flex;flex-direction:column;gap:3px}
+#workflowContent .eps-pro-exercise strong{font-size:14px;color:#223e68}
+#workflowContent .eps-pro-exercise small{font-size:12px;color:#71829b}
+#workflowContent .eps-pro-exercise-actions{display:flex;gap:8px}
+#workflowContent .eps-pro-exercise-actions button{flex:1;min-height:43px;border:1px solid #d0ddef;border-radius:9px;background:#fff;color:#2c559a;font-weight:750;padding:9px}
+#workflowContent .eps-pro-exercise-actions button.flow-scan{background:#e6f7ee;color:#13744e;border-color:#b9e7d0}
+#workflowContent .eps-pro-session-manage{align-self:flex-end;margin-top:15px;padding:8px;border:0;background:transparent;color:#315bb3;font-size:13px}
+@media(max-width:960px){#workflowContent #flowClassGrid.eps-pro-class-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:640px){#workflowContent #flowClassGrid.eps-pro-class-grid,#workflowContent .eps-pro-session-grid{grid-template-columns:1fr!important}#workflowContent .eps-pro-class-card{min-height:175px;padding:18px}#workflowContent .eps-pro-class-name{margin-top:15px}}
