@@ -1178,10 +1178,10 @@
           : "";
 
     d.innerHTML = `
-      <div style="min-width:min(900px,94vw);max-height:88vh;overflow:auto;padding:8px">
-        <h2>Corriger — ${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")}</h2>
+      <div class="e500-edit-layout" style="width:min(920px,90vw);max-width:100%;max-height:85vh;overflow:auto;padding:clamp(10px,2vw,22px)">
+        <h2 style="margin:0 0 6px">✏️ Modifier les résultats</h2><p style="color:#64748b;margin:0 0 18px">${esc(String(student.last||"").toUpperCase())} ${esc(student.first||"")} · Vérifie les informations avant enregistrement.</p>
 
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;padding:12px;border-radius:14px;background:#f3f6fb">
+        <div class="e500-identity" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px;padding:16px;border-radius:14px;background:#f3f6fb">
           <label>Nom<input id="e500Last" value="${esc(student.last||"")}"></label>
           <label>Prénom<input id="e500First" value="${esc(student.first||"")}"></label>
           <label>Classe<input id="e500Class" value="${esc(student.classroom||"")}"></label>
@@ -1193,28 +1193,29 @@
           </label>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+        <div class="e500-races" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
           ${[c1,c2,c3].map((r,index)=>`
             <section style="border:1px solid #d8e1f3;border-radius:14px;padding:12px;background:${index===0 ? "#fff8dc" : index===1 ? "#eef9ef" : "#eef6ff"}">
-              <h3>Course ${index+1}</h3>
+              <h3 style="margin:0 0 16px">Course ${index+1} · 500 m</h3>
 
               ${index < 2 || estimationCount() === 3 ? `
-                <label>Annonce
+                <label class="e500-field"><span>Temps annoncé (500 m)</span>
                   <input id="e500Project${index+1}" value="${esc(r.project||"")}" placeholder="2:00">
                 </label>
               ` : ""}
 
-              <label>250 m
+              <label class="e500-field"><span>Passage intermédiaire à 250 m</span>
                 <input id="e500Split${index+1}" value="${inputTime(r.split250Ms)}" placeholder="0:55">
               </label>
 
-              <label>500 m
+              <label class="e500-field"><span>Temps final à 500 m</span>
                 <input id="e500Total${index+1}" value="${inputTime(r.total500Ms)}" placeholder="1:50">
               </label>
             </section>
           `).join("")}
         </div>
 
+        <h3 style="margin:20px 0 10px">Évaluation complémentaire</h3>
         ${premiereMode() ? `
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px">
           <label>Échauffement /2<input id="e500Warmup" type="number" min="0" max="2" step="0.25" value="${student.exam500Warmup ?? ""}"></label>
