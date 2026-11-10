@@ -233,16 +233,24 @@
     }
     if(roster.length && rosterCheck?.extra.length) warnings.push('Scannés hors liste PRONOTE : '+rosterCheck.extra.map(fullName).join(', '));
     const sorted=[...students].sort((a,b)=>fullName(a).localeCompare(fullName(b),'fr'));
-    panel.innerHTML='<h2>Tableau de bord · '+html(exercise.label)+'</h2>'+
-      '<div class="flow-grid eps-dashboard-metrics">'+
-      [[roster.length?'Scannés / liste PRONOTE':'Élèves scannés',roster.length?(rosterCheck?.found||0)+' / '+roster.length:students.length],['Résultats enregistrés',students.length],['Anomalies de scans',warnings.length]].map(([label,value],i)=>'<div class="flow-card eps-metric eps-metric-'+i+'"><span class="eps-metric-symbol">'+['♙','✓','!'][i]+'</span><div class="eps-metric-copy"><strong>'+value+'</strong><span>'+label+'</span></div></div>').join('')+'</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0">'+
-      (roster.length?'<section style="border:1px solid #cbd5e1;border-radius:12px;padding:14px"><h3 style="margin:0 0 8px">Non scannés · '+missing.length+'</h3><details><summary>Voir les noms</summary><ul style="columns:2;line-height:1.8">'+missing.map(s=>'<li>'+html(fullName(s))+'</li>').join('')+'</ul></details></section>':'<section style="padding:14px;border:1px solid #cbd5e1;border-radius:12px">Importe une liste PRONOTE pour connaître les élèves non scannés.</section>')+
-      '<section style="border:1px solid #cbd5e1;border-radius:12px;padding:14px"><h3 style="margin:0 0 8px">Anomalies · '+warnings.length+'</h3>'+(warnings.length?'<ul style="line-height:1.6">'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</section></div>'+
-      '<div class="eps-student-heading"><h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève pour ouvrir sa fiche et corriger ses résultats.</p></div>'+
-      '<div class="student-picker-grid">'+sorted.map((student,i)=>
-        '<button type="button" class="student-picker '+(i%2?'student-picker-alt':'')+'" data-student-index="'+i+'"><strong>'+html(fullName(student)||'Élève '+(i+1))+'</strong><span>Voir la fiche →</span></button>'
-      ).join('')+'</div>';
+    const scannedCount=roster.length?(rosterCheck?.found||0):students.length;
+    const progress=roster.length?Math.round(100*scannedCount/roster.length):0;
+    panel.innerHTML='<div class="eps-dashboard-top"><div><h2 style="margin:0">Suivi de séance · '+html(exercise.label)+'</h2><p style="margin:5px 0 0;color:#64748b">Résultats enregistrés : '+students.length+'</p></div><button type="button" class="flow-primary" id="epsQuickScan">📷 Scanner</button></div>'+
+      '<div class="eps-progress-panel"><div class="eps-progress-heading"><strong>'+scannedCount+(roster.length?' / '+roster.length:'')+'</strong><span>élèves scannés'+(roster.length?' · '+progress+' %':' · sans liste PRONOTE')+'</span></div>'+
+      (roster.length?'<div class="eps-progress-track" role="progressbar" aria-valuenow="'+scannedCount+'" aria-valuemin="0" aria-valuemax="'+roster.length+'"><div style="width:'+progress+'%"></div></div>':'')+
+      '<div class="eps-progress-stats"><span>✓ '+scannedCount+' identifiés</span><span>'+(roster.length?missing.length+' non scannés':'Liste PRONOTE facultative')+'</span><span>'+warnings.length+' anomalie(s)</span></div></div>'+
+      '<div class="eps-dashboard-filters"><button type="button" data-eps-filter="all">Tous'+(roster.length?' · '+roster.length:'')+'</button><button type="button" data-eps-filter="scanned">Scannés · '+students.length+'</button><button type="button" data-eps-filter="missing" '+(!roster.length?'disabled':'')+'>Non scannés · '+missing.length+'</button><input id="epsStudentSearch" type="search" placeholder="Rechercher un élève" aria-label="Rechercher un élève"></div>'+
+      '<div class="eps-dashboard-checks"><section><h3>Élèves non scannés · '+missing.length+'</h3>'+(roster.length?(missing.length?'<details><summary>Afficher les noms</summary><ul>'+missing.map(x=>'<li>'+html(fullName(x))+'</li>').join('')+'</ul></details>':'<p>Tout le monde a été scanné.</p>'):'<p>Importe une liste PRONOTE pour comparer.</p>')+'</section>'+
+      '<section><h3>Anomalies à vérifier · '+warnings.length+'</h3>'+(warnings.length?'<ul>'+warnings.map(w=>'<li>'+html(w)+'</li>').join('')+'</ul>':'<p>Aucune anomalie détectée.</p>')+'</section></div>'+
+      '<div class="eps-student-heading"><h3>Élèves · ordre alphabétique</h3><p class="flow-note">Touchez un élève scanné pour consulter sa fiche.</p></div>'+
+      '<div class="student-picker-grid" id="epsStudentPicker">'+(roster.length?roster.map((r,i)=>{const student=students.find(x=>window.DFRoster?.match(r,x));return '<button type="button" class="student-picker '+(!student?'eps-unscanned-picker':'')+'" data-eps-status="'+(student?'scanned':'missing')+'" data-eps-name="'+html(fullName(r).toLowerCase())+'" '+(student?'data-student-index="'+sorted.indexOf(student)+'"':'disabled')+'><strong>'+html(fullName(r))+'</strong><span>'+(student?'Voir la fiche →':'Non scanné')+'</span></button>';}).join('')+sorted.filter(x=>!roster.some(r=>window.DFRoster?.match(r,x))).map(x=>'<button type="button" class="student-picker" data-eps-status="scanned" data-eps-name="'+html(fullName(x).toLowerCase())+'" data-student-index="'+sorted.indexOf(x)+'"><strong>'+html(fullName(x))+'</strong><span>Hors liste · voir la fiche →</span></button>').join(''):sorted.map((x,i)=>'<button type="button" class="student-picker" data-eps-status="scanned" data-eps-name="'+html(fullName(x).toLowerCase())+'" data-student-index="'+i+'"><strong>'+html(fullName(x))+'</strong><span>Voir la fiche →</span></button>').join(''))+'</div>';
+    panel.querySelector('#epsQuickScan')?.addEventListener('click',()=>openScan(exercise.id));
+    const filterButtons=[...panel.querySelectorAll('[data-eps-filter]')];
+    const search=panel.querySelector('#epsStudentSearch');
+    let filter='all';
+    const applyFilter=()=>{const query=String(search.value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();panel.querySelectorAll('#epsStudentPicker button').forEach(b=>{const name=(b.dataset.epsName||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();b.hidden=!(filter==='all'||b.dataset.epsStatus===filter)||!name.includes(query);});filterButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.epsFilter===filter)));};
+    filterButtons.forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.epsFilter;applyFilter();}));
+    search.addEventListener('input',applyFilter);applyFilter();
     panel.querySelectorAll('[data-student-index]').forEach(button=>{
       button.onclick=()=>openStudentResultSheet(sorted[Number(button.dataset.studentIndex)]);
     });
