@@ -1748,3 +1748,28 @@ details>summary{cursor:pointer;font-weight:750}
 @media(min-width:900px){main{padding-top:32px!important}.scan-home-card:hover{transform:translateY(-3px)!important}}
 @media(max-width:760px){header.scan-app-header{padding:15px 18px!important}.eps-home-hero{border-radius:18px!important}.scan-home-card{border-radius:16px!important}.workspace-title h2{font-size:23px!important}}
 @media(prefers-reduced-motion:reduce){.scan-home-card{transition:none!important}}
+
+/* Séances compactes : accès direct aux actions sans écran intermédiaire */
+.eps-session-list{display:grid;gap:10px;margin-top:16px}
+.eps-session-row{border:1px solid #dce5f0;background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 3px 12px rgba(23,50,91,.035)}
+.eps-session-row[open]{border-color:#abc4ec;box-shadow:0 7px 21px rgba(23,50,91,.065)}
+.eps-session-row>summary{display:flex;align-items:center;gap:14px;padding:16px 18px;list-style:none;min-height:58px}
+.eps-session-row>summary::-webkit-details-marker{display:none}
+.eps-session-date-icon{display:grid;place-items:center;width:42px;height:42px;flex:none;background:#eff4fd;border-radius:12px;font-size:19px}
+.eps-session-info{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.eps-session-info strong{font-size:17px;font-weight:800;color:#1a355e}
+.eps-session-info small{color:#64748b;font-size:13px;white-space:normal}
+.eps-session-number{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6480a9}
+.eps-session-chevron{color:#58749b;font-size:23px;transition:transform .15s}
+.eps-session-row[open] .eps-session-chevron{transform:rotate(180deg)}
+.eps-session-content{padding:0 18px 15px 74px;border-top:1px solid #e9eff6}
+.eps-session-exercise{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid #edf1f7}
+.eps-session-exercise>span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.eps-session-exercise strong{color:#233e67;font-size:14px}
+.eps-session-exercise small{color:#72829a;font-size:12px}
+.eps-session-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.eps-session-buttons button{border:1px solid #cbdaf0;background:#f6f9fe;color:#254b8d;padding:10px 14px;border-radius:10px;font-size:13px}
+.eps-session-buttons button.flow-scan{background:#e6f7ee;color:#12744c;border-color:#bce7d2}
+.eps-session-footer{display:flex;justify-content:flex-end;padding-top:12px}
+.eps-session-footer button{border:0;background:transparent;color:#315bb3;font-size:13px;padding:7px}
+@media(max-width:680px){.eps-session-number{display:none}.eps-session-content{padding:0 13px 12px}.eps-session-exercise{align-items:flex-start;flex-direction:column}.eps-session-buttons{width:100%}.eps-session-buttons button{flex:1}.eps-session-row>summary{padding:13px}}
