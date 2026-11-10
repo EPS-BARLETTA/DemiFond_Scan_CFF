@@ -38,12 +38,22 @@ function convert(text) {
  if(!students.length)throw Error("Aucun élève valide détecté.");
  return students;
 }
-function compare(roster, scanned) {
- const keys=new Map(),duplicates=[];
- for(const s of scanned){const k=norm(name(s));if(!k)continue;if(keys.has(k))duplicates.push(name(s));keys.set(k,s);}
- const missing=roster.filter(s=>!keys.has(norm(name(s))));
- const extra=scanned.filter(s=>!roster.some(r=>norm(name(r))===norm(name(s))));
- return {missing,extra,duplicates,found:roster.length-missing.length};
+function identity(s) {
+ const last=norm(s.last||s.lastName||s.nom||"");
+ const first=norm(s.first||s.firstName||s.prenom||"");
+ return [last,first].filter(Boolean).join(" ") || norm(s.name||"");
+}
+function match(a,b) {
+ const x=identity(a),y=identity(b);
+ if(!x||!y)return false;
+ if(x===y)return true;
+ const tokens=v=>v.split(/\s+/).filter(Boolean).sort().join(" ");
+ return tokens(x)===tokens(y);
+}
+function compare(roster,scanned) {
+ const used=new Set(),missing=[];
+ for(const r of roster){const index=scanned.findIndex((s,i)=>!used.has(i)&&match(r,s));if(index<0)missing.push(r);else used.add(index);}
+ return {missing,extra:scanned.filter((s,i)=>!used.has(i)),duplicates:[],found:used.size};
 }
 function dialog(title,inner) {
  let d=document.getElementById("dfRosterDialog");if(!d){d=document.createElement("dialog");d.id="dfRosterDialog";document.body.appendChild(d);}
@@ -79,5 +89,5 @@ function open(group,refresh) {
   delete group.rosterPronote;save();d.close();refresh();
  };
 }
-window.DFRoster={open,compare,name,convert};
+window.DFRoster={open,compare,name,convert,match};
 })();
