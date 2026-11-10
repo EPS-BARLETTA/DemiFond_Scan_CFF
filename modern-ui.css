@@ -1849,3 +1849,27 @@ background:#f0f5ff!important;border:1px solid #d5e2f7!important;box-shadow:none!
 #workflowContent .eps-pro-session-manage{align-self:flex-end;margin-top:15px;padding:8px;border:0;background:transparent;color:#315bb3;font-size:13px}
 @media(max-width:960px){#workflowContent #flowClassGrid.eps-pro-class-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:640px){#workflowContent #flowClassGrid.eps-pro-class-grid,#workflowContent .eps-pro-session-grid{grid-template-columns:1fr!important}#workflowContent .eps-pro-class-card{min-height:175px;padding:18px}#workflowContent .eps-pro-class-name{margin-top:15px}}
+
+/* Couleurs pastel discrètes : classes et exercices, sans surcharge */
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card:nth-child(6n+1){--eps-accent:#416cce;--eps-tint:#edf3ff}
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card:nth-child(6n+2){--eps-accent:#16846d;--eps-tint:#e9f8f2}
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card:nth-child(6n+3){--eps-accent:#a86c17;--eps-tint:#fff5e5}
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card:nth-child(6n+4){--eps-accent:#8054bb;--eps-tint:#f4edff}
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card:nth-child(6n+5){--eps-accent:#147e93;--eps-tint:#e9f7fa}
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card:nth-child(6n){--eps-accent:#b94d7b;--eps-tint:#fff0f5}
+#workflowContent #flowClassGrid.eps-pro-class-grid>.eps-pro-class-card{
+border-top-color:var(--eps-accent)!important;background:linear-gradient(145deg,var(--eps-tint) 0%,#fff 72%)!important;
+}
+#workflowContent .eps-pro-class-card .eps-pro-class-label{color:var(--eps-accent)!important}
+#workflowContent .eps-pro-class-card .eps-pro-class-count{background:var(--eps-tint)!important;color:var(--eps-accent)!important}
+#workflowContent .eps-pro-session-card:nth-child(4n+1){--eps-session-accent:#416cce;--eps-session-tint:#eef3ff}
+#workflowContent .eps-pro-session-card:nth-child(4n+2){--eps-session-accent:#16846d;--eps-session-tint:#eaf8f2}
+#workflowContent .eps-pro-session-card:nth-child(4n+3){--eps-session-accent:#a86c17;--eps-session-tint:#fff6e9}
+#workflowContent .eps-pro-session-card:nth-child(4n){--eps-session-accent:#8054bb;--eps-session-tint:#f4efff}
+#workflowContent .eps-pro-session-card{border-top-color:var(--eps-session-accent)!important;background:linear-gradient(150deg,var(--eps-session-tint),#fff 48%)!important}
+#workflowContent .eps-pro-session-tag{color:var(--eps-session-accent)!important}
+#workflowContent .eps-pro-exercise:nth-child(4n+1){--eps-exercise-accent:#416cce;--eps-exercise-tint:#edf3ff}
+#workflowContent .eps-pro-exercise:nth-child(4n+2){--eps-exercise-accent:#16846d;--eps-exercise-tint:#eaf8f2}
+#workflowContent .eps-pro-exercise:nth-child(4n+3){--eps-exercise-accent:#a86c17;--eps-exercise-tint:#fff5e6}
+#workflowContent .eps-pro-exercise:nth-child(4n){--eps-exercise-accent:#8054bb;--eps-exercise-tint:#f3edff}
+#workflowContent .eps-pro-exercise{background:var(--eps-exercise-tint)!important;border-left:4px solid var(--eps-exercise-accent)!important}
