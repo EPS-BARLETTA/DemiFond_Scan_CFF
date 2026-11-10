@@ -1540,13 +1540,23 @@
       const sorted = visibleStudents().slice().sort((a,b)=>
         (String(a.last||"")+" "+String(a.first||"")).localeCompare(
           String(b.last||"")+" "+String(b.first||""),"fr",{sensitivity:"base"}));
+      const rosterForSummary=Array.isArray(activeGroup()?.rosterPronote)?activeGroup().rosterPronote:[];
+      const unscannedForSummary=rosterForSummary.filter(r=>!sorted.some(student=>window.DFRoster?.match(r,student)));
+      const summaryEntries=[
+        ...sorted.map(student=>({student,roster:null})),
+        ...unscannedForSummary.map(roster=>({student:null,roster}))
+      ].sort((a,b)=>{
+        const x=a.student||a.roster,y=b.student||b.roster;
+        return (String(x.last||"")+" "+String(x.first||"")).localeCompare(String(y.last||"")+" "+String(y.first||""),"fr",{sensitivity:"base"});
+      });
       const opened = summary.querySelector("details[open]")?.dataset.studentId || "";
       const fields = premiereMode()
         ? [["exam500Warmup","Échauffement",2],["exam500Carnet","Carnet / investissement",2],["exam500Observation","Observation",1]]
         : [["exam500Afl2",criterionLabels().afl2,2],["exam500Afl3",criterionLabels().afl3,4]];
       summary.innerHTML = '<h3 style="margin:0 0 10px">Élèves · synthèse des notes /20</h3>'+
         '<div class="exam500-student-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:10px;align-items:start">'+
-        sorted.map((student,index)=>{
+        summaryEntries.map(({student,roster},index)=>{
+          if(!student)return '<div class="exam500-summary-missing" style="background:#fff1d6;border:2px solid #f59e0b;border-radius:11px;padding:13px;min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:10px"><strong style="color:#854d0e">'+esc(String(roster.last||"").toUpperCase()+' '+(roster.first||""))+'</strong><span style="font-size:12px;font-weight:750;color:#92400e;white-space:nowrap">NON SCANNÉ</span></div>';
           const sc=score500(student), id=String(student.id);
           const line=(label,value,max)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #e2e8f0"><span>'+esc(label)+'</span><b>'+(value==null?"—":fmtPts(value))+'/'+max+'</b></div>';
           return '<details class="exam500-summary-student" data-student-id="'+esc(id)+'" '+(opened===id?'open':'')+' style="border:2px solid '+(opened===id?'#2563eb':'#cbd5e1')+';border-radius:11px;margin:0;background:'+(index%2===0?'#eff6ff':'#f1f5f9')+'">'+
