@@ -1473,7 +1473,7 @@
       ...scanned.filter(s=>!roster.some(r=>window.DFRoster?.match(r,s))).map(s=>({student:s,roster:null}))
     ].sort((a,b)=>String(a.roster?.last||a.student?.last||"").localeCompare(String(b.roster?.last||b.student?.last||""),"fr",{sensitivity:"base"})) : scanned.map(student=>({student,roster:null}));
     body.innerHTML = ordered.map(({student,roster}) => {
-      if(!student)return '<tr class="pronote-unscanned"><td><b>'+esc(String(roster.last||"").toUpperCase()+' '+(roster.first||""))+'</b></td><td>'+esc(roster.sex||"")+'</td>'+Array.from({length:premiereMode()?12:11},()=>'<td></td>').join("")+'</tr>';
+      if(!student)return '<tr class="pronote-unscanned" style="background:#fff1d6;color:#854d0e"><td style="background:#fff1d6;border-left:5px solid #f59e0b"><b>'+esc(String(roster.last||"").toUpperCase()+' '+(roster.first||""))+'</b> <span style="font-size:11px;font-weight:700;white-space:nowrap">NON SCANNÉ</span></td><td style="background:#fff1d6">'+esc(roster.sex||"")+'</td>'+Array.from({length:premiereMode()?12:11},()=>'<td style="background:#fff1d6"></td>').join("")+'</tr>';
       const sc = score500(student);
       const audit=student.exam500?.validation||[];
       const correctionDetail=audit.filter(v=>Array.isArray(v)&&v[1]==="C").map(v=>{
